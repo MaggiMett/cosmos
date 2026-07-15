@@ -10,6 +10,8 @@ Knowledge exists independently from Tools, Workspaces and visual representation.
 
 It is the memory of Cosmos.
 
+Knowledge is a durable informational record. Projects, Objects, Relationships, Blueprints and Resources remain distinct and do not become Knowledge themselves.
+
 ---
 
 # Philosophy
@@ -51,13 +53,9 @@ Knowledge may originate from many different sources.
 Examples include:
 
 - Captures
-- Blueprints
-- Chat conversations
-- Imported documents
-- PDFs
-- Images
-- Videos
-- Audio
+- durable descriptions of Blueprints
+- explicitly promoted conversation records
+- informational records ingested from documents, PDFs, images, video or audio
 - External references
 - Repository analysis
 - User decisions
@@ -127,19 +125,15 @@ Resources implement.
 
 Knowledge explains.
 
+A Resource remains owned by its native repository or external source. A durable description, summary or analysis of a Resource may be Knowledge without converting the Resource itself into Knowledge.
+
 ---
 
 # Relationships
 
-Knowledge participates in Relationships.
+Knowledge may reference other Knowledge, Objects and Resource mappings through its existing associations and metadata.
 
-Connections may exist between:
-
-- Knowledge ↔ Knowledge
-- Knowledge ↔ Object
-- Knowledge ↔ Resource
-
-These Relationships help Cosmos discover meaning.
+These associations are not Version 1 Relationship endpoints. Version 1 Relationships connect exactly two Objects and support only the `Related` type.
 
 ---
 
@@ -269,6 +263,7 @@ Instead of collecting isolated notes, Cosmos continuously transforms information
 - Knowledge belongs to the user.
 - Objects organize Knowledge.
 - Resources implement Knowledge.
+- Domain entities and Resources never become Knowledge themselves.
 - Relationships reveal meaning.
 - Processing never destroys information.
 - Everything remains traceable.

@@ -16,7 +16,9 @@ It reveals it.
 
 # Philosophy
 
-Everything becomes Knowledge.
+Every meaningful informational record intended for durable retention becomes Knowledge.
+
+Objects, Relationships, Blueprints and Resources remain distinct domain concepts. Archive presents them alongside Knowledge without converting them into Knowledge.
 
 Nothing meaningful is forgotten.
 
@@ -62,7 +64,7 @@ Archive never accesses Persistence directly.
 
 # Archive Structure
 
-Archive organizes Knowledge through semantic relationships rather than physical folders.
+Archive organizes Knowledge through semantic associations rather than physical folders.
 
 Knowledge may be explored through:
 
@@ -90,7 +92,7 @@ Every Knowledge Item displays:
 - Tags
 - related Objects
 - related Knowledge
-- connected Resources
+- connected Resource mappings
 - Review history
 
 Knowledge remains the central element.
@@ -104,7 +106,7 @@ Every Knowledge Item preserves its origin.
 Examples include:
 
 - Capture
-- Chat
+- promoted Chat record
 - PDF
 - Image
 - Repository
@@ -148,24 +150,27 @@ Opening an Object reveals:
 - Blueprint
 - version history
 
-Objects become knowledge hubs.
+Objects serve as knowledge hubs while remaining distinct domain entities.
 
 ---
 
 # Relationships
 
-Archive visualizes Relationships between Knowledge.
+Archive visualizes Project-owned Relationships between Object endpoints.
 
-Examples include:
+Version 1 supports only:
 
-- related
+- Related
+
+Future specialized type examples include:
+
 - depends on
 - expands
 - references
 - duplicates
 - belongs to
 
-Relationships provide navigation rather than hierarchy.
+The specialized examples are not current Version 1 Relationship types. Knowledge-to-Knowledge navigation uses references, Tags and Object associations rather than Relationship endpoints.
 
 ---
 
@@ -346,7 +351,7 @@ Every idea, decision and discovery should remain accessible, connected and under
 
 # Principles
 
-- Everything becomes Knowledge.
+- Durable informational records become Knowledge; domain entities and Resources remain distinct.
 - Original sources remain immutable.
 - Archive presents rather than analyzes.
 - Objects organize understanding.

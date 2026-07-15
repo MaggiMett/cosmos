@@ -26,13 +26,13 @@ Cosmos is the highest-level domain object.
 
 A Project represents a vision that is transformed into reality.
 
-A Project contains everything that belongs to achieving that vision.
+A Project logically organizes everything that contributes to achieving that vision. Logical inclusion does not transfer ownership of native Resource files.
 
 This includes:
 
 - Knowledge
 - Objects
-- Resources
+- Resource mappings
 - Relationships
 - Workspaces
 - Decisions
@@ -163,13 +163,14 @@ Knowledge represents structured information stored inside Cosmos.
 
 Every meaningful informational record preserved by Cosmos becomes Knowledge. Resources remain separate implementation assets.
 
+Projects, Objects, Relationships, Blueprints and Resources remain distinct domain concepts. They do not become Knowledge; durable descriptions, summaries, analyses, decisions or transcripts about them may become Knowledge.
+
 Knowledge may originate from:
 
 - Captures
-- Files
-- Documents
-- Chats
-- Blueprints
+- submitted informational records from files and documents
+- explicitly promoted conversation records
+- durable descriptions of Blueprints
 - Decisions
 - External sources
 
@@ -243,13 +244,15 @@ Cosmos may suggest improvements but never changes User Tags automatically.
 
 # Relationship
 
-Relationships connect Objects and Knowledge.
+Relationships are persistent Project-owned domain records that connect exactly two Objects.
 
 Relationships represent meaningful connections.
 
 Version 1 defines one universal relationship:
 
 - Related
+
+Objects reference Relationships, but neither endpoint exclusively owns the record. Nodes and Connectors only visualize it.
 
 Additional relationship types may be introduced later without changing the underlying architecture.
 

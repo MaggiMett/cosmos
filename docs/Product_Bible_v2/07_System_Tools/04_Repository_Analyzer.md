@@ -4,7 +4,7 @@
 
 The Repository Analyzer continuously understands the technical structure of project repositories.
 
-It transforms source code, configuration and project structure into structured Runtime knowledge that can be used by Journeyman, the Knowledge Runtime and other System Tools.
+It transforms observations about source code, configuration and project structure into structured analysis records that can be stored as Knowledge and used by Journeyman, the Knowledge Runtime and other System Tools.
 
 The Repository Analyzer understands projects.
 
@@ -173,7 +173,7 @@ The Analyzer identifies:
 - extensions
 - plugins
 
-Structure becomes Runtime knowledge.
+Durable information about structure may become Knowledge. The repository Resources themselves remain distinct.
 
 ---
 
@@ -205,13 +205,13 @@ Repository Objects may include:
 - extensions
 - configuration objects
 
-Objects become part of the Knowledge Runtime.
+Confirmed Objects are created as domain entities through Object Service. Durable descriptions and analysis of them may be stored separately as Knowledge.
 
 ---
 
 # Relationship Discovery
 
-Relationships may include:
+The Analyzer may detect technical connections such as:
 
 - imports
 - references
@@ -220,7 +220,7 @@ Relationships may include:
 - dependencies
 - runtime usage
 
-Relationships strengthen repository understanding.
+In Version 1 these technical connections may be stored as analysis Knowledge and may produce candidate `Related` Relationships between two Objects. Specialized Relationship types are future examples only.
 
 ---
 
@@ -269,7 +269,7 @@ The Analyzer produces:
 
 - repository metadata
 - discovered Objects
-- discovered Relationships
+- candidate `Related` Relationships between Objects
 - technology profile
 - architecture summary
 - Review candidates
@@ -334,7 +334,7 @@ Users and Runtime clients should work with meaningful project understanding inst
 - Analysis is incremental.
 - Repository contents remain unchanged.
 - AI enhances understanding.
-- Objects and Relationships become Knowledge.
+- Objects and Relationships remain domain records; durable analysis about them may become Knowledge.
 - Journeyman consumes repository understanding.
 - Structural changes are continuously detected.
 - Understanding grows over time.

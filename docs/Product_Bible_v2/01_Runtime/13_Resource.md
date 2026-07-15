@@ -67,7 +67,7 @@ Future Extensions may introduce additional Resource types.
 
 Resources remain owned by their native repository or external source.
 
-Objects reference Resources through stable mappings.
+Projects own stable Resource mappings, references and metadata. Objects use those mappings to reference Resources.
 
 One Object may reference:
 
@@ -118,6 +118,8 @@ Resources contain implementation.
 
 Knowledge provides understanding.
 
+Resources never become Knowledge. Durable informational records that describe, summarize or analyze a Resource may become Knowledge while the Resource remains distinct.
+
 ---
 
 # Relationships
@@ -159,7 +161,7 @@ Cosmos should detect changes without requiring users to work exclusively inside 
 
 # Import
 
-Existing Resources may be imported into Projects.
+Existing Resources may be mapped into Projects.
 
 Journeyman analyzes:
 
@@ -168,7 +170,7 @@ Journeyman analyzes:
 - naming conventions
 - dependencies
 
-Resources are then connected to existing or newly created Objects.
+Project-owned mappings then connect Resources to existing or newly created Objects. The native assets remain owned by their repository or external source.
 
 ---
 
@@ -233,6 +235,7 @@ Instead, Cosmos should provide understanding while allowing every Resource to re
 - Resources implement or support Objects.
 - Knowledge explains Resources.
 - Objects reference Resources.
+- Projects own Resource mappings, not native Resource files.
 - Resources remain technology compatible.
 - Cosmos never replaces repository structures.
 - External tools remain first-class citizens.

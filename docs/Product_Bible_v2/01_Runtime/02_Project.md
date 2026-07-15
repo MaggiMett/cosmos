@@ -6,7 +6,7 @@ A Project represents the complete journey from an initial idea to a finished pro
 
 Projects are the highest organizational unit inside Cosmos.
 
-Everything that contributes to realizing a vision belongs to a Project.
+Everything that contributes to realizing a vision is organized by or referenced from a Project. This logical scope does not transfer ownership of native Resource files.
 
 A Project defines meaning.
 
@@ -39,7 +39,7 @@ A Project organizes:
 
 - Objects
 - Knowledge
-- Resources
+- Resource mappings
 - Relationships
 - Workspaces
 - Runtime references
@@ -86,7 +86,7 @@ Every Object has exactly one primary Project. It may still be referenced from ot
 Objects may reference:
 
 - Knowledge
-- Resources
+- Resource mappings
 - Relationships
 - Tags
 - Versions
@@ -104,7 +104,7 @@ Knowledge includes:
 - ideas
 - captures
 - documentation
-- discussions
+- promoted discussion records
 - discoveries
 - decisions
 
@@ -114,7 +114,7 @@ Knowledge evolves throughout the lifetime of the Project.
 
 # Resources
 
-Projects reference Resources.
+Projects reference Resources through stable Resource mappings.
 
 Resources represent technical implementation assets such as:
 
@@ -126,6 +126,8 @@ Resources represent technical implementation assets such as:
 - configuration
 
 Resources remain compatible with their native technologies.
+
+Native repositories or external sources own the Resource files. A Project owns only its mappings, references and metadata.
 
 Cosmos never replaces existing project structures.
 
@@ -178,13 +180,13 @@ Project Themes may customize appearance without affecting functionality.
 
 Projects are expected to evolve.
 
-Ideas become Knowledge.
+Ideas may be preserved as Knowledge.
 
-Knowledge becomes Objects.
+Knowledge may inform the creation and evolution of Objects without becoming those Objects.
 
-Objects accumulate Resources.
+Objects accumulate Resource mappings.
 
-Resources become real products.
+Native Resources implement real products while remaining externally owned.
 
 Projects therefore grow naturally over time.
 
@@ -235,7 +237,8 @@ It continuously collects ideas, knowledge, implementation and history until the 
 - Every Project begins with a vision.
 - Projects organize meaning.
 - Projects contain Objects.
-- Objects reference Knowledge and Resources.
+- Projects own Relationship records and Resource mappings.
+- Objects reference Knowledge, Relationships and Resource mappings.
 - Workspaces work on Projects.
 - Themes never change Project logic.
 - Projects evolve continuously.

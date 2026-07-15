@@ -8,6 +8,8 @@ It coordinates the creation, processing, refinement, organization and discovery 
 
 Knowledge Runtime transforms information into understanding.
 
+It receives Knowledge only after ingestion through existing Runtime Services. Domain entities and Resources remain distinct; only durable informational records about them enter the Knowledge lifecycle.
+
 ---
 
 # Philosophy
@@ -33,7 +35,7 @@ The Knowledge Runtime is responsible for:
 - coordinating Knowledge Processing
 - managing Knowledge versions
 - maintaining Object associations
-- updating Relationships
+- coordinating accepted `Related` Relationship updates through Relationship Service
 - triggering Discovery
 - exposing Knowledge to Runtime Services
 
@@ -81,31 +83,30 @@ Knowledge may continue evolving indefinitely.
 
 # Sources
 
-Knowledge may originate from:
+Durable Knowledge records may originate from:
 
 - Capture
-- Blueprint
-- Chat
-- Imported files
-- Images
-- PDFs
-- Audio
-- Repository analysis
+- durable descriptions of Blueprints
+- explicitly promoted conversation records
+- informational records ingested from files, images, PDFs or audio
+- repository analysis records
 - Manual creation
 
 Every source remains permanently traceable.
 
+The source entity or Resource never becomes Knowledge itself.
+
 ---
 
-# Capture
+# Ingestion
 
-Captures represent the primary entry point.
+Knowledge enters through Knowledge Service. Capture is the primary user-facing entry point, while explicit conversation or interaction promotion uses the same Service boundary.
 
-A Capture is stored immediately.
+Ingested Knowledge is stored immediately.
 
 No review is required before storage.
 
-Users should never lose ideas because they were interrupted.
+Users should never lose submitted information because they were interrupted.
 
 ---
 
@@ -118,7 +119,7 @@ Examples include:
 - original Capture
 - imported PDF
 - imported image
-- chat message
+- promoted chat message
 
 Every later refinement references the original source.
 
@@ -130,12 +131,14 @@ Nothing meaningful is overwritten.
 
 After storage the Knowledge Processor analyzes new Knowledge.
 
+Knowledge Processor is the first processing stage after ingestion and storage, not the entry point into Knowledge Runtime.
+
 Typical processing includes:
 
 - metadata extraction
 - Tag suggestions
 - Object suggestions
-- Relationship discovery
+- candidate `Related` Relationship discovery between Objects
 - duplicate detection
 - semantic analysis
 
@@ -147,16 +150,18 @@ Users are never blocked.
 
 # Linking
 
-Processed Knowledge may become linked to:
+Processed Knowledge may become associated with:
 
 - Objects
-- Resources
+- Resource mappings
 - other Knowledge
 - Projects
 
 Links are additive.
 
 Existing links are never removed automatically.
+
+Knowledge associations are not Version 1 Relationship endpoints. Accepted Relationship records connect exactly two Objects through Relationship Service.
 
 ---
 
@@ -170,7 +175,7 @@ Discovery may identify:
 - missing information
 - inconsistent terminology
 - emerging concepts
-- possible Relationships
+- possible `Related` Relationships between Objects
 
 Discovery collects evidence over time.
 
@@ -314,6 +319,7 @@ Cosmos continuously transforms growing information into an increasingly connecte
 # Principles
 
 - Knowledge is stored immediately.
+- Ingestion and storage precede Knowledge Processor execution.
 - Original sources are immutable.
 - Processing happens asynchronously.
 - Discovery prefers evidence over interruption.

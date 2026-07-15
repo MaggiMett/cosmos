@@ -36,9 +36,9 @@ Objects are responsible for:
 
 - representing meaning
 - connecting Knowledge
-- referencing Resources
+- referencing Resource mappings
 - storing metadata
-- maintaining Relationships
+- referencing Project-owned Relationships
 - preserving history
 - tracking versions
 
@@ -96,7 +96,7 @@ Knowledge may include:
 - Captures
 - Documentation
 - Decisions
-- Discussions
+- promoted discussion records
 - References
 - Research
 - Blueprints
@@ -109,7 +109,7 @@ It never replaces it.
 
 # Resources
 
-Objects reference Runtime Resources.
+Objects reference Runtime Resources through stable Resource mappings.
 
 Examples include:
 
@@ -130,11 +130,14 @@ Objects simply provide meaningful access to them.
 
 # Relationships
 
-Objects are connected through Relationships.
+Objects are the only Version 1 Relationship endpoints. Each Relationship is a Project-owned record referenced by both endpoint Objects.
 
-Examples include:
+The current Version 1 type is:
 
-- related
+- Related
+
+Future specialized type examples include:
+
 - parent
 - child
 - dependency
@@ -241,9 +244,9 @@ Objects bridge human understanding and technical implementation.
 - Objects represent meaning.
 - Objects are independent.
 - Objects reference Knowledge.
-- Objects reference Resources.
+- Objects reference Resource mappings.
 - Objects preserve history.
-- Objects maintain Relationships.
+- Objects reference Project-owned Relationships.
 - Objects inherit Context.
 - Objects never depend on presentation.
 - Objects continuously evolve.

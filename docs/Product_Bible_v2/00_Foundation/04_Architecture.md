@@ -67,7 +67,7 @@ Projects represent visions.
 
 Every Project provides a structured environment for transforming an idea into reality.
 
-Projects organize Objects and may connect to one or more repositories.
+Projects organize Objects, Project-owned Relationships and Resource mappings, and may connect to one or more repositories.
 
 They never duplicate Knowledge.
 
@@ -155,6 +155,8 @@ Knowledge stores understanding.
 
 It preserves ideas, documentation, discoveries and decisions.
 
+Domain entities and Resources remain distinct. Durable informational records about them may be stored as Knowledge; the entities and Resources themselves never become Knowledge.
+
 Knowledge grows continuously through refinement and may support multiple Projects without duplication.
 
 ---
@@ -185,11 +187,11 @@ Together they build contextual understanding without imposing a rigid hierarchy.
 
 # Relationships
 
-Relationships connect Objects and Knowledge.
+Relationships are persistent Project-owned records that connect exactly two Object endpoints.
 
-They allow Cosmos to reveal patterns, dependencies and semantic connections.
+Version 1 supports only the universal `Related` type. Specialized types are future extensions.
 
-Nodes and Connectors visualize Relationships without owning them.
+Objects reference Relationships. Nodes and Connectors visualize them without owning them.
 
 ---
 

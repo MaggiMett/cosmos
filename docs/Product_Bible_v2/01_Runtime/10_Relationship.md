@@ -2,15 +2,13 @@
 
 ## Purpose
 
-Relationships connect Objects inside Cosmos.
+Relationships are persistent Project-owned domain records that connect Objects inside Cosmos.
 
 They describe meaningful connections between concepts, allowing Cosmos to understand how Projects evolve over time.
 
 Relationships are independent from visual representation.
 
-Nodes display Relationships.
-
-Objects own them.
+Nodes and Connectors display Relationships. Objects reference them as endpoints.
 
 ---
 
@@ -30,7 +28,7 @@ Meaning emerges from both Objects and the Relationships between them.
 
 Relationships are responsible for:
 
-- connecting Objects
+- connecting exactly two Object endpoints
 - expressing semantic meaning
 - supporting discovery
 - enabling navigation
@@ -45,7 +43,11 @@ They only describe connections.
 
 # Ownership
 
-Relationships belong to Objects.
+Every Relationship has an immutable ID, is owned by exactly one Project and contains exactly two Object endpoint IDs.
+
+Objects reference the Relationship record. Neither endpoint Object exclusively owns it.
+
+Relationship Service validates and performs durable changes. Persistence stores the Relationship with the owning Project's semantic domain data.
 
 Nodes only visualize them.
 
@@ -59,7 +61,7 @@ Version 1 defines one universal Relationship type.
 
 ## Related
 
-A Related Relationship simply states:
+A `Related` Relationship simply states:
 
 "These Objects are meaningfully connected."
 
@@ -76,13 +78,13 @@ Examples include:
 
 Related intentionally remains generic.
 
-More specialized Relationship types may be introduced later.
+No other Relationship type is supported in Version 1.
 
 ---
 
 # Future Relationship Types
 
-Future versions may introduce:
+Future versions may introduce types such as:
 
 - Parent
 - Child
@@ -93,6 +95,8 @@ Future versions may introduce:
 - Derived From
 
 These are extensions of the Relationship system.
+
+They are examples only and are not valid Version 1 Relationship types.
 
 The underlying architecture remains unchanged.
 
@@ -179,6 +183,9 @@ The goal is to help users discover patterns, understand complexity and continuou
 # Principles
 
 - Relationships connect Objects.
+- Every Relationship has exactly two Object endpoints.
+- Projects own Relationship records.
+- Version 1 supports only `Related`.
 - Nodes visualize Relationships.
 - Relationships represent meaning.
 - Discovery never changes user data automatically.

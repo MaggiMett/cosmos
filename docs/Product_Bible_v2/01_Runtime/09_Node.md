@@ -104,7 +104,7 @@ Relationships are visualized through Connectors.
 
 Nodes never store relationships themselves.
 
-Relationships belong to the Object model.
+Relationships are Project-owned domain records whose endpoints are Objects.
 
 Nodes simply display them.
 
@@ -216,6 +216,6 @@ Users should feel like they are exploring a living universe rather than browsing
 - Nodes never own data.
 - Themes define appearance.
 - Skins customize Nodes.
-- Relationships belong to Objects.
+- Relationships are Project-owned records between Object endpoints.
 - Navigation always preserves orientation.
 - Every Node remains replaceable.

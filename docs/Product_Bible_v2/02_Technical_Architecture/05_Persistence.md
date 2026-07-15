@@ -57,7 +57,7 @@ Examples include:
 - Projects
 - Objects
 - Knowledge
-- Relationships
+- Relationships (`Related` only in Version 1)
 - Tags
 
 ---
@@ -109,6 +109,8 @@ Persistence stores references to Resources.
 
 It does not replace them.
 
+Projects persist Resource mappings, references and metadata. Native repository files and external assets remain owned and stored by their source.
+
 ---
 
 ## Cache
@@ -143,17 +145,23 @@ owns
 
 Objects
 
+Project
+
+owns
+
+Relationship records and Resource mappings
+
 Object
 
 references
 
-Knowledge
+Knowledge, Relationship records and Resource mappings
 
 Knowledge
 
 references
 
-Resources
+Resource mappings
 
 Entity
 
@@ -261,6 +269,7 @@ A backup preserves:
 - Knowledge
 - Objects
 - Relationships
+- Resource mappings
 - Tags
 - Workspace definitions
 - Entity identity and configuration

@@ -36,7 +36,7 @@ Blueprint Builder is responsible for:
 - instantiating Objects
 - defining default fields
 - defining Blueprint Tags
-- defining Blueprint Relationships
+- defining expected `Related` Relationship suggestions
 
 Blueprint Builder never stores Object content.
 
@@ -86,8 +86,8 @@ A Blueprint may define:
 - default Tags
 - fields
 - sections
-- Relationships
-- Resources
+- expected `Related` Relationship suggestions
+- Resource references
 - child Objects
 - validation rules
 
@@ -134,7 +134,7 @@ Users remain free to modify User Tags after Object creation.
 
 # Blueprint Relationships
 
-Blueprints may define expected Relationships.
+Blueprints may define expected Relationship suggestions. In Version 1, every accepted Relationship connects two Objects and uses the `Related` type.
 
 Example:
 
@@ -142,7 +142,7 @@ Minecraft Item
 
 ↓
 
-belongs to
+Related
 
 ↓
 
@@ -152,13 +152,13 @@ Character
 
 ↓
 
-belongs to
+Related
 
 ↓
 
 Faction
 
-Relationships become suggestions rather than requirements.
+Specialized meanings such as `belongs to` are future Relationship type examples only. In Version 1 they may inform the suggestion but do not replace the `Related` type.
 
 ---
 
@@ -170,7 +170,7 @@ Creating an Object from a Blueprint performs:
 - assign Blueprint
 - create default fields
 - assign default Tags
-- establish default Relationships
+- request default `Related` Relationships through Relationship Service
 
 The Object immediately becomes part of the Project.
 
@@ -236,7 +236,7 @@ Examples include:
 
 - suggesting fields
 - identifying repeated patterns
-- proposing Relationships
+- proposing `Related` Relationship suggestions
 - explaining existing Blueprints
 
 The user always defines the final structure.
@@ -286,7 +286,7 @@ Every extension follows the same Blueprint Runtime contract.
 
 Blueprint Builder should allow users to gradually formalize recurring ideas without reducing flexibility.
 
-As Projects mature, Blueprints transform repeated manual work into reusable knowledge structures.
+As Projects mature, Blueprints transform repeated manual work into reusable Object structures.
 
 ---
 

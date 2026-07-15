@@ -135,7 +135,7 @@ Examples include:
 - Text
 - Repository files
 
-Imported content becomes a new Capture source.
+Imported informational content becomes a new Capture source. Native files that are Resources remain distinct and externally owned.
 
 ---
 
@@ -164,6 +164,8 @@ Unsubmitted drafts never become Knowledge.
 # Submission
 
 Knowledge enters the Runtime only after explicit submission.
+
+Submission is the ingestion boundary. Knowledge Processor runs only after the submitted Knowledge has been stored.
 
 Submission performs:
 
@@ -213,7 +215,7 @@ Typical processing includes:
 
 - metadata extraction
 - Object suggestions
-- Relationship discovery
+- candidate `Related` Relationship discovery between Objects
 - duplicate analysis
 - semantic indexing
 

@@ -6,7 +6,7 @@ The Knowledge Processor transforms newly submitted Knowledge into structured Run
 
 It analyzes incoming content, extracts semantic information and prepares Knowledge for long-term organization.
 
-The Knowledge Processor is the primary entry point into the Knowledge Runtime.
+The Knowledge Processor is the first processing stage after Knowledge has entered the Knowledge Runtime and been stored.
 
 ---
 
@@ -37,7 +37,7 @@ The Knowledge Processor is responsible for:
 - processing submitted Captures
 - extracting metadata
 - identifying Objects
-- suggesting Relationships
+- suggesting candidate `Related` Relationships between Objects
 - suggesting Tags
 - generating semantic summaries
 - scheduling further analysis
@@ -122,16 +122,16 @@ The Runtime schedules processing according to Job availability.
 
 # Input Sources
 
-The Knowledge Processor may process:
+The Knowledge Processor may process stored Knowledge originating from:
 
 - Captures
-- imported files
-- chat conversations
-- Blueprints
-- generated documents
-- repository information
+- informational records ingested from files
+- explicitly promoted conversation records
+- durable descriptions of Blueprints
+- generated informational records
+- repository analysis records
 
-Every source becomes Knowledge before processing.
+Every input is already Knowledge before processing. Source domain entities and Resources remain distinct and do not become Knowledge themselves.
 
 ---
 
@@ -182,15 +182,16 @@ Detected Objects become Review candidates until confirmed.
 
 # Relationship Detection
 
-Possible Relationships include:
+In Version 1, the Processor may suggest only the `Related` Relationship between two candidate Object endpoints.
 
-- related
+Future semantic type examples include:
+
 - depends on
 - expands
 - duplicates
 - references
 
-Relationships remain suggestions until appropriate.
+The specialized examples are analysis signals only in Version 1, not supported Relationship types. All Relationship candidates remain suggestions until user acceptance through Relationship Service.
 
 ---
 
@@ -226,7 +227,7 @@ The Processor produces:
 - enriched Knowledge
 - suggested Tags
 - candidate Objects
-- candidate Relationships
+- candidate `Related` Relationships between Objects
 - semantic summary
 - Review candidates
 
@@ -268,6 +269,7 @@ The Knowledge Processor should quietly transform raw information into structured
 # Principles
 
 - Processing is asynchronous.
+- Processing begins only after Knowledge ingestion and storage.
 - Original Captures remain immutable.
 - AI enhances processing.
 - Runtime Context improves understanding.

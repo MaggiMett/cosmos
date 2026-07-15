@@ -310,9 +310,9 @@ It never changes Permissions or Runtime behavior.
 
 ---
 
-# Relationship Awareness
+# Interaction Familiarity
 
-Entities may react differently depending on existing relationships.
+Entities may react differently based on authorized interaction history or familiarity data.
 
 Examples:
 
@@ -336,7 +336,7 @@ first meeting
 
 introduction
 
-Relationship data remains separate from Behavior Rules.
+This familiarity is not a Version 1 Relationship record. Version 1 Relationship endpoints are Objects, not Entities. Interaction history remains separate from Behavior Rules.
 
 ---
 
@@ -384,9 +384,9 @@ Examples include:
 - companion greeting
 - tutorial completed
 
-History supports richer future interactions.
+Interaction history is temporary by default and may support richer future interactions.
 
-History is not Knowledge.
+Recorded interaction history remains interaction data, not Knowledge. Only an explicit promotion through Knowledge Service creates a durable Knowledge record about the interaction; the original interaction record remains distinct and traceable.
 
 ---
 
@@ -433,5 +433,6 @@ Users should experience natural cooperation between Entities without losing the 
 - Context is inherited automatically.
 - Runtime Services perform Runtime work.
 - Conversations are interactions.
+- Interaction history remains temporary unless explicitly promoted to Knowledge through Knowledge Service.
 - AI enhances interaction but never defines it.
 - Every interaction leaves the Runtime in a consistent State.

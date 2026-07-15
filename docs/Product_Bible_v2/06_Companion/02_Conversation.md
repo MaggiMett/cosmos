@@ -129,7 +129,7 @@ Conversation may reference:
 - Blueprints
 - Resources
 
-Knowledge remains the single source of truth.
+Knowledge is authoritative for durable informational records. Objects, Relationships, Blueprints and Resources remain authoritative domain concepts in their own right.
 
 Conversation never stores independent knowledge.
 
@@ -254,6 +254,8 @@ Long-term knowledge remains inside the Knowledge Runtime.
 
 Conversation history is temporary.
 
+Selected messages or transcripts become Knowledge only after explicit promotion through Knowledge Service. Promotion creates a durable Knowledge record with source traceability; it does not make the Conversation session itself Knowledge.
+
 ---
 
 # Entity Awareness
@@ -350,7 +352,7 @@ The user should naturally discuss ideas, projects and questions while the Compan
 - Conversation is not the Brain.
 - Conversation is not the Provider.
 - Runtime Context is inherited.
-- Knowledge remains the single source of truth.
+- Knowledge is authoritative for durable informational records.
 - AI enhances conversation.
 - Personality shapes communication.
 - Runtime Services perform actions.
