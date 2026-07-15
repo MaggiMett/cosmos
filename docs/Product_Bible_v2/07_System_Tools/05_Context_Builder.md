@@ -4,11 +4,19 @@
 
 The Context Builder assembles the minimum complete Runtime Context required to perform a specific task.
 
-Its purpose is to provide Runtime Workers, Capability Bundles and Providers with exactly the information they need.
+Its purpose is to provide System Tools, Capability Bundles and Providers with exactly the information they need.
 
 Nothing more.
 
 Nothing less.
+
+---
+
+# Architectural Position
+
+Context Builder is a registered System Tool Extension.
+
+It performs task-oriented Context assembly through Core Runtime contracts and is not a Runtime Service or independent Runtime system.
 
 ---
 
@@ -48,10 +56,10 @@ The Context Builder never performs reasoning.
 The Context Builder operates on:
 
 - Knowledge Runtime
-- Object Runtime
+- Object Service
 - Project Runtime
 - Workspace Runtime
-- Review Runtime
+- Review Service
 - Repository Runtime
 - Bundle Runtime
 
@@ -318,7 +326,7 @@ Every source integrates through the same Context contract.
 
 # Design Goal
 
-The Context Builder should ensure that every Runtime Worker and Provider receives a precise, minimal and complete understanding of the current task.
+The Context Builder should ensure that every System Tool and Provider receives a precise, minimal and complete understanding of the current task.
 
 High-quality Context should become one of the defining strengths of Cosmos.
 

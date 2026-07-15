@@ -6,7 +6,9 @@ A Tool represents a reusable capability inside Cosmos.
 
 Tools allow users or the system to perform specific tasks while remaining independent from Projects, Workspaces and Themes.
 
-Every capability inside Cosmos is implemented as a Tool.
+Every task-oriented capability that follows the Tool contract is implemented as a Tool.
+
+Core Runtime coordination is not a Tool capability.
 
 ---
 
@@ -73,6 +75,10 @@ Examples include:
 System Tools usually have no direct user interface.
 
 They operate automatically in the background.
+
+System Tools remain Extensions that execute task-oriented work through Runtime contracts.
+
+Runtime Services, Registries, Persistence, Entity Runtime, Provider Runtime, Theme Runtime, Event Dispatcher and Job Scheduler are Core Runtime infrastructure and are not Tool definitions or Tool Instances.
 
 ---
 
@@ -278,4 +284,5 @@ Every Tool follows the same principles regardless of its purpose.
 - Multiple Tool Instances are allowed.
 - Themes change appearance only.
 - Every Tool follows the same contract.
+- Core Runtime infrastructure is not a Tool.
 - Everything is extensible.

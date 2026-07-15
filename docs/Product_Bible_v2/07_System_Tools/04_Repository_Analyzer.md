@@ -12,6 +12,14 @@ It does not modify them.
 
 ---
 
+# Architectural Position
+
+Repository Analyzer is a registered System Tool Extension.
+
+It performs task-oriented repository analysis through Core Runtime contracts and is not a Runtime Service or independent Runtime system.
+
+---
+
 # Philosophy
 
 Repositories should be understood before they are modified.
@@ -50,7 +58,7 @@ The Repository Analyzer operates on:
 
 - Project Runtime
 - Knowledge Runtime
-- Object Runtime
+- Object Service
 - Job Runtime
 - Provider Runtime (optional)
 
@@ -278,7 +286,7 @@ Repository knowledge may be used by:
 - Prompt Builder
 - Context Builder
 - Knowledge Runtime
-- Review Runtime
+- Review Service
 
 The Repository Analyzer never performs implementation work.
 
@@ -316,7 +324,7 @@ Every extension integrates into the Repository Analyzer.
 
 The Repository Analyzer should allow Cosmos to understand software projects as structured knowledge rather than collections of files.
 
-Users and Runtime Workers should work with meaningful project understanding instead of raw source code.
+Users and Runtime clients should work with meaningful project understanding instead of raw source code.
 
 ---
 

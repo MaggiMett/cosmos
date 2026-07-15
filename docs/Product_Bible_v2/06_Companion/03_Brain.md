@@ -14,6 +14,16 @@ It does not perform Runtime work.
 
 ---
 
+# Architectural Position
+
+The Brain is an internal Companion coordination component.
+
+It is not a Tool, Runtime Service or independent Runtime system.
+
+It coordinates existing Entity Runtime, Bundle Runtime, Knowledge Runtime and Provider Runtime contracts without replacing their ownership.
+
+---
+
 # Philosophy
 
 The Brain is not an AI model.

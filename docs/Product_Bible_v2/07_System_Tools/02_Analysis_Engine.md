@@ -10,6 +10,14 @@ Its purpose is to understand.
 
 ---
 
+# Architectural Position
+
+Analysis Engine is a registered System Tool Extension.
+
+It performs task-oriented analysis through Core Runtime contracts and is not a Runtime Service or independent Runtime system.
+
+---
+
 # Philosophy
 
 Knowledge gains value through connections.
@@ -46,10 +54,10 @@ The Analysis Engine never modifies Knowledge directly.
 The Analysis Engine operates on:
 
 - Knowledge Runtime
-- Object Runtime
-- Relationship Runtime
-- Tag Runtime
-- Review Runtime
+- Object Service
+- Relationship Service
+- Tag Service
+- Review Service
 - Job Runtime
 - Provider Runtime (optional)
 
@@ -350,7 +358,7 @@ Future Extensions may introduce:
 - collaborative analysis
 - domain-specific analyzers
 
-Every extension integrates into the Analysis Runtime.
+Every extension integrates into the Analysis Engine through the existing System Tool contract.
 
 ---
 

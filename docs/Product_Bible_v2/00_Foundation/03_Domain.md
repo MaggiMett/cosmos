@@ -16,7 +16,7 @@ It intentionally contains no implementation details, user interface descriptions
 
 Cosmos is the complete environment in which users create, organize and evolve their personal universe.
 
-It connects projects, knowledge, tools and intelligent systems into one coherent ecosystem.
+It connects projects, knowledge, tools, Entities and intelligent systems into one coherent ecosystem.
 
 Cosmos is the highest-level domain object.
 
@@ -120,6 +120,10 @@ Examples:
 - Runtime Translation
 
 System Tools support the system itself and usually have no direct user interface.
+
+System Tools remain task-oriented capabilities.
+
+Core Runtime infrastructure is not a Tool.
 
 ---
 
@@ -279,6 +283,20 @@ Context reduces manual configuration and helps every Tool understand where it is
 
 ---
 
+# Entity
+
+An Entity is a persistent identity with an active presence inside the Cosmos Runtime.
+
+Entities may interact with users, other Entities and the environment.
+
+Entity identity and configuration remain independent from visual appearance and optional AI Providers.
+
+Entities never own business logic.
+
+They request actions through Runtime Services.
+
+---
+
 # Theme
 
 A Theme defines the visual representation of Cosmos.
@@ -300,7 +318,7 @@ Themes never change the underlying domain model.
 
 # Companion
 
-The Companion is the user's constant assistant inside Cosmos.
+The Companion is the user's constant Entity and assistant inside Cosmos.
 
 The Companion exists independently from Projects and accompanies the user throughout the entire system.
 
@@ -321,4 +339,5 @@ The Companion never replaces user decisions.
 - Knowledge grows continuously.
 - Resources implement Objects.
 - Context is inherited.
+- Entities provide Runtime presence without owning business logic.
 - Everything is designed to be extensible.

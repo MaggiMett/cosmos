@@ -66,6 +66,22 @@ Future Registry categories may be added without changing the general Registry mo
 
 ---
 
+# Taxonomy Boundaries
+
+The System Tool Registry contains task-oriented System Tool definitions such as Knowledge Processor, Analysis Engine, Repository Analyzer, Context Builder, Prompt Builder and Journeyman.
+
+Provider Runtime, Theme Runtime, Event Dispatcher and Job Scheduler are Core Runtime infrastructure and are never registered as System Tools.
+
+Provider definitions register through the Provider Registry.
+
+Entity definitions register through the shared Registry System as components declared by their source Extension and are instantiated by the Entity Runtime.
+
+Registries manage definitions only.
+
+Active Entity State remains owned by the Entity Runtime.
+
+---
+
 # Registry Entry
 
 Every registered component is represented by a Registry Entry.

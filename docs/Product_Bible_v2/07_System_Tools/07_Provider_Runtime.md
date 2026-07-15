@@ -12,11 +12,21 @@ It never performs reasoning itself.
 
 ---
 
+# Architectural Position
+
+Provider Runtime is Core Runtime infrastructure.
+
+It is not a System Tool, Provider Extension or Runtime Service.
+
+Provider definitions register through the Provider Registry, while Provider Runtime owns their selection, routing, authentication and active execution coordination.
+
+---
+
 # Philosophy
 
 The rest of Cosmos should never know which Provider is being used.
 
-Every Runtime Worker, Entity and Capability Bundle communicates only with the Provider Runtime.
+Every System Tool, Entity and Capability Bundle communicates only with the Provider Runtime.
 
 Providers become interchangeable implementations.
 
@@ -46,10 +56,10 @@ The Provider Runtime never owns Runtime Context.
 
 The Provider Runtime operates on:
 
-- Extension Runtime
+- Extension System
 - Job Runtime
-- Configuration Runtime
-- Security Runtime
+- Runtime Configuration through Persistence
+- Permission System
 
 The Provider Runtime serves the entire Cosmos Runtime.
 
@@ -262,7 +272,7 @@ Examples include:
 - local sockets
 - enterprise credentials
 
-Authentication never leaks into Runtime Workers.
+Authentication never leaks into Runtime consumers.
 
 ---
 
@@ -424,7 +434,7 @@ The rest of Cosmos should never care which Provider generated a result.
 # Principles
 
 - Providers are interchangeable.
-- Runtime Workers never access Providers directly.
+- System Tools and other Runtime consumers never access Providers directly.
 - Adapters isolate Provider-specific behavior.
 - Runtime Requests are standardized.
 - Runtime Results are standardized.

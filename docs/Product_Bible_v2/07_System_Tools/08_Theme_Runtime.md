@@ -12,6 +12,16 @@ They never define logic.
 
 ---
 
+# Architectural Position
+
+Theme Runtime is Core Runtime infrastructure.
+
+It is not a System Tool, Theme Extension or Runtime Service.
+
+Theme definitions register through the Theme Registry, while Theme Runtime owns loading, activation and presentation-resource resolution.
+
+---
+
 # Philosophy
 
 Cosmos should feel like one platform with many worlds.
@@ -46,10 +56,10 @@ The Theme Runtime never changes Runtime behavior.
 
 The Theme Runtime operates on:
 
-- Extension Runtime
+- Extension System
 - Entity Runtime
-- UI Runtime
-- Resource Runtime
+- Cosmos UI contracts
+- Resource Service
 
 The Theme Runtime provides presentation resources to the entire Cosmos Runtime.
 

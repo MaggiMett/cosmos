@@ -12,6 +12,18 @@ It does not determine how the Entity looks or which AI Provider it may use.
 
 ---
 
+# Architectural Position
+
+Entity Roles are part of registered Entity definitions used by Entity Runtime.
+
+They are not Tools, Runtime Services or independent Runtime systems.
+
+They are not registered as an independent component category.
+
+Role definitions use the shared Registry System through their Entity definition and remain part of the Entity configuration contract.
+
+---
+
 # Philosophy
 
 The Entity Runtime provides life.

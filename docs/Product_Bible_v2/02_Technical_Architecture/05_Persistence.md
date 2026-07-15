@@ -71,6 +71,7 @@ Examples include:
 - installed Extensions
 - enabled Themes
 - Workspace Blueprints
+- Entity identity and configuration
 - user preferences
 
 ---
@@ -86,6 +87,7 @@ Examples include:
 - active selections
 - camera positions
 - temporary drafts
+- Entity position and restorable Entity State
 
 Runtime State may be restored after restart.
 
@@ -149,6 +151,14 @@ Knowledge
 references
 
 Resources
+
+Entity
+
+owns
+
+its persistent identity and configuration
+
+Active Entity Runtime State references the immutable Entity ID.
 
 Ownership should remain explicit.
 
@@ -242,6 +252,7 @@ A backup preserves:
 - Relationships
 - Tags
 - Workspace definitions
+- Entity identity and configuration
 - Runtime configuration
 
 Cache is excluded.
@@ -319,6 +330,7 @@ Users should trust that every important piece of work remains safe while the Run
 - Persistence owns durability.
 - Runtime owns behavior.
 - Services access Persistence.
+- Active Runtime systems never access Persistence directly.
 - Extensions never bypass Persistence.
 - IDs remain immutable.
 - Transactions remain atomic.

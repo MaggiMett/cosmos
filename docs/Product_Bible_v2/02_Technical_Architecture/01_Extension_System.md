@@ -56,6 +56,16 @@ Examples include:
 
 ---
 
+## Entities
+
+Registered Runtime presences with identity, Scope, Role, Avatar and Behavior configuration.
+
+Entity definitions participate in the shared Extension lifecycle and Registry System.
+
+The Entity Runtime manages active Entity instances after registration.
+
+---
+
 ## Themes
 
 Visual replacements for Runtime components.
@@ -121,6 +131,28 @@ Examples include:
 - Blender
 - Blockbench
 - VS Code
+
+---
+
+# Core Runtime Infrastructure
+
+Core Runtime infrastructure is not an Extension category and is never registered as a Tool.
+
+This includes:
+
+- Runtime Services
+- Registry System
+- Persistence
+- Permission System
+- Entity Runtime
+- Provider Runtime
+- Theme Runtime
+- Event Dispatcher
+- Job Scheduler
+
+Extensions consume these contracts.
+
+They never provide a parallel implementation of them.
 
 ---
 

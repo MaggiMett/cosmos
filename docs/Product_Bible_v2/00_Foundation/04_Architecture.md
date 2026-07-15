@@ -44,7 +44,9 @@ Cosmos
 │   ├── Tags
 │   └── Relationships
 │
-└── System Services
+├── Entities
+│
+└── Runtime Services
 ```
 
 ---
@@ -123,6 +125,8 @@ System Tools support Cosmos in the background.
 
 Tools remain independent from Projects and Themes and operate through Runtime Services.
 
+Core Runtime infrastructure coordinates Tools but is not itself a Tool.
+
 ---
 
 # Objects
@@ -187,6 +191,20 @@ Nodes and Connectors visualize Relationships without owning them.
 
 ---
 
+# Entities
+
+Entities provide persistent identity and active presence inside the Runtime.
+
+The Entity Runtime manages Entity lifecycle and active state.
+
+Entity definitions are resolved through the shared Registry System.
+
+Entity actions and durable changes pass through Runtime Services and Persistence like every other Runtime client.
+
+Entities never own business logic.
+
+---
+
 # Context Flow
 
 Context is composed additively through the active Runtime path.
@@ -225,6 +243,7 @@ Examples include:
 - Capture Templates
 - Providers
 - Integrations
+- Entities
 
 The Core defines contracts.
 
@@ -243,6 +262,10 @@ Knowledge organizes understanding.
 Resources provide implementation.
 
 Tools provide capabilities.
+
+Entities provide Runtime presence and interaction.
+
+Runtime Services own business behavior.
 
 Workspaces organize work.
 

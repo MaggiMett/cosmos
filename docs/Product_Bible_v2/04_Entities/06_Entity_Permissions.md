@@ -12,6 +12,16 @@ The Runtime decides whether those capabilities may be executed.
 
 ---
 
+# Architectural Position
+
+Entity Permissions specialize the shared Permission System for Entity requests.
+
+They do not create an independent permission system, Runtime Service or Runtime category.
+
+Entity Runtime uses this contract while Runtime actions continue through the existing Runtime Service boundary.
+
+---
+
 # Philosophy
 
 Entities should never possess unrestricted access.

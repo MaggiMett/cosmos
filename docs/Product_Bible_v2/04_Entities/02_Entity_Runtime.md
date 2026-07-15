@@ -10,6 +10,16 @@ The Entity Runtime makes Cosmos feel inhabited.
 
 ---
 
+# Architectural Position
+
+Entity Runtime is Core Runtime infrastructure.
+
+It is not a System Tool, Extension or Runtime Service.
+
+It resolves Entity definitions through the shared Registry System, coordinates active Entity lifecycle and calls Runtime Services for business actions and durable changes.
+
+---
+
 # Philosophy
 
 Entities should feel alive without requiring artificial intelligence.
@@ -494,6 +504,10 @@ Personality Profile
 Behavior configuration
 relationship state
 last active State
+
+Persistent Entity data is written through Runtime Services and the Persistence Layer.
+
+Entity Runtime never accesses Persistence directly.
 
 Temporary animation progress is not persisted.
 

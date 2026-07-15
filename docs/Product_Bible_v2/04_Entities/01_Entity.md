@@ -12,6 +12,20 @@ Entities exist independently from AI Providers.
 
 ---
 
+# Architectural Position
+
+Entity is a registered Runtime component category.
+
+Entity definitions are discovered through the shared Registry System.
+
+Runtime Services own business behavior for durable Entity identity and configuration.
+
+Entity Runtime owns active lifecycle, Scope, position and State.
+
+Persistence is accessed only through Runtime Services.
+
+---
+
 # Philosophy
 
 An Entity is not a chat window.
@@ -199,8 +213,7 @@ Typical Services include:
 - Workspace Service
 - Knowledge Service
 - Object Service
-- Review Service
-- Notification Service
+- Job Service
 
 Entities never access Persistence directly.
 

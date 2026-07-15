@@ -10,6 +10,14 @@ The Prompt Builder translates Runtime understanding into Provider understanding.
 
 ---
 
+# Architectural Position
+
+Prompt Builder is a registered System Tool Extension.
+
+It performs task-oriented prompt compilation through Core Runtime contracts and is not a Runtime Service or independent Runtime system.
+
+---
+
 # Philosophy
 
 Providers should never receive raw Runtime data.
@@ -321,7 +329,7 @@ Every extension integrates through the Prompt Builder.
 
 # Design Goal
 
-The Prompt Builder should make Provider communication deterministic, reproducible and independent from individual Runtime Workers.
+The Prompt Builder should make Provider communication deterministic, reproducible and independent from individual System Tools and Runtime clients.
 
 Every Provider should receive the highest possible quality input without knowing anything about Cosmos.
 

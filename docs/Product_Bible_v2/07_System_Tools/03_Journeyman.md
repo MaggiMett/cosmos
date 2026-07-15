@@ -10,6 +10,16 @@ Journeyman transforms plans into completed work.
 
 ---
 
+# Architectural Position
+
+Journeyman is a registered System Tool Extension.
+
+Runtime Worker describes Journeyman's execution role; it is not a separate Runtime component category.
+
+Journeyman performs task-oriented work through Core Runtime contracts and never replaces Runtime Services.
+
+---
+
 # Philosophy
 
 Journeyman is not an AI.
@@ -48,7 +58,7 @@ Journeyman operates on:
 - Knowledge Runtime
 - Bundle Runtime
 - Job Runtime
-- Review Runtime
+- Review Service
 - Provider Runtime
 
 Journeyman introduces no special Runtime architecture.

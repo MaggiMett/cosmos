@@ -10,6 +10,14 @@ The Knowledge Processor is the primary entry point into the Knowledge Runtime.
 
 ---
 
+# Architectural Position
+
+Knowledge Processor is a registered System Tool Extension.
+
+It performs task-oriented processing through Core Runtime contracts and is not a Runtime Service or independent Runtime system.
+
+---
+
 # Philosophy
 
 Users should capture ideas.
@@ -44,9 +52,9 @@ The Knowledge Processor never modifies user intent.
 The Knowledge Processor operates on:
 
 - Knowledge Runtime
-- Object Runtime
-- Tag Runtime
-- Context Runtime
+- Object Service
+- Tag Service
+- Runtime Context
 - Job Runtime
 - Provider Runtime (optional)
 

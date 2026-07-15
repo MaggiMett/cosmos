@@ -57,10 +57,19 @@ Examples include:
 - Tag Service
 - Theme Service
 - Job Service
+- Review Service
 
 Services define Runtime behavior.
 
 Extensions consume Services.
+
+Runtime Services own business behavior for durable Entity identity and configuration.
+
+Review Service owns business behavior for Review Items and decisions.
+
+Entity Runtime owns active Entity lifecycle and State, while Review remains a User Tool presentation.
+
+Neither Runtime component replaces the Runtime Service boundary.
 
 ---
 
@@ -229,6 +238,8 @@ Runtime Services may be used by:
 
 - User Tools
 - System Tools
+- Entities
+- Capability Bundles
 - Companion
 - Journeyman
 - MCP

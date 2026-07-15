@@ -229,7 +229,8 @@ Knowledge Service
 Review Service
 Job Service
 Object Service
-Provider Service
+
+Provider-dependent capabilities use Provider Runtime through its existing contract.
 
 Bundles never access Persistence, Registries or Extension internals directly.
 

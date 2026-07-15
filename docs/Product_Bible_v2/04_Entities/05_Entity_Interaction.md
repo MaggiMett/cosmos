@@ -10,6 +10,16 @@ Interaction creates the social layer of Cosmos.
 
 ---
 
+# Architectural Position
+
+Entity Interaction is an internal contract coordinated by Entity Runtime.
+
+It is not a System Tool, Runtime Service or independent Runtime system.
+
+Runtime actions requested during an interaction continue through the existing Runtime Services.
+
+---
+
 # Philosophy
 
 Entities never communicate directly.

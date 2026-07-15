@@ -16,7 +16,7 @@ Cosmos behaves as one continuous system.
 
 The user should not feel like they are switching between disconnected applications.
 
-Projects, Workspaces, Tools, Knowledge and Resources participate in one coherent Runtime.
+Projects, Workspaces, Tools, Entities, Knowledge and Resources participate in one coherent Runtime.
 
 ---
 
@@ -178,7 +178,7 @@ They:
 - publish Events
 - create Jobs for long-running work
 
-UI, MCP, Companion, Journeyman and Extensions all use the same Services.
+UI, MCP, Entities, Companion, Journeyman and Extensions all use the same Services.
 
 ---
 
@@ -222,6 +222,22 @@ Examples include:
 - Runtime Translation
 
 They operate through Runtime contracts and should avoid unnecessary user interruption.
+
+System Tools execute task-oriented capabilities.
+
+Runtime Services, Registries, Persistence, the Entity Runtime, Provider Runtime, Theme Runtime, Event Dispatcher and Job Scheduler are Core Runtime infrastructure rather than System Tools.
+
+---
+
+# Entity Runtime
+
+The Entity Runtime manages active Entity lifecycle, Scope, State and interaction coordination.
+
+Entity definitions are discovered through the shared Registry System.
+
+Durable Entity identity and configuration are changed through Runtime Services and stored through Persistence.
+
+The Entity Runtime never owns business logic and never accesses Persistence directly.
 
 ---
 

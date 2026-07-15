@@ -10,6 +10,14 @@ The Event Dispatcher enables loose coupling throughout Cosmos.
 
 ---
 
+# Architectural Position
+
+Event Dispatcher is the Core Runtime component that implements the Event Model's delivery responsibilities.
+
+It is not a System Tool, Extension or Runtime Service.
+
+---
+
 # Philosophy
 
 Runtime components should never communicate directly.
@@ -49,7 +57,7 @@ Examples include:
 - Entity Runtime
 - Job Runtime
 - Knowledge Runtime
-- Review Runtime
+- Review Service
 - Bundle Runtime
 - Provider Runtime
 - Theme Runtime

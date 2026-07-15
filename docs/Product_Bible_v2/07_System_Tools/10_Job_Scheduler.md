@@ -4,11 +4,21 @@
 
 The Job Scheduler coordinates the execution of all Runtime Jobs inside Cosmos.
 
-It determines when work should begin, how work is prioritized and how available Runtime Workers are utilized.
+It determines when work should begin, how work is prioritized and how compatible Job handlers and System Tools are utilized.
 
 The Job Scheduler orchestrates work.
 
 It never performs work itself.
+
+---
+
+# Architectural Position
+
+Job Scheduler is the Core Runtime scheduling component inside the existing Job Runtime.
+
+It is not a System Tool, Extension or Runtime Service.
+
+System Tools and Job handlers execute scheduled work through the Job Runtime contract.
 
 ---
 
@@ -30,7 +40,7 @@ The Job Scheduler is responsible for:
 
 - scheduling Runtime Jobs
 - prioritizing work
-- assigning Runtime Workers
+- assigning compatible Job handlers
 - coordinating execution
 - respecting dependencies
 - managing retries
@@ -47,11 +57,11 @@ The Job Scheduler operates on:
 
 - Job Runtime
 - Event Dispatcher
-- Runtime Workers
+- Job handlers and System Tools
 - Provider Runtime
-- Review Runtime
+- Review Service
 
-The Scheduler coordinates every Runtime Worker.
+The Scheduler coordinates every compatible Job handler.
 
 ---
 
@@ -129,9 +139,9 @@ Priority never bypasses dependency requirements.
 
 ---
 
-# Worker Assignment
+# Job Handler Assignment
 
-The Scheduler assigns Jobs to compatible Runtime Workers.
+The Scheduler assigns Jobs to compatible Job handlers and System Tools.
 
 Examples:
 
@@ -294,7 +304,7 @@ Scheduling considers available resources.
 
 Examples include:
 
-- Runtime Workers
+- Job handlers and System Tools
 - Providers
 - CPU
 - memory
@@ -408,7 +418,7 @@ Users should never need to think about scheduling while always understanding wha
 
 - Every task becomes a Job.
 - The Scheduler coordinates work.
-- Workers execute work.
+- Job handlers and System Tools execute work.
 - Dependencies are respected.
 - Validation precedes completion.
 - Scheduling is deterministic.

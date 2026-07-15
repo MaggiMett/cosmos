@@ -10,6 +10,16 @@ Behaviour transforms Runtime Events into believable actions.
 
 ---
 
+# Architectural Position
+
+Entity Behaviour is an Entity Runtime contract.
+
+It is not a System Tool, Runtime Service or independent Runtime system.
+
+Behaviour configuration belongs to the Entity definition and active execution remains owned by Entity Runtime.
+
+---
+
 # Philosophy
 
 An Entity should feel alive even when no AI Provider is available.
@@ -443,6 +453,10 @@ They never replace the Runtime.
 # Persistence
 
 Behaviour configuration is persistent.
+
+Persistent Behaviour configuration is written through Runtime Services and the Persistence Layer.
+
+Entity Behaviour never accesses Persistence directly.
 
 Temporary Behaviour execution is not.
 
