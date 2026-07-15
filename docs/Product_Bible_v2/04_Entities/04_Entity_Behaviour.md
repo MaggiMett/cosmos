@@ -429,7 +429,9 @@ It must never distract from productive work.
 
 # Behaviour Packs
 
-Themes and Extensions may provide Behaviour Packs.
+Non-Theme Extensions may provide Behaviour Packs through the existing Extension contract.
+
+Themes may provide animation and presentation mappings for Behaviour results, but they never provide, add, remove or modify Behaviour Rules.
 
 Examples:
 
@@ -458,6 +460,8 @@ Allay behaviour
 Behaviour Packs extend Behaviour Rules.
 
 They never replace the Runtime.
+
+Changing a Theme never changes Behaviour Pack assignment or execution.
 
 ---
 

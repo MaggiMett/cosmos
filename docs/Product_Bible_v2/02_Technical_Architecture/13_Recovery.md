@@ -188,7 +188,7 @@ Failures should always be understandable.
 
 # Recovery Events
 
-The Recovery System publishes Events including:
+The Recovery System reports completed recovery facts through the appropriate existing Runtime Service. That Service publishes Events including:
 
 - RuntimeRecovered
 - WorkspaceRecovered

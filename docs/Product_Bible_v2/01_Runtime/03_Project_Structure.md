@@ -164,6 +164,8 @@ Resources may include:
 
 Objects simply reference these Resources.
 
+Project `.cosmos/` manifests are portable projections of committed Project mappings and Project-owned Extension definitions. SQLite remains the authoritative Version 1 transactional store; manifests do not create a third Project structure or a second source of truth and may be rebuilt from committed Persistence records.
+
 ---
 
 # Importing Existing Projects

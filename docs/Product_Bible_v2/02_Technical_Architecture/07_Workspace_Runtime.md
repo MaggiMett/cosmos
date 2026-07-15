@@ -213,7 +213,7 @@ Synchronization should feel immediate.
 
 # Events
 
-The Workspace Runtime publishes Events including:
+The Workspace Runtime reports completed lifecycle facts to Workspace Service. Workspace Service publishes Events including:
 
 - WorkspaceOpened
 - WorkspaceClosed

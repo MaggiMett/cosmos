@@ -58,6 +58,7 @@ The Analysis Engine operates on:
 - Relationship Service
 - Tag Service
 - Review Service
+- Context Builder
 - Job Runtime
 - Provider Runtime (optional)
 
@@ -282,12 +283,15 @@ The Engine remains operational without them.
 
 # Runtime Context
 
-Analysis inherits Context when appropriate.
+Every Analysis Job receives the immutable Context Snapshot captured when its Runtime Service creates the Job.
+
+When analysis requires task-specific information, Analysis Engine requests a Context Package from Context Builder using that Snapshot. It never follows later live Runtime Context changes.
 
 Examples include:
 
-- Project boundaries
-- Workspace context
+- zero, one or multiple assigned Project scopes
+- optional focused or primary Project
+- Workspace session at Job creation when applicable
 - Blueprint scope
 - inherited System Tags
 
@@ -301,7 +305,7 @@ It never restricts future discoveries.
 
 The Analysis Engine never interrupts the user.
 
-Only mature discoveries become Review Items.
+Only mature discoveries are submitted as Review candidates to Review Service. Review Service creates and owns the resulting Review Items.
 
 Review remains the only user-facing output.
 

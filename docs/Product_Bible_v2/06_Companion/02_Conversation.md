@@ -76,7 +76,7 @@ Brain
 
 ↓
 
-Provider (optional)
+Provider Runtime (selects and invokes the Provider when required)
 
 ↓
 

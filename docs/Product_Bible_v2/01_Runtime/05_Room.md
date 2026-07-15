@@ -135,9 +135,11 @@ Examples include:
 - Theme overrides
 - atmosphere
 
-Room Context extends Project Context.
+In Workspace Mode, Room Context extends the inherited Runtime Context that is present.
 
 It never replaces it.
+
+A Room does not require Project Context. Assigned Project scopes remain optional and may contain zero, one or multiple Projects.
 
 ---
 

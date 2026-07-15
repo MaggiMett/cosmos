@@ -319,12 +319,14 @@ Business logic remains unchanged.
 
 Version 1 uses a conservative local-first storage profile:
 
-- SQLite stores transactional Cosmos domain data and durable Runtime configuration.
-- JSON manifests inside each Project `.cosmos/` directory store portable Project mappings and Project-owned extension definitions.
+- SQLite is the authoritative transactional store for Cosmos domain data and durable Runtime configuration, including Project mappings and Project-owned Extension definitions.
+- JSON manifests inside each Project `.cosmos/` directory are portable projections of committed Project mappings and Project-owned Extension definitions. They are not an independent source of truth.
 - Native repositories and external sources store Resources.
 - Dedicated cache directories store rebuildable indexes, embeddings, previews and analysis results.
 
 SQLite is the authoritative transactional store for Version 1.
+
+Runtime Services commit authoritative changes through Persistence to SQLite first. Persistence then refreshes the applicable `.cosmos/` projection from the committed record. A missing or stale projection is rebuilt from SQLite; transactional correctness and Registry reconstruction never depend on the projection being current.
 
 The Persistence contracts remain implementation-independent so a future migration is possible without changing domain behavior.
 

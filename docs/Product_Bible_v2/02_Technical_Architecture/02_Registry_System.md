@@ -335,7 +335,7 @@ Registry metadata may be cached for startup performance.
 
 For installed Extensions, the authoritative definition remains the Extension Manifest and validated component declaration.
 
-For user-created Object Blueprints, Capture Templates and Workspace Blueprints, the authoritative definition is the versioned persistent record owned by the appropriate Runtime Service. The category Registry exposes a rebuildable index of that validated record.
+For user-created Object Blueprints, Capture Templates and Workspace Blueprints, the authoritative definition is the versioned SQLite persistent record owned by the appropriate Runtime Service. The category Registry exposes a rebuildable index of that validated record. A Project `.cosmos/` manifest may contain a portable projection of a Project-owned definition, but it is never a competing authoritative Registry source.
 
 Cached Registry state may always be rebuilt.
 

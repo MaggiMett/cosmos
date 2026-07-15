@@ -103,30 +103,14 @@ The system may suggest improvements but never silently modifies User Tags.
 Tags flow through the Runtime automatically.
 
 ```text
-Project
+Direct Tool Mode:
+Cosmos → Optional Project Scopes and Focus → Tool → Optional Object → Optional Knowledge
 
-↓
-
-Room
-
-↓
-
-Workspace
-
-↓
-
-Tool
-
-↓
-
-Object
-
-↓
-
-Knowledge
+Workspace Mode:
+Cosmos → Optional Project Scopes and Focus → Room → Workspace Session → Tool → Optional Object → Optional Knowledge
 ```
 
-Every level contributes additional Context.
+Every present level contributes additional Context. Project scopes are optional and may contain zero, one or multiple assigned Projects plus an optional focused or primary Project.
 
 Lower levels extend inherited Tags.
 

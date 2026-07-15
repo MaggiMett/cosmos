@@ -40,7 +40,7 @@ The Knowledge Processor is responsible for:
 - suggesting candidate `Related` Relationships between Objects
 - suggesting Tags
 - generating semantic summaries
-- scheduling further analysis
+- requesting further analysis through the appropriate Runtime Service
 - preparing Review candidates
 
 The Knowledge Processor never modifies user intent.
@@ -54,7 +54,8 @@ The Knowledge Processor operates on:
 - Knowledge Runtime
 - Object Service
 - Tag Service
-- Runtime Context
+- Review Service
+- Context Builder
 - Job Runtime
 - Provider Runtime (optional)
 
@@ -207,12 +208,15 @@ AI Providers improve semantic understanding when available.
 
 # Runtime Context
 
-Processing inherits Runtime Context.
+Every Knowledge Processing Job receives the immutable Context Snapshot captured when Knowledge Service creates the Job.
+
+When processing requires task-specific information, Knowledge Processor requests a Context Package from Context Builder using that Snapshot. It never follows later live Runtime Context changes.
 
 Examples:
 
-- active Project
-- active Workspace
+- zero, one or multiple assigned Project scopes
+- optional focused or primary Project
+- Workspace session at Job creation when applicable
 - inherited Tags
 - current Object Blueprint when applicable
 
@@ -232,6 +236,8 @@ The Processor produces:
 - Review candidates
 
 The original Capture never changes.
+
+Knowledge Processor submits Review candidates to Review Service and never creates or persists Review Items directly.
 
 ---
 
@@ -272,6 +278,6 @@ The Knowledge Processor should quietly transform raw information into structured
 - Processing begins only after Knowledge ingestion and storage.
 - Original Captures remain immutable.
 - AI enhances processing.
-- Runtime Context improves understanding.
+- The Job's Context Snapshot and Context Package improve understanding.
 - Suggestions remain non-destructive.
 - Users stay in control.

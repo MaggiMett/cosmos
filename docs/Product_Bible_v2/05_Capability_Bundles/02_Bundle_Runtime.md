@@ -211,7 +211,9 @@ Context Updates
 
 Context may change while a Bundle remains active.
 
-The Bundle Runtime provides updated Context snapshots when relevant.
+The Bundle Runtime provides updated Runtime Context when relevant.
+
+These live updates are not Context Snapshots. Context Snapshots remain immutable captures created for tasks, Commands or Jobs.
 
 Examples include:
 

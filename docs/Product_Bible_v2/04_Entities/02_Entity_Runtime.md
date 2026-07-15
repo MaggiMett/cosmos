@@ -506,7 +506,7 @@ Runtime Scope
 selected Avatar
 Personality Profile
 Behavior configuration
-relationship state
+authorized interaction familiarity data
 last active State
 
 Persistent Entity data is written through Runtime Services and the Persistence Layer.

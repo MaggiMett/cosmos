@@ -61,6 +61,7 @@ The Repository Analyzer operates on:
 - Project Runtime
 - Knowledge Runtime
 - Object Service
+- Context Builder
 - Job Runtime
 - Provider Runtime (optional)
 
@@ -253,12 +254,15 @@ AI Providers improve architectural understanding and semantic interpretation.
 
 # Runtime Context
 
-Analysis may inherit Context.
+Every Repository Analysis Job receives the immutable Context Snapshot captured when its Runtime Service creates the Job.
+
+When analysis requires task-specific information, Repository Analyzer requests a Context Package from Context Builder using that Snapshot. It never follows later live Runtime Context changes.
 
 Examples include:
 
-- active Project
-- selected Workspace
+- zero, one or multiple assigned Project scopes
+- optional focused or primary Project
+- Workspace session at Job creation when applicable
 - active Blueprint
 - current Review
 
@@ -292,6 +296,8 @@ Repository knowledge may be used by:
 - Review Service
 
 The Repository Analyzer never performs implementation work.
+
+Repository Analyzer submits Review candidates to Review Service and never creates or persists Review Items directly.
 
 It never performs Runtime Translation, mutates Resource mappings or changes Project metadata. Accepted changes are requested through Runtime Services, and approved implementation belongs to Journeyman.
 

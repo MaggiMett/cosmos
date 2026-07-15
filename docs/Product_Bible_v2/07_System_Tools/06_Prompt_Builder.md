@@ -52,7 +52,7 @@ The Prompt Builder never gathers Context.
 The Prompt Builder operates on:
 
 - Context Builder
-- Provider Runtime
+- selected Provider Profile supplied by Provider Runtime
 - Project Runtime
 - Bundle Runtime
 - Runtime Configuration
@@ -60,6 +60,8 @@ The Prompt Builder operates on:
 The Prompt Builder always receives a completed Context Package.
 
 Context Builder is the only component that assembles that Package.
+
+Provider Runtime invokes Prompt Builder only after Provider Runtime has selected the concrete Provider. Prompt Builder never selects or invokes Providers.
 
 ---
 
@@ -70,7 +72,7 @@ The Prompt Builder receives:
 - Task
 - Context Package
 - Runtime configuration
-- selected Provider
+- selected Provider Profile supplied by Provider Runtime
 - execution preferences
 
 The Prompt Builder never requests additional Runtime information.

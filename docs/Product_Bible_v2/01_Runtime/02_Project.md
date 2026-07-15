@@ -153,7 +153,7 @@ Changing Workspaces never changes the Project itself.
 
 # Context
 
-When a Project becomes active, it provides the initial Runtime Context.
+When a Project is assigned to Runtime Context, it contributes to the existing additive Context.
 
 The Project automatically contributes:
 
@@ -162,7 +162,7 @@ The Project automatically contributes:
 - inherited Context
 - available Objects
 
-Every Workspace opened from the Project automatically inherits this context.
+A Workspace session inherits the contributions of its zero, one or multiple assigned Project scopes. An optional focused or primary Project may provide defaults without replacing the other assigned scopes.
 
 ---
 

@@ -63,6 +63,8 @@ The Job Scheduler operates on:
 
 The Scheduler coordinates every compatible Job handler.
 
+For Provider-backed Jobs, the dependency direction is Job Scheduler and Job handler to Provider Runtime. Provider Runtime never depends on Job Scheduler or Job Runtime to provide its core contract.
+
 ---
 
 # Job Lifecycle

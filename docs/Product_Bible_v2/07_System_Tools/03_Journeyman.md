@@ -160,7 +160,7 @@ The shared Extension Validation pipeline validates code-bearing skill implementa
 
 Provider Usage
 
-Journeyman may request reasoning from one or more Providers.
+Journeyman may request reasoning from Provider Runtime using abstract capability and reasoning requirements.
 
 Providers may assist with:
 
@@ -170,7 +170,7 @@ code generation
 summarization
 implementation reasoning
 
-Journeyman coordinates Providers.
+Provider Runtime alone selects, invokes, routes, monitors and fails over concrete Providers. Journeyman coordinates only the reasoning results within its task.
 
 Providers never execute Runtime work.
 
@@ -214,7 +214,7 @@ Invalid work never becomes completed automatically.
 
 Review
 
-After execution Journeyman prepares a structured Review.
+After execution Journeyman prepares a structured Review candidate and submits it to Review Service. Review Service creates and owns any resulting Review Item.
 
 Review may include:
 
@@ -273,7 +273,7 @@ Without AI Providers Journeyman may still:
 execute deterministic workflows
 coordinate Jobs
 validate work
-schedule processing
+request processing through Runtime Services
 prepare Reviews
 
 Advanced reasoning becomes unavailable.

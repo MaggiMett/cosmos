@@ -178,9 +178,9 @@ State changes occur through the Entity Runtime.
 
 ---
 
-# Relationships
+# Interaction Associations
 
-Entities may establish relationships with:
+Entities may establish interaction associations with:
 
 - Users
 - Projects
@@ -188,9 +188,11 @@ Entities may establish relationships with:
 - Workspaces
 - other Entities
 
-Relationships define interaction.
+Interaction associations define social and contextual familiarity.
 
 They do not define ownership.
+
+They are not Version 1 Relationship records. Version 1 Relationships connect exactly two Objects and use only the `Related` type.
 
 ---
 

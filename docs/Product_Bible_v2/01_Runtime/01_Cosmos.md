@@ -224,16 +224,16 @@ The user should never lose orientation regardless of zoom level.
 
 Relationships appear as constellation lines.
 
-Version 1 distinguishes:
+Version 1 supports only Project-owned `Related` Relationships between exactly two Object endpoints.
 
-- Structural Relationships
-- Discovered Relationships
+The map may distinguish presentation provenance between:
 
-Structural Relationships represent intentional organization.
+- intentionally created `Related` records
+- discovered candidate `Related` connections
 
-Discovered Relationships visualize meaningful patterns found by Cosmos.
+These are not additional Relationship types. A discovered candidate becomes a Relationship only after user acceptance through Relationship Service.
 
-Discovered Relationships never modify the user's structure automatically.
+Discovery never modifies the user's structure automatically.
 
 ---
 

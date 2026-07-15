@@ -264,25 +264,17 @@ Additional relationship types may be introduced later without changing the under
 
 Context describes the current working situation.
 
-Context is inherited automatically through the following hierarchy:
+Context is composed additively through the applicable active Runtime path.
 
-Project
+```text
+Direct Tool Mode:
+Cosmos → Optional Project Scopes and Focus → Tool → Optional Object → Optional Knowledge
 
-↓
+Workspace Mode:
+Cosmos → Optional Project Scopes and Focus → Room → Workspace Session → Tool → Optional Object → Optional Knowledge
+```
 
-Room
-
-↓
-
-Workspace
-
-↓
-
-Tool
-
-↓
-
-Object
+Project, Room, Workspace, Object and Knowledge segments contribute only when present. Project scope may contain zero, one or multiple assigned Projects plus an optional focused or primary Project.
 
 Context reduces manual configuration and helps every Tool understand where it is currently operating.
 

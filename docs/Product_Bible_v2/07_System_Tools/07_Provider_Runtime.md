@@ -60,11 +60,13 @@ Consumers never select or invoke a concrete Provider. They supply abstract requi
 The Provider Runtime operates on:
 
 - Extension System
-- Job Runtime
-- Runtime Configuration through Persistence
+- Prompt Builder after concrete Provider selection
+- Runtime Configuration through Runtime Services
 - Permission System
 
 The Provider Runtime serves the entire Cosmos Runtime.
+
+Provider Runtime never accesses Persistence directly and does not depend on Job Runtime for its selection, routing or execution contract. Provider-backed long-running Job handlers call Provider Runtime through this stable interface.
 
 ---
 
@@ -82,6 +84,14 @@ Provider Runtime
 ↓
 
 Provider Selection
+
+↓
+
+Prompt Builder
+
+↓
+
+Provider Request
 
 ↓
 
@@ -220,7 +230,7 @@ Every Provider implements the same Runtime contract through a Provider Adapter.
 
 Adapters translate between:
 
-Runtime Request
+Provider Request
 
 ↓
 
@@ -239,15 +249,25 @@ Adapters isolate Provider-specific behavior.
 A Runtime Request contains:
 
 - objective
-- compiled prompt
 - capability and reasoning requirements
 - user and Project preferences
 - privacy constraints
+- authorized Context Package
 - execution options
 - timeout
 - response requirements
 
 The Runtime Request never contains unrestricted Runtime access.
+
+Provider Runtime uses these abstract fields to select the concrete Provider before prompt compilation.
+
+---
+
+# Provider Request
+
+After selection, Provider Runtime supplies the selected Provider Profile, task, authorized Context Package and Runtime configuration to Prompt Builder.
+
+Prompt Builder returns the compiled Provider Request. Provider Runtime then routes that request through the selected Provider Adapter and remains the owner of invocation, monitoring and failover.
 
 ---
 
@@ -311,6 +331,10 @@ Failure
 ↓
 
 Compatible Provider
+
+↓
+
+Prompt Builder recompiles the Provider Request for the compatible Provider Profile
 
 ↓
 

@@ -93,7 +93,7 @@ Knowledge Service
 
 Knowledge Processing Job
 
-Repository Service
+Project Service
 
 ↓
 
@@ -305,7 +305,7 @@ User work always receives higher priority than maintenance work.
 
 # AI Jobs
 
-AI Providers execute through the Job Runtime.
+Provider-backed long-running work executes as Jobs. The Job handler calls Provider Runtime through its stable interface; Provider Runtime does not depend on Job Runtime.
 
 Examples include:
 
@@ -327,7 +327,7 @@ It controls:
 
 - concurrent Jobs
 - execution queues
-- provider utilization
+- provider-backed Job concurrency
 - repository access
 - CPU-intensive work
 

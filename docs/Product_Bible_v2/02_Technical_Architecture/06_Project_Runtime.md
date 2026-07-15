@@ -111,7 +111,7 @@ Active Projects may:
 - receive Context
 - participate in opening Workspace sessions through Runtime Services
 - execute Tools
-- create Jobs
+- request long-running Jobs through Runtime Services
 - receive Events
 
 Multiple Projects may remain loaded simultaneously.
@@ -194,7 +194,7 @@ Runtime State may be restored after restart.
 
 # Events
 
-The Project Runtime publishes Events including:
+The Project Runtime reports completed lifecycle facts to Project Service. Project Service publishes Events including:
 
 - ProjectLoaded
 - ProjectActivated

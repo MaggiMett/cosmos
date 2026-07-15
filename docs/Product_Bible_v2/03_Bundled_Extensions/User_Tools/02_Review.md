@@ -50,6 +50,7 @@ Analysis belongs to System Tools.
 
 Review uses:
 
+- Review Service
 - Knowledge Service
 - Object Service
 - Relationship Service
@@ -64,7 +65,7 @@ Review never accesses Persistence directly.
 
 # Review Sources
 
-Review Items may be created by:
+Review candidates may be proposed by:
 
 - Analysis Engine
 - Knowledge Processor
@@ -73,7 +74,7 @@ Review Items may be created by:
 - Companion
 - future System Tools
 
-Every Review Item must identify its source.
+Every producer submits its candidate or creation Command to Review Service. Review Service creates and owns the Review Item, persists its state and records its source.
 
 ---
 
@@ -292,7 +293,7 @@ Available actions depend on the Review category.
 
 Review never modifies domain data directly.
 
-A user decision sends a Command to the appropriate Runtime Service.
+A user decision sends a Command to Review Service. Review Service authoritatively validates and records the decision, owns the Review Item state transition and coordinates the appropriate existing domain Service when the accepted decision requires a domain mutation.
 
 Examples:
 
@@ -314,7 +315,7 @@ Merge Tags
 
 Tag Service
 
-Review only collects intent.
+Review only collects intent and presents the resulting state.
 
 Runtime Services perform the change.
 
