@@ -1,0 +1,263 @@
+# Architecture
+
+## Purpose
+
+This document describes the conceptual architecture of Cosmos.
+
+It explains how the major building blocks of the system relate to each other.
+
+The Architecture defines structure.
+
+It does not describe implementation details, programming languages or runtime behavior.
+
+---
+
+# Overview
+
+Cosmos is designed as a layered system.
+
+Every layer has a single responsibility.
+
+Higher layers organize lower layers.
+
+Lower layers never define higher layers.
+
+This creates a stable architecture that remains extensible over time.
+
+---
+
+# Architecture Hierarchy
+
+```text
+Cosmos
+│
+├── Projects
+│
+├── Base
+│   └── Rooms
+│       └── Workspaces
+│           └── Tools
+│
+├── Objects
+│   ├── Knowledge
+│   ├── Resource Mappings
+│   ├── Tags
+│   └── Relationships
+│
+└── System Services
+```
+
+---
+
+# Cosmos
+
+Cosmos is the root environment.
+
+It connects every Project, every Workspace and every system component into one coherent operating system.
+
+Cosmos owns global navigation, spatial experience and shared Runtime coordination.
+
+---
+
+# Projects
+
+Projects represent visions.
+
+Every Project provides a structured environment for transforming an idea into reality.
+
+Projects organize Objects and may connect to one or more repositories.
+
+They never duplicate Knowledge.
+
+---
+
+# Base
+
+The Base is the user's home.
+
+It provides permanent access to Rooms, Workspaces and the Companion.
+
+The Base exists independently from Projects.
+
+A Workspace may be opened globally or with one or more assigned Project scopes.
+
+---
+
+# Rooms
+
+Rooms organize the Base.
+
+A Room provides one or more Workspace Slots.
+
+Rooms exist for organization and immersion.
+
+They do not contain business logic.
+
+---
+
+# Workspaces
+
+Workspaces are configurable working environments.
+
+A Workspace combines:
+
+- Layout
+- Overlay
+- Context
+- Tool collection
+- Window state
+
+A Workspace defines how the user works.
+
+It never defines what the user works on.
+
+---
+
+# Tools
+
+Tools perform actions.
+
+User Tools provide direct interaction.
+
+System Tools support Cosmos in the background.
+
+Tools remain independent from Projects and Themes and operate through Runtime Services.
+
+---
+
+# Objects
+
+Objects represent meaningful entities.
+
+Everything with independent meaning inside a Project may become an Object.
+
+Objects connect:
+
+- Knowledge
+- Resource mappings
+- Tags
+- Relationships
+- Versions
+
+Objects are the central semantic entity of Cosmos.
+
+---
+
+# Knowledge
+
+Knowledge stores understanding.
+
+It preserves ideas, documentation, discoveries and decisions.
+
+Knowledge grows continuously through refinement and may support multiple Projects without duplication.
+
+---
+
+# Resources
+
+Resources contain implementation.
+
+Resources include files, source code, textures, models, documents and other physical assets.
+
+They remain in their native repositories or sources and are connected to Objects through stable mappings.
+
+Knowledge explains Resources.
+
+---
+
+# Tags
+
+Tags organize meaning and Context.
+
+System Tags describe structure.
+
+User Tags describe the user's language and organization.
+
+Together they build contextual understanding without imposing a rigid hierarchy.
+
+---
+
+# Relationships
+
+Relationships connect Objects and Knowledge.
+
+They allow Cosmos to reveal patterns, dependencies and semantic connections.
+
+Nodes and Connectors visualize Relationships without owning them.
+
+---
+
+# Context Flow
+
+Context is composed additively through the active Runtime path.
+
+```text
+Cosmos
+    ↓
+Optional Project Scope
+    ↓
+Room
+    ↓
+Workspace
+    ↓
+Tool
+    ↓
+Object
+```
+
+Each layer contributes additional Context.
+
+Lower layers extend higher Context and never silently replace it.
+
+---
+
+# Extensibility
+
+Every major component of Cosmos is designed for extension.
+
+Examples include:
+
+- Themes and Skins
+- User Tools
+- System Tools
+- Workspace Blueprints
+- Object Blueprints
+- Capture Templates
+- Providers
+- Integrations
+
+The Core defines contracts.
+
+Extensions provide capabilities.
+
+---
+
+# Separation of Responsibilities
+
+Projects organize visions.
+
+Objects organize meaning.
+
+Knowledge organizes understanding.
+
+Resources provide implementation.
+
+Tools provide capabilities.
+
+Workspaces organize work.
+
+Rooms organize the Base.
+
+The Base provides a home.
+
+Cosmos connects everything together.
+
+---
+
+# Architectural Goal
+
+The architecture of Cosmos should remain stable for many years.
+
+New functionality should emerge by extending existing concepts instead of introducing special cases.
+
+The simpler the Core remains, the more powerful Cosmos becomes.
