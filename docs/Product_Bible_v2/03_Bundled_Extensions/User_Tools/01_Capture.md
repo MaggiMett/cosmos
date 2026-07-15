@@ -37,8 +37,8 @@ Capture is responsible for:
 - accepting external files
 - creating Capture drafts
 - sending SubmitCapture Commands to Knowledge Service
-- providing Capture Templates
-- creating Blueprints
+- using and managing Capture Templates through Knowledge Service
+- using Object Blueprints for structured Object capture
 - receiving submission results from Knowledge Service
 
 Capture never performs Knowledge Processing.
@@ -90,9 +90,9 @@ Rant is the preferred mode for brainstorming.
 
 ---
 
-## Template
+## Capture Template
 
-Templates provide structured input.
+Capture Templates provide structured input.
 
 Examples include:
 
@@ -101,13 +101,15 @@ Examples include:
 - Quest
 - Feature Request
 
-Templates guide the user while remaining editable.
+Capture Templates guide the user while remaining editable.
+
+A Capture Template has an immutable ID, explicit version and either global or Project scope. Capture sends creation and update Commands to Knowledge Service. Knowledge Service performs authoritative permission and category-schema validation, persists the versioned definition, updates the Capture Template Registry and publishes the completed-fact Event. Capture never persists or registers a Capture Template directly.
 
 ---
 
-## Blueprint
+## Object Blueprint
 
-Blueprints describe reusable object definitions.
+Object Blueprints describe reusable Object structures.
 
 Examples include:
 
@@ -116,7 +118,7 @@ Examples include:
 - UI Screen
 - Character
 
-Blueprints create structured Object descriptions rather than free-form notes.
+This mode uses an existing Object Blueprint to create a structured Object description rather than creating or modifying the Object Blueprint definition.
 
 ---
 

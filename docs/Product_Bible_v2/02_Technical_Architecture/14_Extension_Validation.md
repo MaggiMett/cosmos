@@ -55,6 +55,8 @@ Permission and Security Scan
     ↓
 Static Code Checks
     ↓
+Category-Specific Contract Validation
+    ↓
 Registry Simulation
     ↓
 Isolated Validation Tests
@@ -176,6 +178,16 @@ Static checks supplement Runtime isolation and do not replace it.
 
 ---
 
+# Category-Specific Contract Validation
+
+Every Extension category contributes contract checks inside this shared pipeline; it does not create a separate validation pipeline.
+
+Capability Bundle checks include compatible Entity Roles, capability declarations, Bundle dependencies, Permission declarations and configuration schemas. These checks precede Registry Simulation and isolated validation tests.
+
+Object Blueprint, Capture Template and Workspace Blueprint Extensions validate their category schema, version and declared scope through the same pipeline.
+
+---
+
 # Registry Simulation
 
 Declared components are registered inside an isolated temporary Registry.
@@ -209,6 +221,8 @@ Examples include:
 Tests execute in isolation.
 
 A failing test prevents activation.
+
+Every code-bearing Capability Bundle is a code-bearing Extension and must provide and pass these isolated automated tests. Bundle-specific contract checks never replace test execution.
 
 ---
 

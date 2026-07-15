@@ -66,6 +66,14 @@ The Entity Runtime manages active Entity instances after registration.
 
 ---
 
+## Capability Bundles
+
+Reusable capabilities assigned only to Runtime Entities and validated against Entity Roles.
+
+Capability Bundle definitions follow the shared Extension lifecycle. Bundle Runtime manages active Entity-owned Bundle Instances only after their definitions have been validated and registered.
+
+---
+
 ## Themes
 
 Visual replacements for Runtime components.
@@ -93,15 +101,24 @@ Users may freely customize the resulting Workspaces.
 
 ---
 
-## Blueprints
+## Object Blueprints
 
-Reusable definitions for Objects and Captures.
+Reusable definitions for Object structure.
 
 Examples include:
 
 - Minecraft Item
 - Character
 - API Endpoint
+
+---
+
+## Capture Templates
+
+Reusable definitions for structured Capture input.
+
+Examples include:
+
 - Meeting Notes
 
 ---
@@ -236,7 +253,10 @@ Examples include:
 - Tool Registry
 - Theme Registry
 - Provider Registry
-- Blueprint Registry
+- Bundle Registry
+- Object Blueprint Registry
+- Capture Template Registry
+- Workspace Blueprint Registry
 
 The Core discovers Extensions automatically during startup.
 
@@ -271,6 +291,8 @@ Shutdown
 ```
 
 Each phase is controlled by the Runtime.
+
+Category-specific Runtime behavior begins only after this lifecycle has validated and registered the Extension definition. Bundle Runtime does not replace discovery, Extension Validation or registration; it manages the lifecycle of active Entity-owned Bundle Instances.
 
 ---
 
@@ -340,6 +362,8 @@ Validation includes:
 - schema validation
 - security validation
 - automated tests
+
+Category-specific checks, including Capability Bundle contract checks, execute inside this shared validation pipeline. Every code-bearing Capability Bundle must provide and pass isolated automated tests.
 
 Only validated Extensions become active.
 

@@ -4,6 +4,8 @@
 
 Capability Bundles provide reusable functional abilities for Runtime Entities.
 
+Runtime Entities are their only consumers. Every active Bundle Instance belongs to exactly one Entity and is validated against that Entity's Role.
+
 They allow Entities to gain new capabilities without changing their Role, Runtime implementation or identity.
 
 Capability Bundles are Extensions.
@@ -60,7 +62,9 @@ This includes:
 - Registration
 - Lifecycle
 
-Bundles never bypass the Extension Runtime.
+Bundle definitions use the shared Bundle Registry category and the mandatory shared Extension Validation pipeline. Every code-bearing Bundle must provide and pass isolated automated tests.
+
+Bundles never bypass or duplicate the Extension System, Registry System or Extension Validation pipeline.
 
 ---
 
@@ -85,6 +89,8 @@ Capability Bundles:
 The Entity remains one Runtime Entity.
 
 Bundles only extend what it may do.
+
+System Tools and Runtime Worker roles do not receive Bundle Instances. Their capabilities use the existing System Tool Extension contract.
 
 Role Compatibility
 
@@ -228,7 +234,7 @@ Allows contextual suggestions based on Runtime information.
 
 Journeyman Coordination
 
-Allows an Entity to prepare and request user-confirmed Journeyman tasks.
+Allows an Entity to prepare and request user-confirmed Journeyman tasks. It extends the Entity, not Journeyman.
 
 Ambient Interaction
 
@@ -269,6 +275,8 @@ Assignment
 Initialization
 
 Invalid Bundles never become active.
+
+Assignment and configuration changes are requested through a Command to the appropriate Runtime Service. The Service performs authoritative permission and business validation, persists the change, updates Runtime state and publishes the completed-fact Event. Bundle Runtime does not persist assignments or publish mutations directly.
 
 Runtime Isolation
 
@@ -333,6 +341,7 @@ Installing a new Bundle should feel like teaching an Entity a new skill while pr
 
 Principles
 Capability Bundles are Extensions.
+Bundle Instances belong only to Entities.
 Roles define purpose.
 Bundles define abilities.
 Permissions control execution.

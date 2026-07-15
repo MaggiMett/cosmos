@@ -60,6 +60,8 @@ The Companion is built upon:
 
 The Companion introduces no special Runtime architecture.
 
+Because the Companion is a Support Entity, each assigned Capability Bundle Instance belongs to the Companion and is validated against its Support Entity Role through the shared Extension and Bundle contracts.
+
 It is composed entirely from existing Cosmos systems.
 
 ---
@@ -112,6 +114,8 @@ Examples include:
 - Job Monitoring
 
 Installing or removing Bundles changes the Companion's abilities without changing its identity.
+
+Journeyman Coordination allows the Companion to request Journeyman work through Runtime Services. The Bundle remains assigned to the Companion; Journeyman does not consume that Bundle Instance.
 
 ---
 

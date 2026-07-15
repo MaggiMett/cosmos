@@ -14,7 +14,7 @@ What is available?
 
 # Philosophy
 
-Cosmos should never depend on hardcoded lists of Tools, Themes, Providers or Blueprints.
+Cosmos should never depend on hardcoded lists of Tools, Themes, Providers or Blueprint definitions.
 
 Every extensible component registers itself through a Registry.
 
@@ -59,6 +59,7 @@ Initial Registries include:
 - Workspace Blueprint Registry
 - Object Blueprint Registry
 - Capture Template Registry
+- Bundle Registry
 - Provider Registry
 - Integration Registry
 
@@ -76,9 +77,25 @@ Provider definitions register through the Provider Registry.
 
 Entity definitions register through the shared Registry System as components declared by their source Extension and are instantiated by the Entity Runtime.
 
+Bundle Registry is the Capability Bundle category view of this shared Registry System. It adds Bundle-specific metadata such as compatible Entity Roles but does not define separate identity, status, discovery, validation or persistence behavior.
+
 Registries manage definitions only.
 
 Active Entity State remains owned by the Entity Runtime.
+
+---
+
+# Blueprint Taxonomy and Ownership
+
+The canonical Blueprint definition categories are:
+
+- Object Blueprint
+- Capture Template
+- Workspace Blueprint
+
+Each category uses its category-specific Registry built on the shared Registry contract. The Registry manages definition identity, metadata, version, availability and resolution; it never owns Tool drafts, instantiated Objects, Capture content, Workspace definitions or active Workspace sessions.
+
+Object Blueprint mutations are owned by Object Service, Capture Template mutations by Knowledge Service and Workspace Blueprint mutations by Workspace Service. After validation and persistence, the owning Service updates the applicable category Registry before publishing the completed-fact Event.
 
 ---
 
@@ -292,7 +309,7 @@ list all User Tools
 find Tools supporting image Resources
 find Themes containing Companion Skins
 find Providers supporting code generation
-find Blueprints compatible with the active Project
+find Object Blueprints, Capture Templates or Workspace Blueprints compatible with the active Project scopes
 
 Registry queries never execute components.
 
@@ -310,7 +327,9 @@ Persistence
 
 Registry metadata may be cached for startup performance.
 
-The authoritative definition remains the Extension Manifest and validated component declaration.
+For installed Extensions, the authoritative definition remains the Extension Manifest and validated component declaration.
+
+For user-created Object Blueprints, Capture Templates and Workspace Blueprints, the authoritative definition is the versioned persistent record owned by the appropriate Runtime Service. The category Registry exposes a rebuildable index of that validated record.
 
 Cached Registry state may always be rebuilt.
 

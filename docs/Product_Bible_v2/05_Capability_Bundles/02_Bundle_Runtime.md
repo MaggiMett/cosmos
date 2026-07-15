@@ -2,9 +2,9 @@
 
 ## Purpose
 
-The Bundle Runtime manages active Capability Bundle instances assigned to Runtime Entities.
+The Bundle Runtime manages active Capability Bundle Instances assigned only to Runtime Entities.
 
-It is responsible for loading, validating, activating, suspending and unloading Bundles while preserving Entity stability and Runtime consistency.
+It resolves already validated and registered Bundle Definitions, then validates Entity assignment compatibility and activates, suspends or unloads their Instances while preserving Entity stability and Runtime consistency.
 
 The Bundle Runtime extends Entity abilities without changing Entity identity.
 
@@ -30,16 +30,18 @@ The Bundle Runtime is responsible for:
 
 - resolving assigned Capability Bundles
 - validating Role compatibility
-- resolving dependencies
+- resolving declared dependencies through the shared Registry System
 - validating Permission declarations and preflight availability
 - initializing Bundle instances
 - injecting Runtime Context
-- routing Events
+- delivering declared Events received through the shared Event Dispatcher
 - preserving Bundle State
 - isolating failures
 - unloading Bundles safely
 
 The Bundle Runtime never owns business logic.
+
+It does not discover Extensions, perform shared Extension Validation, maintain a separate Registry or write Persistence directly.
 
 ---
 
@@ -48,6 +50,8 @@ The Bundle Runtime never owns business logic.
 A Bundle Definition describes one reusable capability package.
 
 A Bundle Instance represents one active assignment of that definition to one Entity.
+
+No System Tool or Runtime Worker receives a Bundle Instance.
 
 Example:
 
@@ -62,9 +66,9 @@ Multiple Entities may use the same Bundle Definition.
 
 Every Entity receives its own Bundle Instance and independent Runtime State.
 
-Bundle Lifecycle
+Bundle Instance Lifecycle
 
-Every Bundle Instance follows the same lifecycle.
+After its Bundle Definition completes the shared Extension lifecycle, every assigned Bundle Instance follows this lifecycle.
 
 Assigned
 
@@ -102,23 +106,21 @@ Bundles never activate themselves.
 
 Assignment
 
-A Bundle may be assigned through:
+A Bundle may be assigned to an Entity through:
 
 bundled Entity configuration
 user configuration
-Entity Blueprint
-Extension installation
 Runtime migration
 
 Assignment does not immediately activate the Bundle.
 
-Validation must succeed first.
+The Bundle Definition must already have passed shared Extension Validation and registration. Entity Role, dependency and Permission preflight checks must then succeed before instance activation.
 
 Resolution
 
 Before initialization, the Runtime resolves:
 
-Bundle Definition
+Bundle Definition from the shared Bundle Registry category
 compatible Runtime API
 Entity Role
 required dependencies
@@ -251,6 +253,8 @@ EntityInteractionCompleted
 
 The Bundle Runtime routes Events to active Bundle Instances.
 
+Subscriptions and delivery use the shared Event Model and Event Dispatcher. Events describe completed facts; neither Bundle Runtime nor a Bundle treats an Event as authority to mutate state or create work directly. A reacting Bundle sends a Command or request to the appropriate Runtime Service.
+
 Capabilities
 
 Every Bundle exposes named capabilities through the Entity Runtime.
@@ -338,6 +342,8 @@ long-lived session references
 notification preferences
 
 Transient execution details are not persisted.
+
+Persistent configuration, assignments and state changes are requested through Commands to the appropriate Runtime Service. That Service performs authoritative validation, writes Persistence and publishes the completed-fact Event. Bundle Runtime restores and operates the resulting state but is not a persistence owner.
 
 Suspension
 
@@ -464,9 +470,8 @@ shared Bundle configuration
 collaborative Bundle capabilities
 advanced capability routing
 Bundle composition helpers
-Bundle migration systems
 
-Every extension follows the same Bundle Runtime contract.
+Every extension remains subject to the shared Extension, Registry, Validation, Service, Permission, Event and Persistence contracts.
 
 Design Goal
 
@@ -477,6 +482,7 @@ Users should experience new Bundles as new skills rather than new software modul
 Principles
 Bundle Definitions are reusable.
 Bundle Instances belong to Entities.
+Bundle Definitions are validated and registered through the shared Extension contracts.
 Runtime controls lifecycle.
 Role compatibility is mandatory.
 Permission declarations are preflighted before activation; Runtime Services enforce Permissions authoritatively.

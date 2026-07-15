@@ -143,6 +143,40 @@ Optional Long-Running Job Creation by that Service
 
 ---
 
+# Blueprint Definition Mutations
+
+Cosmos uses three canonical Blueprint definition categories with existing Service owners:
+
+- Object Blueprint — Object Service
+- Capture Template — Knowledge Service
+- Workspace Blueprint — Workspace Service
+
+Creation and updates follow the canonical action pipeline:
+
+```text
+User Tool
+    ↓
+Command
+    ↓
+Owning Runtime Service
+    ↓
+Authoritative Permission Validation
+    ↓
+Business and Category-Schema Validation
+    ↓
+Transaction and Persistence
+    ↓
+Category Registry Update
+    ↓
+Completed-Fact Event Publication
+```
+
+The owning Service assigns or verifies the immutable definition ID, explicit version and declared scope. Updates create a new definition version; existing consumers retain their referenced version until an explicit migration or selection. Installed Extension-provided definitions must already have passed shared Extension Validation. User-created definitions are validated against the same category schema by the owning Service before persistence and Registry update.
+
+User Tools never persist or register Blueprint definitions directly. Registries expose validated definitions but never become mutation or business-logic owners.
+
+---
+
 # Queries
 
 Services expose Queries.

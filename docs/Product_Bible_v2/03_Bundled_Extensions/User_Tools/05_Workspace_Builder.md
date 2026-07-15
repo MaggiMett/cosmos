@@ -39,7 +39,7 @@ Workspace Builder is responsible for:
 - configuring Layouts
 - assigning Overlays
 - defining Workspace Context
-- saving Workspace Blueprints
+- creating and updating Workspace Blueprints through Workspace Service
 
 Workspace Builder never performs work belonging to the contained Tools.
 
@@ -56,6 +56,26 @@ Workspace Builder uses:
 - Event Model
 
 Workspace Builder never modifies Persistence directly.
+
+Workspace Blueprint creation and updates follow one path:
+
+```text
+Workspace Builder
+    ↓
+Command
+    ↓
+Workspace Service
+    ↓
+Authoritative Permission and Category-Schema Validation
+    ↓
+Persistence
+    ↓
+Workspace Blueprint Registry Update
+    ↓
+Completed-Fact Event
+```
+
+Workspace Builder keeps drafts and presents validation feedback. It never persists or registers Workspace Blueprint definitions directly.
 
 ---
 
@@ -177,9 +197,9 @@ Global Workspaces have no assigned Project scopes and receive Runtime Context dy
 
 # Workspace Blueprints
 
-Every Workspace definition may be saved as a Blueprint.
+Every Workspace definition may be saved as a Workspace Blueprint.
 
-Blueprints preserve:
+Workspace Blueprints preserve:
 
 - Tool arrangement
 - Overlay
@@ -187,7 +207,9 @@ Blueprints preserve:
 - Layout
 - Context configuration
 
-New Workspaces may be created from existing Blueprints.
+New Workspace definitions may be created from existing Workspace Blueprints.
+
+Every Workspace Blueprint has an immutable ID, explicit version and declared scope. Its scope preserves the source Workspace definition's zero, one or multiple assigned Project scopes and optional focused or primary Project. Updates create a new version; existing Workspace definitions retain their referenced version until explicitly changed.
 
 ---
 
@@ -250,9 +272,9 @@ The user remains responsible for Workspace design.
 
 # Failure Handling
 
-If Workspace creation fails:
+If Workspace or Workspace Blueprint creation fails:
 
-- the current Blueprint remains available
+- the current Workspace Blueprint draft remains available
 - existing Workspaces remain unchanged
 - validation errors are explained
 - retry remains possible
@@ -290,5 +312,5 @@ Instead of adapting to software, users continuously shape Cosmos into the worksp
 - Active Workspace session State belongs to Workspace Runtime.
 - Users build their own workplaces.
 - Project Workspaces inherit Context.
-- Blueprints preserve Workspace configuration.
+- Workspace Blueprints preserve Workspace configuration.
 - Every Workspace definition remains fully customizable.

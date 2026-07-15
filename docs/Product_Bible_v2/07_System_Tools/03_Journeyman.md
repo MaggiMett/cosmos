@@ -18,6 +18,8 @@ Runtime Worker describes Journeyman's execution role; it is not a separate Runti
 
 Journeyman performs task-oriented work through Core Runtime contracts and never replaces Runtime Services.
 
+Its skills are capabilities declared through the existing System Tool Extension manifest and dependency contract. Journeyman is not an Entity and never receives an Entity-owned Capability Bundle Instance.
+
 ---
 
 # Philosophy
@@ -56,7 +58,7 @@ Journeyman operates on:
 
 - Project Runtime
 - Knowledge Runtime
-- Bundle Runtime
+- Extension System and System Tool Registry
 - Job Runtime
 - Review Service
 - Provider Runtime
@@ -112,7 +114,7 @@ optional focused or primary Project
 Workspace session when applicable
 Objects
 Knowledge
-Blueprints
+Object Blueprints, Capture Templates and Workspace Blueprints relevant to the task
 Resources
 previous Reviews
 Runtime configuration
@@ -129,16 +131,16 @@ The plan defines:
 
 objective
 required Context
-required Capability Bundles
+required System Tool Extension capabilities
 required Providers
 expected outputs
 validation strategy
 
 Plans remain transparent.
 
-Capability Bundles
+System Tool Skills
 
-Journeyman gains abilities through Capability Bundles.
+Journeyman gains abilities through capabilities declared by its System Tool Extension and its declared System Tool Extension dependencies.
 
 Examples include:
 
@@ -149,11 +151,9 @@ Review Assistance
 Refactoring
 Testing
 Migration
-Blueprint Generation
+Object Blueprint Generation
 
-Journeyman itself remains unchanged.
-
-Bundles define skills.
+The shared Extension Validation pipeline validates code-bearing skill implementations, and the System Tool Registry resolves their definitions. Journeyman requests all Runtime work through Runtime Services and never imports another Extension's internals.
 
 Provider Usage
 
@@ -182,7 +182,7 @@ analyze repository
 generate documentation
 refactor module
 execute migration
-create Blueprint
+create Object Blueprint through Object Service
 
 Jobs remain observable throughout execution.
 
@@ -195,7 +195,7 @@ Validation may include:
 tests
 static analysis
 repository consistency
-Bundle validation
+Extension validation
 architecture validation
 review generation
 
@@ -283,7 +283,7 @@ Failure never corrupts the Project.
 
 Extensibility
 
-Future Capability Bundles may teach Journeyman new skills.
+Future System Tool Extensions may provide Journeyman with new declared skill capabilities.
 
 Examples include:
 
@@ -298,7 +298,7 @@ Security Analysis
 Infrastructure
 DevOps
 
-Journeyman learns through Bundles.
+Journeyman gains them through the existing System Tool Extension contract.
 
 Never through Core changes.
 
@@ -311,7 +311,7 @@ Rather than acting as a coding assistant, Journeyman should understand goals, pr
 Principles
 Journeyman is a Runtime Worker.
 Journeyman is not an AI.
-Capability Bundles define skills.
+System Tool Extension capabilities define skills.
 Providers extend reasoning.
 Runtime Services execute work.
 Planning precedes execution.

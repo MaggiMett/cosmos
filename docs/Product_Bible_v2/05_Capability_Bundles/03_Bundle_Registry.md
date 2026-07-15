@@ -2,13 +2,13 @@
 
 ## Purpose
 
-The Bundle Registry maintains the catalog of all Capability Bundle Definitions available to Cosmos.
+The Bundle Registry is the Capability Bundle category-specific Registry built on the shared Registry System contract.
 
-It provides discovery, validation metadata, dependency information and compatibility details without loading Bundle implementations.
+It exposes Bundle-specific discovery, validation metadata, dependency information and Entity Role compatibility without loading Bundle implementations.
 
 The Registry knows what Bundles exist.
 
-The Bundle Runtime decides which Bundles become active.
+Bundle Runtime decides which validated, active Bundle Definitions are instantiated for assigned Entities.
 
 ---
 
@@ -26,7 +26,7 @@ A Bundle may exist inside the Registry while remaining unassigned or inactive.
 
 # Responsibilities
 
-The Bundle Registry is responsible for:
+Within the shared Registry contract, the Bundle Registry is responsible for:
 
 - registering Bundle Definitions
 - maintaining immutable Bundle identities
@@ -38,11 +38,13 @@ The Bundle Registry is responsible for:
 
 The Registry never executes Bundle code.
 
+Shared Registry behavior remains authoritative for identity, status, activation, dependency references, duplicate handling, resolution and caching. Bundle Registry is not a separate discovery, validation or persistence architecture.
+
 ---
 
 # Registry Entry
 
-Every Bundle Definition registers exactly one Registry Entry.
+Every Bundle Definition has exactly one shared Registry Entry in the Capability Bundle category.
 
 Each entry contains:
 
@@ -61,6 +63,8 @@ Each entry contains:
 - lifecycle version
 
 Registry Entries remain lightweight.
+
+Registration occurs only after the Capability Bundle Extension has completed the mandatory shared Extension Validation pipeline, including isolated automated tests for every code-bearing Bundle.
 
 ---
 
@@ -109,9 +113,9 @@ Version compatibility includes:
 - Runtime API version
 - Extension API version
 
-The Registry exposes compatibility.
+The Registry exposes declared compatibility through the shared Registry entry.
 
-The Bundle Runtime validates compatibility.
+Shared Extension Validation validates definition compatibility, and Bundle Runtime performs current Entity assignment compatibility preflight before activation.
 
 ---
 
@@ -127,7 +131,7 @@ Dependency declarations include:
 
 Dependencies remain descriptive.
 
-Resolution belongs to the Bundle Runtime.
+Shared Extension Validation and the Registry System resolve definition dependencies. Bundle Runtime checks the current availability of resolved dependencies for Entity assignment and activation.
 
 ---
 
@@ -225,9 +229,9 @@ They do not affect Runtime behavior.
 
 ---
 
-# Assignment Information
+# Assignment Availability
 
-The Registry exposes assignment status.
+The Registry may expose read-only assignment availability derived from the shared Registry status and current compatibility metadata.
 
 Examples:
 
@@ -237,7 +241,7 @@ Examples:
 - disabled
 - incompatible
 
-Assignment itself belongs to the Bundle Runtime.
+Assignment and active Instance state belong to the Entity and Bundle Runtime path and are never stored in the Registry.
 
 ---
 
@@ -279,6 +283,8 @@ The Registry never stores:
 
 These belong to Runtime systems.
 
+Registry metadata may be cached, but the authoritative Bundle Definition remains the validated Extension Manifest and component declaration. The shared Registry index is rebuildable and does not own Bundle Persistence.
+
 ---
 
 # Extensibility
@@ -292,7 +298,7 @@ Future extensions may introduce:
 - compatibility badges
 - community verification
 
-The Registry remains the single source of Bundle metadata.
+The shared Registry remains the single catalog of Bundle metadata.
 
 ---
 
@@ -307,6 +313,7 @@ Users and developers should always understand what a Bundle provides before assi
 # Principles
 
 - The Registry stores metadata.
+- Bundle Registry follows the shared Registry contract.
 - Bundle execution belongs to the Runtime.
 - Bundle identity is immutable.
 - Compatibility is declarative.

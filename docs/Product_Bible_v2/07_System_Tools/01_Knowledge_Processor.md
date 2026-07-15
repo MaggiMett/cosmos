@@ -127,7 +127,7 @@ The Knowledge Processor may process stored Knowledge originating from:
 - Captures
 - informational records ingested from files
 - explicitly promoted conversation records
-- durable descriptions of Blueprints
+- durable informational descriptions of Object Blueprints, Capture Templates or Workspace Blueprints
 - generated informational records
 - repository analysis records
 
@@ -214,7 +214,7 @@ Examples:
 - active Project
 - active Workspace
 - inherited Tags
-- current Blueprint
+- current Object Blueprint when applicable
 
 Context improves extraction quality.
 

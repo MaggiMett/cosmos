@@ -2,11 +2,11 @@
 
 ## Purpose
 
-Blueprint Builder allows users to define reusable object structures.
+Blueprint Builder allows users to define reusable Object Blueprint structures.
 
-Instead of repeatedly describing similar Objects, users create a Blueprint once and instantiate it whenever needed.
+Instead of repeatedly describing similar Objects, users create an Object Blueprint once and instantiate it whenever needed.
 
-Blueprints define structure.
+Object Blueprints define structure.
 
 Objects define content.
 
@@ -22,7 +22,7 @@ Stories contain Characters.
 
 Applications contain Pages.
 
-Blueprints describe these recurring structures without restricting creativity.
+Object Blueprints describe these recurring structures without restricting creativity.
 
 ---
 
@@ -30,12 +30,12 @@ Blueprints describe these recurring structures without restricting creativity.
 
 Blueprint Builder is responsible for:
 
-- creating Blueprints
-- editing Blueprints
-- versioning Blueprints
+- creating Object Blueprints through Object Service
+- editing Object Blueprints through Object Service
+- versioning Object Blueprints
 - instantiating Objects
 - defining default fields
-- defining Blueprint Tags
+- defining Object Blueprint Tags
 - defining expected `Related` Relationship suggestions
 
 Blueprint Builder never stores Object content.
@@ -55,11 +55,31 @@ Blueprint Builder uses:
 
 Blueprint Builder never modifies Persistence directly.
 
+Object Blueprint creation and updates follow one path:
+
+```text
+Blueprint Builder
+    ↓
+Command
+    ↓
+Object Service
+    ↓
+Authoritative Permission and Category-Schema Validation
+    ↓
+Persistence
+    ↓
+Object Blueprint Registry Update
+    ↓
+Completed-Fact Event
+```
+
+Blueprint Builder keeps drafts and presents validation feedback. It never persists or registers Object Blueprint definitions directly.
+
 ---
 
-# Blueprint
+# Object Blueprint
 
-A Blueprint defines the structure of an Object Type.
+An Object Blueprint defines the structure of an Object Type.
 
 Examples include:
 
@@ -71,15 +91,15 @@ Examples include:
 - UI Screen
 - Database Table
 
-Blueprints define expectations.
+Object Blueprints define expectations.
 
-They never contain project-specific information.
+Global Object Blueprints never contain project-specific information. Project-scoped Object Blueprints may define Project-specific structure, but Object content remains outside the definition.
 
 ---
 
-# Blueprint Components
+# Object Blueprint Components
 
-A Blueprint may define:
+An Object Blueprint may define:
 
 - title
 - description
@@ -95,7 +115,7 @@ Projects may extend these definitions.
 
 ---
 
-# Blueprint Fields
+# Object Blueprint Fields
 
 Fields describe information expected for an Object.
 
@@ -122,9 +142,9 @@ Future field types may be introduced through Extensions.
 
 ---
 
-# Blueprint Tags
+# Object Blueprint Tags
 
-Blueprints automatically assign default System Tags.
+Object Blueprints automatically assign default System Tags.
 
 They may also suggest User Tags.
 
@@ -132,9 +152,9 @@ Users remain free to modify User Tags after Object creation.
 
 ---
 
-# Blueprint Relationships
+# Object Blueprint Relationships
 
-Blueprints may define expected Relationship suggestions. In Version 1, every accepted Relationship connects two Objects and uses the `Related` type.
+Object Blueprints may define expected Relationship suggestions. In Version 1, every accepted Relationship connects two Objects and uses the `Related` type.
 
 Example:
 
@@ -162,12 +182,12 @@ Specialized meanings such as `belongs to` are future Relationship type examples 
 
 ---
 
-# Blueprint Instantiation
+# Object Blueprint Instantiation
 
-Creating an Object from a Blueprint performs:
+Creating an Object from an Object Blueprint performs:
 
 - create Object
-- assign Blueprint
+- record the Object Blueprint ID and version
 - create default fields
 - assign default Tags
 - request default `Related` Relationships through Relationship Service
@@ -178,11 +198,11 @@ The Object immediately becomes part of the Project.
 
 # Versioning
 
-Blueprints evolve through versions.
+Object Blueprints have immutable IDs and evolve through explicit versions.
 
 Existing Objects retain their historical structure.
 
-Users may later migrate Objects to newer Blueprint versions when appropriate.
+Users may later migrate Objects to newer Object Blueprint versions when appropriate.
 
 Migration is always explicit.
 
@@ -190,9 +210,9 @@ Migration is always explicit.
 
 # Project Scope
 
-Blueprints may exist in two scopes.
+Object Blueprints may exist in two scopes.
 
-## Global Blueprints
+## Global Object Blueprints
 
 Reusable across Projects.
 
@@ -204,7 +224,7 @@ Examples:
 
 ---
 
-## Project Blueprints
+## Project Object Blueprints
 
 Specific to one Project.
 
@@ -214,15 +234,15 @@ Examples:
 - Dwarven Building
 - Skill Tree Node
 
-Project Blueprints inherit Runtime Context automatically.
+Project-scoped Object Blueprints declare their Project scope and inherit Runtime Context automatically.
 
 ---
 
 # Object Creation
 
-Objects created from Blueprints remain fully editable.
+Objects created from Object Blueprints remain fully editable.
 
-Blueprints provide a starting structure.
+Object Blueprints provide a starting structure.
 
 They never lock Object behavior.
 
@@ -230,14 +250,14 @@ They never lock Object behavior.
 
 # Companion
 
-Companion may assist while creating Blueprints.
+Companion may assist while creating Object Blueprints.
 
 Examples include:
 
 - suggesting fields
 - identifying repeated patterns
 - proposing `Related` Relationship suggestions
-- explaining existing Blueprints
+- explaining existing Object Blueprints
 
 The user always defines the final structure.
 
@@ -259,9 +279,9 @@ Context reduces manual configuration.
 
 # Failure Handling
 
-If Blueprint creation fails:
+If Object Blueprint creation fails:
 
-- the Blueprint draft remains available
+- the Object Blueprint draft remains available
 - validation errors are explained
 - retry remains possible
 - no existing Objects are modified
@@ -274,11 +294,11 @@ Future Extensions may introduce:
 
 - custom field types
 - validation rules
-- Blueprint inheritance
-- domain-specific Blueprints
+- Object Blueprint inheritance
+- domain-specific Object Blueprints
 - automatic Object migration
 
-Every extension follows the same Blueprint Runtime contract.
+Every extension follows the shared Extension, Validation, Service, Registry, Permission, Persistence and Event contracts.
 
 ---
 
@@ -286,17 +306,17 @@ Every extension follows the same Blueprint Runtime contract.
 
 Blueprint Builder should allow users to gradually formalize recurring ideas without reducing flexibility.
 
-As Projects mature, Blueprints transform repeated manual work into reusable Object structures.
+As Projects mature, Object Blueprints transform repeated manual work into reusable Object structures.
 
 ---
 
 # Principles
 
-- Blueprints define structure.
+- Object Blueprints define structure.
 - Objects contain content.
-- Blueprints are reusable.
+- Object Blueprints are reusable.
 - Objects remain editable.
-- Blueprint versions are preserved.
+- Object Blueprint versions are preserved.
 - Migration is explicit.
 - Runtime Context is inherited.
 - Companion assists but never decides.

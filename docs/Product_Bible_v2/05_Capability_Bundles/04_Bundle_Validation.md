@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The Bundle Validation System ensures that every Capability Bundle is safe, compatible and predictable before becoming part of the Cosmos Runtime.
+Bundle Validation is the Capability Bundle category-specific validation stage inside the mandatory shared Extension Validation pipeline.
 
 Validation protects Entity stability and Runtime integrity.
 
@@ -22,39 +22,39 @@ Validation increases trust in the Extension ecosystem.
 
 # Responsibilities
 
-Bundle Validation is responsible for:
+Inside that shared pipeline, Bundle Validation is responsible for:
 
-- validating Bundle manifests
-- validating Runtime compatibility
 - validating Role compatibility
-- validating dependency declarations
-- validating Permission declarations
+- validating Bundle-specific dependency declarations
+- validating Bundle-specific Permission declarations
 - validating configuration schemas
 - validating capability definitions
 - reporting validation results
 
-Validation never executes Bundle logic.
+Shared Extension Validation remains responsible for package structure, Manifest, Runtime compatibility, dependencies, security and static checks, Registry Simulation, isolated automated tests and the final validation result.
+
+Bundle-specific contract checks never execute normal Bundle workflows. The shared pipeline must execute isolated automated tests for every code-bearing Capability Bundle.
 
 ---
 
-# Validation Stages
+# Bundle-Specific Validation Stage
 
-Every Bundle passes through the same validation pipeline.
+Every Bundle passes through the shared Extension Validation pipeline. Within its Category-Specific Contract Validation stage, Bundle Validation performs the checks below.
 
 ```text
-Manifest
+Bundle Manifest Declarations
 
 ↓
 
-Schema Validation
+Bundle Schema Validation
 
 ↓
 
-Version Validation
+Bundle Compatibility Declarations
 
 ↓
 
-Dependency Validation
+Bundle Dependency Validation
 
 ↓
 
@@ -74,20 +74,20 @@ Configuration Validation
 
 ↓
 
-Registry Validation
+Bundle Registry Metadata Validation
 
 ↓
 
-Approved
+Return to Shared Extension Validation
 ```
 
-Failure at any stage prevents activation.
+The shared pipeline then performs Registry Simulation and isolated validation tests before producing the final result. Failure in any shared or Bundle-specific stage prevents activation.
 
 ---
 
-# Manifest Validation
+# Bundle Manifest Declarations
 
-Validation verifies:
+The shared Manifest validator verifies the common Extension fields. Bundle Validation additionally verifies the Bundle declarations:
 
 - immutable Bundle ID
 - semantic version
@@ -101,9 +101,9 @@ Missing mandatory fields invalidate the Bundle.
 
 ---
 
-# Version Validation
+# Bundle Compatibility Declarations
 
-The Validator checks:
+The shared compatibility validator checks the Extension and Runtime API declarations. Bundle Validation additionally checks:
 
 - Runtime API compatibility
 - Extension API compatibility
@@ -128,7 +128,7 @@ Role compatibility must be explicit.
 
 # Dependency Validation
 
-Validation resolves:
+Bundle Validation checks the category-specific declarations for:
 
 - required Bundles
 - optional Bundles
@@ -136,9 +136,7 @@ Validation resolves:
 - Providers
 - Integration requirements
 
-Circular dependencies are rejected.
-
-Missing mandatory dependencies prevent activation.
+The shared Dependency Resolution stage rejects circular dependencies and prevents activation when mandatory dependencies are missing.
 
 ---
 
@@ -187,12 +185,13 @@ Configuration must remain deterministic.
 
 Before registration the Validator verifies:
 
-- immutable Bundle ID uniqueness
-- version consistency
-- metadata completeness
+- Bundle category metadata completeness
+- compatible Entity Role metadata
+- capability and configuration metadata
+- version declaration consistency
 - category definitions
 
-Only validated Bundles enter the Registry.
+The shared Registry Simulation verifies immutable ID uniqueness, namespaces and dependency resolution. Only Bundles that pass the complete shared pipeline enter the active Registry.
 
 ---
 
@@ -229,7 +228,7 @@ Updates never bypass validation.
 
 # Validation Report
 
-Every validation produces a structured report.
+Shared Extension Validation produces one structured report containing the Bundle-specific results.
 
 The report contains:
 
@@ -293,8 +292,8 @@ Users should trust that validated Bundles integrate cleanly into Cosmos without 
 # Principles
 
 - Validation happens before Runtime.
-- Every Bundle follows the same pipeline.
-- Validation never executes Bundle logic.
+- Every Bundle follows the shared Extension Validation pipeline.
+- Bundle-specific checks never execute normal workflows; the shared pipeline executes mandatory isolated tests for code-bearing Bundles.
 - Runtime stability has highest priority.
 - Validation reports remain transparent.
 - Invalid Bundles remain isolated.
