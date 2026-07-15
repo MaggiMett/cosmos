@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The Personality System defines the character, communication style and behavioral tendencies of the Companion.
+The Personality System defines configuration for the character, communication style and behavioural tendencies of the Companion.
 
 Personality creates consistency across every AI Provider and every conversation.
 
@@ -18,7 +18,7 @@ Personality belongs to the Companion.
 
 Providers generate language.
 
-Personality determines how the Companion chooses to communicate.
+Personality configures how the Companion may communicate.
 
 Changing Providers should never change who the Companion is.
 
@@ -26,19 +26,19 @@ Changing Providers should never change who the Companion is.
 
 # Responsibilities
 
-Personality is responsible for:
+Personality provides configuration input for:
 
 - communication style
-- emotional expression
-- conversational tone
-- idle behavior
-- reaction intensity
+- permitted Behaviour Rule weights
+- idle frequency
+- expression intensity
 - suggestion style
-- interaction preferences
 
 Personality never changes factual information.
 
 It changes presentation.
+
+Personality never executes Behaviour Rules, performs state transitions, changes Permissions or owns Runtime State.
 
 ---
 
@@ -47,11 +47,11 @@ It changes presentation.
 Personality operates on top of:
 
 - Entity Runtime
-- Behaviour System
+- Entity Behaviour
 - Conversation
 - Brain
 
-Providers receive Personality guidance through the Brain.
+Brain supplies Personality-derived communication requirements to Provider Runtime, which delivers them through the standardized Provider request.
 
 Providers never own Personality.
 
@@ -67,9 +67,10 @@ A profile contains:
 - display name
 - description
 - communication traits
-- behavior traits
-- emotional traits
-- interaction preferences
+- permitted Behaviour Rule weights
+- idle frequency
+- expression intensity
+- suggestion style
 - default configuration
 
 Profiles remain independent from Providers.
@@ -94,7 +95,7 @@ Communication should remain recognizable regardless of the selected AI Provider.
 
 # Behaviour
 
-Personality influences Runtime Behaviour.
+Personality supplies permitted configuration values to Entity Behaviour.
 
 Examples include:
 
@@ -132,13 +133,13 @@ observes nearby Objects
 
 looks around often
 
-Behavior remains deterministic.
+Entity Behaviour validation and state transitions remain deterministic. Personality may supply probabilistic Rule weights only where the Behaviour configuration explicitly permits them; Entity Behaviour owns selection and reproducibility.
 
 ---
 
 # Emotional Expression
 
-Personality influences visual emotion.
+Personality configures expression intensity and style for visual emotion. It does not determine or own emotion.
 
 Examples include:
 
@@ -149,9 +150,7 @@ Examples include:
 - pride
 - surprise
 
-Emotion affects presentation only.
-
-It never changes Permissions or Runtime authority.
+Emotion is presentation and Entity Behaviour input only. It never executes Behaviour, performs state transitions, changes Permissions or owns Runtime State.
 
 ---
 
@@ -226,7 +225,7 @@ Profiles may be distributed as Extensions.
 
 # AI Independence
 
-Without an AI Provider, Personality still influences:
+Without an AI Provider, Personality configuration still influences permitted presentation and Behaviour parameters such as:
 
 - idle behavior
 - animations
@@ -241,7 +240,7 @@ The Companion always retains its character.
 
 # Provider Guidance
 
-When using an AI Provider, the Brain supplies Personality guidance.
+When advanced reasoning is requested, Brain supplies Personality-derived communication requirements to Provider Runtime.
 
 The Provider generates language that matches the active Personality Profile.
 
@@ -308,8 +307,8 @@ After months or years of use, users should immediately recognize their Companion
 
 - Personality belongs to the Companion.
 - Providers generate language.
-- Personality shapes communication.
-- Personality influences Behavior.
+- Personality shapes communication through configuration.
+- Personality configures permitted Behaviour parameters but never executes Behaviour.
 - Identity remains consistent.
 - Users remain in control.
 - Personality is extensible.

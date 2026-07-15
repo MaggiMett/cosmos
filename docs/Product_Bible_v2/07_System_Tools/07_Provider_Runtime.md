@@ -18,7 +18,7 @@ Provider Runtime is Core Runtime infrastructure.
 
 It is not a System Tool, Provider Extension or Runtime Service.
 
-Provider definitions register through the Provider Registry, while Provider Runtime owns their selection, routing, authentication and active execution coordination.
+Provider definitions register through the Provider Registry, while Provider Runtime is the sole authoritative owner of discovery, capability matching, availability, selection, routing, authentication, failover and active execution monitoring.
 
 ---
 
@@ -38,17 +38,20 @@ The Runtime remains stable.
 
 The Provider Runtime is responsible for:
 
-- Provider registration
+- resolving registered Provider definitions
 - Provider discovery
 - Provider selection
 - request routing
 - capability matching
+- Provider availability
 - authentication
 - failover
 - load balancing
 - execution monitoring
 
 The Provider Runtime never owns Runtime Context.
+
+Consumers never select or invoke a concrete Provider. They supply abstract requirements, preferences and constraints and receive a standardized Runtime Result.
 
 ---
 
@@ -188,7 +191,7 @@ Examples include:
 - multimodal
 - image understanding
 
-The Runtime selects Providers according to required capabilities.
+Provider Runtime selects Providers according to required capabilities.
 
 ---
 
@@ -196,16 +199,18 @@ The Runtime selects Providers according to required capabilities.
 
 Selection may consider:
 
-- required capability
-- preferred Provider
-- user configuration
-- Project configuration
+- required capabilities
+- reasoning requirements
+- user preferences
+- Project preferences
+- privacy constraints
 - latency
 - availability
-- privacy requirements
 - execution cost
 
 Selection remains deterministic whenever possible.
+
+For Companion reasoning, Brain supplies these inputs but Provider Runtime makes the concrete selection and invocation decision.
 
 ---
 
@@ -235,7 +240,9 @@ A Runtime Request contains:
 
 - objective
 - compiled prompt
-- Provider Profile
+- capability and reasoning requirements
+- user and Project preferences
+- privacy constraints
 - execution options
 - timeout
 - response requirements
@@ -278,7 +285,7 @@ Authentication never leaks into Runtime consumers.
 
 # Provider Health
 
-The Runtime continuously monitors:
+Provider Runtime continuously monitors:
 
 - availability
 - response time
@@ -346,7 +353,7 @@ Summarization
 
 Claude
 
-The Runtime coordinates all Provider usage.
+Provider Runtime coordinates all Provider usage.
 
 ---
 
@@ -435,6 +442,7 @@ The rest of Cosmos should never care which Provider generated a result.
 
 - Providers are interchangeable.
 - System Tools and other Runtime consumers never access Providers directly.
+- Provider Runtime alone owns Provider discovery, matching, selection, routing, availability, failover and execution monitoring.
 - Adapters isolate Provider-specific behavior.
 - Runtime Requests are standardized.
 - Runtime Results are standardized.

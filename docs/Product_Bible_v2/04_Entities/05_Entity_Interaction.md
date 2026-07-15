@@ -195,6 +195,8 @@ Failed preflight requests may be rejected early for feedback. Any Command that r
 
 While interacting, participating Entities temporarily enter Interaction State.
 
+Entity Behaviour owns each deterministic transition into and out of that State. Entity Interaction coordinates the participants but never performs the transition itself.
+
 Examples:
 
 Idle
@@ -249,7 +251,7 @@ Pet Happy Animation
 Return to Idle
 ```
 
-Each participant performs its own Behavior.
+Entity Behaviour executes each participant's Behaviour independently.
 
 The Runtime keeps them synchronized.
 
@@ -306,9 +308,9 @@ Examples:
 - surprise
 - disappointment
 
-Emotion changes presentation only.
+Emotion is presentation and Behaviour input only.
 
-It never changes Permissions or Runtime behavior.
+Emotion may be supplied as explicit input to configured Entity Behaviour Rule eligibility or weights. It never executes Behaviour, performs state transitions, changes Permissions or owns Runtime State.
 
 ---
 
@@ -353,7 +355,7 @@ Examples:
 - Workspace change
 - shutdown
 
-Interrupted interactions should conclude gracefully whenever possible.
+Entity Interaction reports the interruption. Entity Behaviour owns priority resolution, interruption handling and deterministic transition to a safe State.
 
 ---
 
@@ -396,7 +398,7 @@ Recorded interaction history remains interaction data, not Knowledge. Only an ex
 
 If an interaction fails:
 
-- all participants return to a safe State
+- Entity Behaviour returns all participants to a safe State
 - partial animations are cancelled gracefully
 - Runtime consistency is preserved
 - other Entities remain unaffected

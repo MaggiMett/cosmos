@@ -16,7 +16,7 @@ Entity Behaviour is an Entity Runtime contract.
 
 It is not a System Tool, Runtime Service or independent Runtime system.
 
-Behaviour configuration belongs to the Entity definition and active execution remains owned by Entity Runtime.
+Behaviour configuration belongs to the Entity definition. Entity Behaviour owns active Rule execution, state transitions, scheduling, priorities, cooldowns and interruption handling within Entity Runtime.
 
 ---
 
@@ -24,7 +24,7 @@ Behaviour configuration belongs to the Entity definition and active execution re
 
 An Entity should feel alive even when no AI Provider is available.
 
-Behaviour is deterministic.
+Behaviour validation, state transitions and action execution are deterministic.
 
 Personality influences Behaviour.
 
@@ -39,12 +39,17 @@ It never replaces it.
 Entity Behaviour is responsible for:
 
 - selecting reactions
+- validating and executing Behaviour Rules
+- performing deterministic state transitions
+- scheduling eligible Rules
+- resolving priorities
 - executing idle behaviour
 - responding to Runtime Events
 - controlling interaction flow
 - coordinating animations
 - expressing personality
 - respecting cooldowns
+- handling interruptions
 - maintaining natural pacing
 
 Behaviour never performs business logic.
@@ -61,7 +66,7 @@ Each Rule contains:
 - conditions
 - priority
 - cooldown
-- probability
+- optional probability or selection weight
 - resulting actions
 
 Rules remain independent.
@@ -144,7 +149,7 @@ Examples:
 
 Emotion changes presentation.
 
-Not Runtime permissions.
+Emotion may also be an explicit input to configured Rule eligibility or weights. It never executes a Rule, performs a state transition, changes Runtime permissions or owns Runtime State.
 
 ---
 
@@ -165,7 +170,7 @@ Priority
 
 ↓
 
-Probability
+Optional Probability / Selection Weight
 
 ↓
 
@@ -234,7 +239,9 @@ Higher priority Rules may interrupt lower priority Rules.
 
 Behaviour should not become repetitive.
 
-Rules may define execution probability.
+Rule selection is deterministic by default. A Rule may participate in probabilistic selection only when probability or selection weight is explicitly configured.
+
+Probability never overrides priority, conditions or cooldowns. Entity Behaviour first determines the eligible highest-priority Rules, then applies explicitly configured probabilistic selection within that permitted set.
 
 Example:
 
@@ -246,7 +253,9 @@ Probability
 35%
 ```
 
-Randomness creates natural variation.
+Configured randomness creates natural variation.
+
+The same eligible Rules, configuration and recorded seed produce the same selection. When recovery, testing or replay requires reproducibility, Entity Behaviour records the seed or the selected Rule with the existing execution record.
 
 ---
 
@@ -267,7 +276,7 @@ Cooldown prevents spam.
 
 # Behaviour Queue
 
-The Runtime maintains a Behaviour Queue.
+Entity Behaviour maintains the Behaviour Queue within Entity Runtime.
 
 Rules enter the queue after validation.
 
@@ -279,7 +288,7 @@ The queue keeps behaviour orderly.
 
 # Personality Influence
 
-Personality modifies Behaviour.
+Personality supplies configuration input to Behaviour.
 
 Examples:
 
@@ -305,9 +314,9 @@ Energetic
 
 moves more often
 
-Personality adjusts Behaviour.
+Personality may adjust only permitted Rule weights, idle frequency, communication style, expression intensity and suggestion style.
 
-It never replaces Behaviour Rules.
+It never executes or replaces Behaviour Rules, performs state transitions, changes Permissions or owns Runtime State.
 
 ---
 
@@ -384,7 +393,7 @@ The Runtime validates every interaction.
 
 # Interruptions
 
-Behaviour may be interrupted.
+Entity Behaviour owns interruption handling.
 
 Examples:
 
@@ -394,6 +403,8 @@ Examples:
 - Workspace change
 
 Interrupted Behaviour should return to a safe State whenever possible.
+
+The interruption decision and resulting state transition are deterministic for the same inputs and selected Rule.
 
 ---
 
@@ -506,8 +517,9 @@ Users should quickly recognize patterns while still enjoying small moments of su
 # Principles
 
 - Behaviour is data-driven.
-- Behaviour is deterministic.
-- Personality modifies Behaviour.
+- Behaviour validation, state transitions and action execution are deterministic.
+- Rule selection is probabilistic only when explicitly configured and is reproducible from a seed or recorded selection when required.
+- Personality configures permitted Behaviour parameters but never executes Behaviour.
 - AI extends Behaviour.
 - Rules remain independent.
 - Runtime validates execution.

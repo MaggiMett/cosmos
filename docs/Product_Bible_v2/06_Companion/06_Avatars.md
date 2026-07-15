@@ -38,6 +38,8 @@ The Avatar System is responsible for:
 
 Avatars never define Runtime behavior.
 
+They never own Entity State or emotion and never execute Behaviour Rules or state transitions.
+
 ---
 
 # Runtime Foundation
@@ -49,7 +51,7 @@ Avatars operate on top of:
 - Entity Interaction
 - Theme System
 
-The Avatar receives Runtime State.
+The Avatar receives Entity State and presentation emotion.
 
 It never creates Runtime State.
 
@@ -109,7 +111,7 @@ Examples include:
 - think
 - talk
 
-The Runtime requests animation states.
+Entity Behaviour determines the Behaviour result and state transition; Entity Runtime conveys the resulting animation state.
 
 The Avatar performs them.
 
@@ -129,9 +131,9 @@ Examples include:
 - pride
 - relaxation
 
-Expressions reflect Personality.
+Expressions visualize the current presentation emotion and configured expression intensity.
 
-They never change Runtime logic.
+They never create or change emotion, Behaviour, Permissions or Runtime State.
 
 ---
 
@@ -224,6 +226,8 @@ Sleep Animation
 
 The Avatar never owns Runtime State.
 
+It likewise visualizes emotion without owning it.
+
 ---
 
 # Interaction
@@ -296,7 +300,7 @@ Users should recognize their Companion because of its Personality—not because 
 
 - Avatars define appearance.
 - Personality defines character.
-- Runtime defines behavior.
+- Entity Behaviour owns Behaviour execution and state transitions.
 - Themes define visuals.
 - AI never defines appearance.
 - Avatars are replaceable.

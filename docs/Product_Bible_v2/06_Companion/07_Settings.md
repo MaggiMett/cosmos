@@ -37,6 +37,8 @@ The Settings System is responsible for:
 
 Settings never execute Runtime logic.
 
+They never select Providers, execute Behaviour Rules, perform state transitions or own Runtime State.
+
 ---
 
 # Runtime Foundation
@@ -78,7 +80,7 @@ Users may adjust:
 - formality
 - communication style
 
-These settings modify the active Personality Profile.
+These settings modify the active Personality Profile as configuration input. Personality does not execute Behaviour.
 
 ---
 
@@ -108,7 +110,7 @@ Users may configure:
 - fallback behavior
 - reasoning limits
 
-The Brain uses these preferences during Provider selection.
+Brain may include these preferences in an abstract Provider request. Provider Runtime remains the sole owner of capability matching, concrete Provider selection, routing, availability and failover.
 
 ---
 
@@ -143,7 +145,7 @@ Avatar settings affect presentation only.
 
 ---
 
-# Behavior Settings
+# Behaviour Settings
 
 Users may configure:
 
@@ -153,7 +155,7 @@ Users may configure:
 - interaction frequency
 - ambient animations
 
-Behavior remains governed by the Entity Runtime.
+These values configure Entity Behaviour parameters only. Entity Behaviour remains the execution owner for Rules, state transitions, scheduling, priorities, cooldowns and interruptions.
 
 ---
 

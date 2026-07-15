@@ -20,7 +20,7 @@ Changing Providers should improve or alter intelligence.
 
 It should never change identity, personality or Runtime behavior.
 
-Providers are tools.
+Providers are interchangeable infrastructure components managed through Provider Runtime.
 
 The Companion is the user-facing identity.
 
@@ -76,7 +76,7 @@ Brain
 Conversation
 ```
 
-The Brain coordinates every Provider interaction.
+Brain supplies abstract requirements and preferences. Provider Runtime coordinates every concrete Provider interaction.
 
 ---
 
@@ -129,17 +129,19 @@ Enterprise Providers follow the same Runtime contract.
 
 # Provider Selection
 
-The Brain selects Providers according to:
+Provider Runtime selects Providers according to:
 
-- user preference
-- project configuration
-- installed Providers
+- user preferences supplied by the consumer
+- Project preferences supplied by the consumer
 - capability requirements
-- availability
+- privacy constraints
+- reasoning requirements
+- registered and available Providers
 - performance
-- privacy requirements
 
 Selection always remains configurable.
+
+Brain never selects or invokes a concrete Provider directly.
 
 ---
 
@@ -183,9 +185,7 @@ Providers may expose capabilities such as:
 - image understanding
 - multimodal reasoning
 
-Capabilities remain descriptive.
-
-The Brain decides when to use them.
+Capabilities remain descriptive. Consumers request capabilities; Provider Runtime performs authoritative capability matching and selection.
 
 ---
 
@@ -211,7 +211,7 @@ Not to the Brain.
 
 # Context Delivery
 
-Providers receive only the Context assembled by the Brain.
+Providers receive only the authorized Context Package supplied with the request and delivered by Provider Runtime.
 
 They never query Runtime Services directly.
 
@@ -226,7 +226,7 @@ This ensures:
 
 # Privacy
 
-The Brain determines what information is shared.
+Brain supplies privacy constraints, while Context Builder assembles the authorized Context Package and Provider Runtime enforces those constraints during selection and routing.
 
 Providers never receive unrestricted Runtime access.
 
@@ -243,7 +243,7 @@ Users remain in control of:
 
 If a Provider becomes unavailable:
 
-- the Brain selects another Provider when possible
+- Provider Runtime selects a compatible fallback when possible
 - deterministic Runtime behavior continues
 - non-AI capabilities remain available
 - the Companion remains active
@@ -279,7 +279,7 @@ Users should freely choose where reasoning happens without changing how the Comp
 - Providers are replaceable.
 - Providers extend the Brain.
 - Providers never define the Companion.
-- The Brain selects Providers.
+- Provider Runtime alone selects, routes and fails over Providers.
 - Runtime Context is assembled before reasoning.
 - Providers never access Runtime directly.
 - Provider failure never disables the Companion.

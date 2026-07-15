@@ -4,7 +4,7 @@
 
 The Entity Runtime manages every active Entity inside Cosmos.
 
-It controls Entity lifecycle, scope, movement, state, behavior and interaction while keeping Entities independent from AI Providers and visual Themes.
+It controls Entity lifecycle, scope, movement and interaction, hosts active Entity State, and coordinates Entity Behaviour while keeping Entities independent from AI Providers and visual Themes.
 
 The Entity Runtime makes Cosmos feel inhabited.
 
@@ -38,16 +38,18 @@ The Entity Runtime is responsible for:
 
 - loading Entities
 - activating Entities by Scope
-- managing Entity State
+- hosting active Entity State and recovery
 - managing movement and position
 - routing Runtime Events
-- executing Behavior Rules
+- delivering Behaviour inputs and results
 - coordinating animations
 - managing Entity interactions
 - preserving Entity Runtime State
 - suspending and unloading Entities safely
 
 The Entity Runtime never owns business logic.
+
+Entity Behaviour owns Behaviour Rule execution, state transitions, scheduling, priorities, cooldowns and interruption handling within Entity Runtime.
 
 ---
 
@@ -181,6 +183,8 @@ State Transitions
 
 State changes occur through explicit Runtime transitions.
 
+Entity Behaviour validates and performs every state transition deterministically. Entity Runtime stores and exposes the resulting active State.
+
 Example:
 
 Idle
@@ -233,7 +237,7 @@ Face user
 Play wave animation
 Return to Idle
 
-Behavior Rules must remain deterministic.
+Behaviour Rule validation, condition evaluation, state transitions and action execution are deterministic. Rule selection is deterministic by default and may be probabilistic only when explicitly configured; a seed or recorded selection makes that choice reproducible when required.
 
 Event Processing
 
@@ -256,7 +260,7 @@ Event-driven behavior reduces unnecessary work and creates predictable reactions
 
 Event Priority
 
-Events may have different priorities.
+Entity Behaviour applies Event and Rule priorities.
 
 Initial priorities include:
 
@@ -265,13 +269,13 @@ Normal
 Important
 Blocking
 
-Ambient behavior may be interrupted.
+Ambient Behaviour may be interrupted.
 
 Blocking Runtime actions may not be interrupted without explicit cancellation.
 
 Cooldowns
 
-Repeated behaviors may define cooldowns.
+Entity Behaviour schedules and enforces configured cooldowns for repeated Behaviours.
 
 Examples include:
 
@@ -465,17 +469,17 @@ The Provider only returns generated intelligence.
 
 Personality
 
-Personality influences Runtime behavior through configuration.
+Personality supplies configuration input to Entity Behaviour.
 
 Examples include:
 
 idle frequency
-preferred greetings
-animation selection
 communication tone
-reaction intensity
+permitted Rule weights
+expression intensity
+suggestion style
 
-Personality never bypasses Behavior Rules or Permissions.
+Personality never executes Behaviour Rules, performs state transitions, owns Runtime State or changes Permissions.
 
 Runtime Context
 
@@ -571,8 +575,8 @@ Principles
 Entities live without AI.
 Runtime controls lifecycle.
 Scope controls availability.
-Behavior Rules may react to completed Event facts.
-Behavior Rules remain deterministic.
+Behaviour Rules may react to completed Event facts.
+Behaviour validation and state transitions are deterministic; explicitly configured probabilistic Rule selection is reproducible from a seed or recorded selection when required.
 Runtime Services authoritatively enforce Permissions for Runtime actions.
 Runtime Services execute work.
 Avatars define presentation.

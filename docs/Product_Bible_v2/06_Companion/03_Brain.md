@@ -4,7 +4,7 @@
 
 The Brain coordinates thinking, reasoning and decision making for the Companion.
 
-It receives user intentions from Conversation and Runtime Context through Entity Runtime, coordinates Capability Bundles and optionally uses one or more AI Providers to produce intelligent responses.
+It receives user intentions from Conversation and Runtime Context through Entity Runtime, coordinates Capability Bundles and may request advanced reasoning through Provider Runtime.
 
 The Brain thinks.
 
@@ -44,7 +44,7 @@ The Brain is responsible for:
 - coordinating reasoning
 - receiving Runtime Context and requesting task-specific Context Packages
 - selecting Capability Bundles
-- selecting AI Providers
+- supplying capability requirements, user and Project preferences, privacy constraints and reasoning requirements to Provider Runtime
 - coordinating multi-step workflows
 - preparing Runtime requests
 - producing structured decisions
@@ -95,7 +95,7 @@ Capability Selection
 
 ↓
 
-Provider Selection (optional)
+Provider Runtime Request (optional)
 
 ↓
 
@@ -207,25 +207,26 @@ The Companion remains functional.
 
 ---
 
-# Provider Selection
+# Provider Request
 
-When advanced reasoning is required the Brain selects an appropriate Provider.
+When advanced reasoning is required, the Brain sends an abstract request to Provider Runtime.
 
-Selection may consider:
+The request may contain:
 
-- user preference
-- installed Providers
-- required capability
-- Provider availability
-- project configuration
+- required capabilities
+- user preferences
+- Project preferences
+- privacy constraints
+- reasoning requirements
+- authorized Context Package
 
-The selected Provider performs reasoning only.
+Provider Runtime alone discovers availability, matches capabilities, selects and invokes the concrete Provider, routes the request, monitors execution and performs failover. The Brain never selects, invokes or fails over a concrete Provider directly.
 
 ---
 
 # Structured Reasoning
 
-Providers return structured reasoning results.
+Provider Runtime returns standardized structured reasoning results from the selected Provider.
 
 Examples include:
 
@@ -280,14 +281,17 @@ The Brain never stores independent facts.
 
 # Personality
 
-Personality influences:
+Personality supplies configuration for:
 
-- reasoning style
-- communication strategy
-- suggestion frequency
-- interaction preferences
+- permitted Behaviour Rule weights
+- idle frequency
+- communication style
+- expression intensity
+- suggestion style
 
 Personality never changes factual Runtime information.
+
+It never selects Providers or executes Companion Behaviour.
 
 ---
 
@@ -378,7 +382,7 @@ Changing the Provider should improve reasoning quality without changing how the 
 
 - The Brain is not an AI.
 - The Brain coordinates reasoning.
-- Providers perform reasoning.
+- Provider Runtime selects and invokes Providers; Providers perform reasoning.
 - Runtime Context is inherited; task-specific Context Packages come from Context Builder.
 - Capability Bundles perform specialized work.
 - Runtime Services execute actions.
