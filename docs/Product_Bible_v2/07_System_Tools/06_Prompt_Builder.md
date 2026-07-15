@@ -40,6 +40,7 @@ The Prompt Builder is responsible for:
 - reducing redundant information
 - assembling execution instructions
 - preserving Runtime intent
+- preserving the Context Package's authorized scope
 - generating reproducible prompts
 
 The Prompt Builder never gathers Context.
@@ -58,6 +59,8 @@ The Prompt Builder operates on:
 
 The Prompt Builder always receives a completed Context Package.
 
+Context Builder is the only component that assembles that Package.
+
 ---
 
 # Input
@@ -71,6 +74,8 @@ The Prompt Builder receives:
 - execution preferences
 
 The Prompt Builder never requests additional Runtime information.
+
+It may structure the completed Package for a Provider but never expands its scope or assembles replacement Context.
 
 ---
 
@@ -161,6 +166,8 @@ Typical sections include:
 - execution constraints
 
 Irrelevant Context is never added.
+
+Prompt formatting never changes the assigned Project scopes or optional focused or primary Project established in the Context Package.
 
 ---
 

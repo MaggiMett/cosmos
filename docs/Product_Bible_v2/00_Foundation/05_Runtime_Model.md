@@ -29,12 +29,14 @@ Cosmos supports two primary working paths.
 ```text
 Cosmos Map
     ↓
-Optional Project or Object Focus
+Optional Project Scopes, Project Focus or Object Focus
     ↓
 One User Tool beside the visible map
 ```
 
 Direct Tool Mode is intended for focused work with one Tool while preserving the visible constellation.
+
+Tool Runtime creates and owns the lifecycle of the single active Tool Instance. Direct Tool Mode has no Workspace session, Room, Panels or multi-window Layout.
 
 ## Workspace Mode
 
@@ -50,6 +52,8 @@ Multiple Tool Instances
 
 Workspace Mode is intended for complex work involving several windows or Tools.
 
+Workspace Runtime opens a temporary active Workspace session from a persistent Workspace definition. The session contains its multiple Tool Instances and presentation state; Tool Runtime owns each Tool Instance lifecycle.
+
 Both modes use the same Tool definitions, Runtime Services and Context model.
 
 ---
@@ -59,22 +63,14 @@ Both modes use the same Tool definitions, Runtime Services and Context model.
 Context is composed additively through the active Runtime path.
 
 ```text
-Cosmos
-    ↓
-Optional Project Scope
-    ↓
-Room
-    ↓
-Workspace
-    ↓
-Tool
-    ↓
-Object
-    ↓
-Knowledge
+Direct Tool Mode:
+Cosmos → Optional Project Scopes and Focus → Tool → Optional Object → Optional Knowledge
+
+Workspace Mode:
+Cosmos → Optional Project Scopes and Focus → Room → Workspace Session → Tool → Optional Object → Optional Knowledge
 ```
 
-A Workspace may also carry assigned Project Tags, including multiple Projects when desired.
+Assigned Project scopes may contain zero, one or multiple Projects. An optional focused or primary Project provides defaults and emphasis without removing other assigned scopes.
 
 No component needs to rediscover Context that has already been established.
 
@@ -84,9 +80,10 @@ No component needs to rediscover Context that has already been established.
 
 Runtime Context may include:
 
-- active or assigned Project scopes
+- zero, one or multiple assigned Project scopes
+- optional focused or primary Project
 - active Room
-- active Workspace
+- active Workspace session
 - active Tool Instance
 - active Object
 - inherited System Tags
@@ -95,7 +92,11 @@ Runtime Context may include:
 - permissions
 - Runtime state
 
-Long-running work receives an immutable Context Snapshot.
+Runtime injects the current Runtime Context into ordinary Tools and Services.
+
+A Context Snapshot is an immutable capture of Runtime Context for a task or long-running operation, so later navigation does not alter that work.
+
+A Context Package is the minimal authorized task-specific view of a Context Snapshot plus resolved referenced information. Context Builder is the canonical component that assembles every Context Package.
 
 ---
 
@@ -151,7 +152,7 @@ Processing enriches Knowledge without overwriting user intent.
 
 # Runtime State
 
-Workspaces and Tool Instances preserve restorable state such as:
+Active Workspace sessions and Tool Instances preserve restorable state such as:
 
 - open Tools
 - window positions
@@ -162,6 +163,8 @@ Workspaces and Tool Instances preserve restorable state such as:
 - Theme and Skin overrides
 
 Domain data and Runtime state remain separate.
+
+Persistent Workspace definitions remain separate from temporary active Workspace sessions and their restorable state.
 
 ---
 

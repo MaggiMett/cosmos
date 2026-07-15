@@ -120,11 +120,11 @@ Users should always understand where they are.
 
 # Focus
 
-Focusing a Project changes the active Context.
+Focusing a Project identifies the optional primary Project within the active Context.
 
 The surrounding universe remains visible.
 
-Only the active Project becomes the current working context.
+Other assigned Project scopes remain part of the current working Context.
 
 Focus never disconnects the user from Cosmos.
 
@@ -134,41 +134,33 @@ Focus never disconnects the user from Cosmos.
 
 Cosmos initiates Context inheritance.
 
-Context flows through the Runtime:
+Context follows the active working mode:
 
-Project
+```text
+Direct Tool Mode:
+Cosmos → Optional Project Scopes and Focus → Tool → Optional Object
 
-↓
+Workspace Mode:
+Cosmos → Optional Project Scopes and Focus → Room → Workspace Session → Tool → Optional Object
+```
 
-Room
+Assigned Project scopes are optional and may contain zero, one or multiple Projects.
 
-↓
+When a Project is focused, it becomes the optional primary Context for defaults and emphasis without replacing other assigned scopes.
 
-Workspace
-
-↓
-
-Tool
-
-↓
-
-Object
-
-Project Context is optional.
-
-When a Project is focused, it becomes the primary Context for newly opened Tools and Workspaces.
-
-Without a focused Project, Cosmos provides global Context.
+Without assigned Project scopes, Cosmos provides global Context. Project focus remains optional when scopes are assigned.
 
 ---
 
 # Direct Tool Mode
 
-A focused Project or Object may open one User Tool directly beside the map.
+From global, Project-focused or Object-focused Context, the user may open one User Tool directly beside the map.
 
 This mode preserves the constellation and surrounding Project structure while the user performs one focused task.
 
-Opening additional Tools or arranging multiple windows transitions the user into a Workspace.
+Tool Runtime creates, restores and closes the single Direct Tool Mode Tool Instance. The Instance has no Workspace session and receives Runtime Context directly from the Runtime.
+
+Opening additional Tools or arranging multiple windows opens a Workspace session and transitions the user into Workspace Mode.
 
 Direct Tool Mode and Workspace Mode use the same Tool definitions, Runtime Services and Context model.
 

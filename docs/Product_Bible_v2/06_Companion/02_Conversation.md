@@ -103,17 +103,18 @@ Conversation automatically receives Runtime Context.
 
 Examples include:
 
-- active Project
-- active Workspace
+- zero, one or multiple assigned Project scopes
+- optional focused or primary Project
+- active Workspace session
 - current Room
 - selected Object
 - active Review
 - running Jobs
 - nearby Entities
 
-Conversation never asks the Runtime directly.
+Conversation never discovers Runtime Context independently.
 
-The Brain receives Context from the Entity Runtime.
+The Brain receives ordinary Runtime Context through the Entity Runtime. When reasoning requires task-specific information, the Brain requests a Context Package assembled by Context Builder.
 
 ---
 
@@ -246,7 +247,7 @@ The current session may reference:
 
 - previous messages
 - current Runtime Context
-- active Workspace
+- active Workspace session
 - recent Runtime Events
 
 Long-term knowledge remains inside the Knowledge Runtime.

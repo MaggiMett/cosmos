@@ -106,6 +106,12 @@ Capture Instance
 
 Each Tool Instance maintains its own independent state.
 
+Tool Runtime owns the lifecycle of every Tool Instance.
+
+In Direct Tool Mode, Tool Runtime owns one active Tool Instance directly. It has no Workspace session, Room, Panels or multi-window Layout.
+
+In Workspace Mode, an active Workspace session contains one or more Tool Instances and owns their presentation placement, while Tool Runtime continues to own each Instance lifecycle.
+
 ---
 
 # Context
@@ -115,22 +121,16 @@ Tools never determine Context themselves.
 Context is inherited automatically.
 
 ```text
-Project
+Direct Tool Mode:
+Cosmos → Optional Project Scopes and Focus → Tool
 
-↓
-
-Room
-
-↓
-
-Workspace
-
-↓
-
-Tool
+Workspace Mode:
+Cosmos → Optional Project Scopes and Focus → Room → Workspace Session → Tool
 ```
 
 The Runtime provides the complete Context before the Tool performs any action.
+
+Assigned Project scopes may contain zero, one or multiple Projects, with an optional focused or primary Project for defaults and emphasis.
 
 ---
 

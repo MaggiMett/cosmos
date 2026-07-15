@@ -8,6 +8,8 @@ It is responsible for creating, executing, suspending and destroying Tool Instan
 
 The Tool Runtime transforms Tool definitions into executable Runtime instances.
 
+It is the lifecycle owner for Tool Instances in both Direct Tool Mode and Workspace Mode.
+
 ---
 
 # Philosophy
@@ -36,6 +38,16 @@ The Tool Runtime is responsible for:
 - safely shutting down Tool Instances
 
 The Tool Runtime never performs business logic itself.
+
+---
+
+# Execution Modes
+
+In Direct Tool Mode, Tool Runtime creates and owns one active Tool Instance without a Workspace session, Room, Panels or multi-window Layout. When Direct Tool Mode closes, Tool Runtime requests eligible Tool State persistence through Tool Service and then destroys the Instance.
+
+In Workspace Mode, an active Workspace session contains one or more Tool Instances and owns their presentation placement. Tool Runtime still creates, initializes, suspends, closes and destroys each Instance.
+
+Opening a second Tool or arranging multiple windows requires an active Workspace session and therefore uses Workspace Mode.
 
 ---
 
@@ -96,18 +108,21 @@ Only after successful initialization does the Tool become active.
 
 # Runtime Context
 
-Every Tool Instance receives immutable Context for the current execution.
+Every Tool Instance receives the current Runtime Context for ordinary active execution.
 
 Typical Context includes:
 
-- active Project
-- active Workspace
+- zero, one or multiple assigned Project scopes
+- optional focused or primary Project
+- active Workspace session when in Workspace Mode
 - active Object
 - inherited Tags
 - current Theme
 - current Runtime State
 
 Tool Instances never discover Context themselves.
+
+Long-running work receives a Context Snapshot through the applicable Runtime contract. Task-specific Context Packages are assembled by Context Builder, not by Tool Runtime or Tool Instances.
 
 ---
 
@@ -303,7 +318,7 @@ If a Tool Instance fails:
 - the failure is isolated
 - unsaved work is recovered whenever possible
 - the Runtime remains operational
-- Workspace State remains valid
+- Workspace session state remains valid when applicable
 
 Tool failures must never destabilize Cosmos.
 
@@ -329,6 +344,9 @@ Users should think about their work—not about the software executing it.
 
 - Tool Definitions describe capabilities.
 - Tool Instances perform work.
+- Tool Runtime owns every Tool Instance lifecycle.
+- Direct Tool Mode has one Tool Instance and no Workspace session.
+- Workspace Mode contains Tool Instances in an active Workspace session.
 - Runtime Services own business logic.
 - Tool Instances receive Context.
 - Communication happens through Events.

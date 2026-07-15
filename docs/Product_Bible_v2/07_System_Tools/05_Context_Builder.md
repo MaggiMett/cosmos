@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The Context Builder assembles the minimum complete Runtime Context required to perform a specific task.
+The Context Builder assembles the minimum complete Context Package required to perform a specific task.
 
 Its purpose is to provide System Tools, Capability Bundles and Providers with exactly the information they need.
 
@@ -38,7 +38,7 @@ Not exhaustive.
 
 The Context Builder is responsible for:
 
-- assembling Runtime Context
+- assembling task-specific Context Packages from Context Snapshots
 - resolving relevant Objects
 - resolving related Knowledge
 - resolving Resources
@@ -62,6 +62,7 @@ The Context Builder operates on:
 - Review Service
 - Repository Runtime
 - Bundle Runtime
+- Runtime Context
 
 Context assembly always occurs before execution.
 
@@ -79,7 +80,7 @@ The Context Builder may assemble Context from:
 - Reviews
 - Runtime configuration
 - Repository knowledge
-- active Workspace
+- active Workspace session
 - active Room
 - Runtime state
 
@@ -92,7 +93,7 @@ Every Context source remains authoritative.
 Every Context request follows the same flow.
 
 ```text
-Task Request
+Task Request and Context Snapshot
 
 ↓
 
@@ -119,7 +120,7 @@ Validate Completeness
 Context Package
 ```
 
-The resulting Context Package becomes the working foundation.
+The resulting Context Package becomes the task's temporary working view of the existing Context model.
 
 ---
 
@@ -187,7 +188,9 @@ The Context Builder never assumes that every task needs every source.
 
 A Context Package may contain:
 
-- Runtime metadata
+- source Context Snapshot identity and Runtime metadata
+- zero, one or multiple assigned Project scopes
+- optional focused or primary Project
 - Objects
 - Knowledge Items
 - Relationships
@@ -198,6 +201,8 @@ A Context Package may contain:
 - Bundle information
 
 Packages remain temporary.
+
+A Package is a minimal authorized task-specific projection of its Context Snapshot plus resolved referenced information. It is not a separate Context model and does not replace ordinary Runtime Context injection into Tools and Services.
 
 ---
 
@@ -249,8 +254,9 @@ Consumers never assemble Context independently.
 
 Current Runtime information may include:
 
-- active Project
-- active Workspace
+- zero, one or multiple assigned Project scopes
+- optional focused or primary Project
+- active Workspace session
 - selected Object
 - active Review
 - nearby Entities
@@ -259,7 +265,7 @@ Current Runtime information may include:
 
 Runtime information changes continuously.
 
-The Context Package represents one consistent snapshot.
+The source Context Snapshot preserves one consistent point in time while Context Builder produces the task-specific Package from it.
 
 ---
 
@@ -279,7 +285,7 @@ They never construct it.
 
 Context should be assembled incrementally.
 
-Previously assembled Context may be reused when still valid.
+Previously assembled Context Packages may be reused when still valid.
 
 Only changed Runtime information should require rebuilding.
 
@@ -334,7 +340,7 @@ High-quality Context should become one of the defining strengths of Cosmos.
 
 # Principles
 
-- Context is assembled.
+- Context Packages are assembled from Context Snapshots.
 - Context is minimal.
 - Context is complete.
 - Context is deterministic.
@@ -342,3 +348,4 @@ High-quality Context should become one of the defining strengths of Cosmos.
 - AI consumes Context.
 - Consumers never assemble Context themselves.
 - Every task receives its own Context Package.
+- Ordinary Tools and Services continue receiving Runtime Context directly from the Runtime.

@@ -60,6 +60,7 @@ Journeyman operates on:
 - Job Runtime
 - Review Service
 - Provider Runtime
+- Context Builder
 
 Journeyman introduces no special Runtime architecture.
 
@@ -80,7 +81,7 @@ Planning
 
 ↓
 
-Context Assembly
+Context Package Request
 
 ↓
 
@@ -100,14 +101,15 @@ Completed
 
 Journeyman never skips validation.
 
-Context Assembly
+Context Package Request
 
-Before beginning work Journeyman assembles Runtime Context.
+Before beginning work Journeyman receives a Context Snapshot and requests a task-specific Context Package from Context Builder.
 
 Context may include:
 
-Project
-Workspace
+zero, one or multiple assigned Project scopes
+optional focused or primary Project
+Workspace session when applicable
 Objects
 Knowledge
 Blueprints
@@ -117,7 +119,7 @@ Runtime configuration
 
 Journeyman never scans the repository blindly.
 
-Context is assembled through Runtime Services.
+Context Builder assembles the Package through existing Runtime Services and Runtime contracts. Journeyman never assembles Context independently.
 
 Planning
 

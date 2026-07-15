@@ -37,24 +37,16 @@ It only describes the current situation.
 
 ---
 
-# Context Path
+# Context Model
 
 Context is composed through the active Runtime path.
 
 ```text
-Cosmos
-    ↓
-Optional Project Scope
-    ↓
-Room
-    ↓
-Workspace
-    ↓
-Tool
-    ↓
-Object
-    ↓
-Knowledge
+Direct Tool Mode:
+Cosmos → Optional Project Scopes and Focus → Tool → Optional Object → Optional Knowledge
+
+Workspace Mode:
+Cosmos → Optional Project Scopes and Focus → Room → Workspace Session → Tool → Optional Object → Optional Knowledge
 ```
 
 Each level contributes additional Context.
@@ -63,29 +55,33 @@ Lower levels extend inherited Context and never silently replace it.
 
 ---
 
-# Optional Project Scope
+# Optional Project Scopes
 
-Project Context is optional.
+Project Context is optional and consists of assigned Project scopes plus optional focus.
 
-A user may work globally without a focused Project.
+A user may work with:
 
-A Workspace may carry:
+- zero assigned Project scopes
+- one assigned Project scope
+- multiple assigned Project scopes
+- an optional focused or primary Project within the available scope when a default or emphasis is needed
 
-- no Project Tag
-- one Project Tag
-- multiple Project Tags
+Focus never removes or silently replaces other assigned Project scopes.
 
 This allows project-specific Workspaces and cross-project Workspaces without introducing separate Workspace types.
 
 ---
 
-# Context Components
+# Runtime Context
+
+Runtime Context is the live additive view of the current Runtime path. The Runtime rebuilds it as navigation, focus or active state changes and injects it into ordinary Tools and Services.
 
 A Runtime Context may contain:
 
-- active or assigned Project IDs
+- zero, one or multiple assigned Project IDs
+- optional focused or primary Project ID
 - active Room
-- active Workspace
+- active Workspace session
 - active Tool Instance
 - active Object
 - inherited System Tags
@@ -126,11 +122,12 @@ A Tool receives the merged Context Tags of the current path plus its local addit
 
 # Workspace Context
 
-Every Workspace defines its own Context additions.
+Every persistent Workspace definition defines its own Context additions.
 
 Examples include:
 
-- assigned Project Tags
+- assigned Project scopes
+- optional default focused or primary Project
 - preferred Objects
 - default Archive filters
 - active Branches
@@ -162,12 +159,13 @@ Inherited Tags remain removable where the product explicitly allows user control
 
 # Context Snapshots
 
-Long-running operations receive immutable Context Snapshots.
+A Context Snapshot is an immutable capture of Runtime Context at task, command or Job initiation.
 
 A Snapshot may contain:
 
 - Project scopes
-- Room and Workspace IDs
+- optional focused or primary Project ID
+- Room and Workspace session IDs
 - Tool and Object IDs
 - inherited Tags
 - permissions
@@ -175,6 +173,16 @@ A Snapshot may contain:
 - timestamp
 
 Later navigation does not alter a running operation.
+
+---
+
+# Context Packages
+
+A Context Package is a temporary, minimal and authorized task-specific view of a Context Snapshot plus resolved referenced Objects, Knowledge, Resources, Blueprints, Reviews and Runtime configuration required by the task.
+
+Context Builder is the canonical component for assembling every Context Package. Consumers request and receive Packages; they never assemble independent task Context.
+
+Context Packages do not replace ordinary Runtime Context injection into Tools and Services.
 
 ---
 
@@ -223,9 +231,11 @@ Users should experience Cosmos as understanding where they are and what they are
 # Principles
 
 - Context is composed additively.
-- Project scope is optional.
-- Workspaces may carry Project Tags.
+- Project scopes are optional and may be zero, one or multiple.
+- Focus or primary Project selection is optional.
+- Workspace definitions may carry assigned Project scopes.
 - Tools receive Context from the Runtime.
 - Context never owns persistent meaning.
 - Snapshots preserve long-running work.
+- Context Builder assembles task-specific Context Packages.
 - Extensions share one Context model.

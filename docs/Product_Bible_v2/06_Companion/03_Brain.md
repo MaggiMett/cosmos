@@ -4,7 +4,7 @@
 
 The Brain coordinates thinking, reasoning and decision making for the Companion.
 
-It receives user intentions from Conversation, gathers Runtime Context, coordinates Capability Bundles and optionally uses one or more AI Providers to produce intelligent responses.
+It receives user intentions from Conversation and Runtime Context through Entity Runtime, coordinates Capability Bundles and optionally uses one or more AI Providers to produce intelligent responses.
 
 The Brain thinks.
 
@@ -42,7 +42,7 @@ The Brain is responsible for:
 
 - interpreting user intentions
 - coordinating reasoning
-- gathering Runtime Context
+- receiving Runtime Context and requesting task-specific Context Packages
 - selecting Capability Bundles
 - selecting AI Providers
 - coordinating multi-step workflows
@@ -60,6 +60,7 @@ The Brain operates on top of:
 - Entity Runtime
 - Bundle Runtime
 - Runtime Context
+- Context Builder
 - Knowledge Runtime
 - Provider Runtime
 
@@ -86,7 +87,7 @@ Brain
 
 ↓
 
-Context Assembly
+Context Package Request
 
 ↓
 
@@ -132,23 +133,26 @@ Intent determines which Capabilities participate.
 
 ---
 
-# Context Assembly
+# Context Package Request
 
-The Brain gathers Runtime Context.
+The Brain receives ordinary active Runtime Context through Entity Runtime.
+
+When a request requires task-specific information, the Brain asks Context Builder to assemble a Context Package from a Context Snapshot.
 
 Examples include:
 
-- active Project
-- active Workspace
+- zero, one or multiple assigned Project scopes
+- optional focused or primary Project
+- active Workspace session
 - selected Objects
 - active Review
 - running Jobs
 - nearby Entities
 - installed Bundles
 
-Context always originates from Runtime Services.
+Context Builder resolves the required authorized information through existing Runtime Services and Runtime contracts.
 
-The Brain never scans the system independently.
+The Brain never scans the system or assembles a Context Package independently.
 
 ---
 
@@ -375,7 +379,7 @@ Changing the Provider should improve reasoning quality without changing how the 
 - The Brain is not an AI.
 - The Brain coordinates reasoning.
 - Providers perform reasoning.
-- Runtime Context is assembled.
+- Runtime Context is inherited; task-specific Context Packages come from Context Builder.
 - Capability Bundles perform specialized work.
 - Runtime Services execute actions.
 - Knowledge remains authoritative.

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The Workspace Runtime manages every active Workspace inside Cosmos.
+The Workspace Runtime manages every active Workspace session inside Cosmos.
 
 It is responsible for creating, restoring, updating and destroying Workspace sessions while maintaining a consistent user experience.
 
@@ -12,7 +12,9 @@ The Workspace Runtime coordinates Tool Instances, Layouts and Runtime Context.
 
 # Philosophy
 
-A Workspace is temporary.
+A Workspace session is temporary.
+
+Its Workspace definition is persistent.
 
 The user's work is not.
 
@@ -26,22 +28,22 @@ Changing Workspaces should feel like walking to another desk rather than closing
 
 The Workspace Runtime is responsible for:
 
-- opening Workspaces
-- closing Workspaces
-- restoring Workspace State
-- managing Tool Instances
+- opening Workspace sessions from persistent Workspace definitions
+- closing Workspace sessions without removing their definitions
+- restoring Workspace session state
+- containing Tool Instances in Workspace Mode
 - managing Panels
 - managing Layouts
 - synchronizing Runtime Context
-- tracking active Workspaces
+- tracking active Workspace sessions
 
 The Workspace Runtime never performs business logic.
 
 ---
 
-# Workspace Lifecycle
+# Workspace Session Lifecycle
 
-Every Workspace follows the same lifecycle.
+Every active Workspace session follows the same lifecycle.
 
 ```text
 Created
@@ -63,17 +65,17 @@ Background
 Closed
 ```
 
-Closed Workspaces may later be restored.
+Closing destroys the active session after restorable state is preserved. The persistent Workspace definition remains and may later be reopened as a new session.
 
 ---
 
-# Active Workspace
+# Active Workspace Session
 
-Only one Workspace is normally focused.
+Only one Workspace session is normally focused.
 
-Multiple Workspaces may remain active simultaneously.
+Multiple Workspace sessions may remain active simultaneously.
 
-Background Workspaces continue preserving:
+Background Workspace sessions continue preserving:
 
 - Tool state
 - Layout
@@ -84,7 +86,7 @@ Background Workspaces continue preserving:
 
 # Tool Instances
 
-Every Workspace owns its Tool Instances.
+Every active Workspace session contains its Tool Instances.
 
 Examples:
 
@@ -104,7 +106,9 @@ Individual Tool Instances
 
 Tool Instances never belong to Projects.
 
-They belong to the active Workspace session.
+The active Workspace session owns their containment and presentation placement. Tool Runtime owns each Tool Instance lifecycle.
+
+Direct Tool Mode has no Workspace session and is outside Workspace Runtime ownership.
 
 ---
 
@@ -119,7 +123,7 @@ The Workspace Runtime manages:
 - sidebar visibility
 - panel arrangement
 
-Layout changes affect only the current Workspace.
+Layout changes affect only the current Workspace session.
 
 ---
 
@@ -143,7 +147,7 @@ They never contain business logic.
 
 # Overlay
 
-Every Workspace loads exactly one Overlay.
+Every Workspace session loads exactly one Overlay from its persistent Workspace definition.
 
 The Overlay defines:
 
@@ -162,9 +166,10 @@ The Workspace Runtime extends inherited Context.
 
 Workspace Context includes:
 
-- active Project
+- zero, one or multiple assigned Project scopes
+- optional focused or primary Project
 - active Room
-- active Workspace
+- active Workspace session
 - active Tools
 - current Object
 - current filters
@@ -175,7 +180,7 @@ Whenever Workspace Context changes, Tool Instances are notified automatically.
 
 # State
 
-Every Workspace maintains Runtime State.
+Every active Workspace session maintains Runtime State.
 
 Examples include:
 
@@ -186,7 +191,7 @@ Examples include:
 - scroll positions
 - temporary drafts
 
-Workspace State is restored whenever the Workspace is reopened.
+Workspace session state is restored whenever its persistent Workspace definition is reopened.
 
 ---
 
@@ -226,7 +231,7 @@ Other Runtime systems subscribe through the Event Model.
 
 Workspace failures remain isolated.
 
-If one Workspace becomes invalid:
+If one Workspace session becomes invalid:
 
 - its Tool Instances are safely closed
 - its Runtime State is preserved whenever possible
@@ -238,15 +243,15 @@ One broken Workspace must never stop the Runtime.
 
 # Persistence
 
-The Workspace Runtime stores:
+The Workspace Runtime coordinates preservation of restorable session state through Workspace Service for:
 
-- Layout
+- current Layout state
 - open Tool Instances
-- Overlay
 - Runtime State
-- user preferences
 
 Business data remains outside the Workspace Runtime.
+
+Persistent Workspace definitions are stored through Workspace Service and Persistence. Workspace Runtime does not own their durability.
 
 ---
 
@@ -274,10 +279,12 @@ Users should always return to the same workplace exactly as they left it, allowi
 
 # Principles
 
-- Workspaces are temporary.
+- Workspace definitions are persistent.
+- Active Workspace sessions are temporary.
 - User work is persistent.
-- Tool Instances belong to Workspaces.
-- Layout belongs to the Workspace.
+- Workspace sessions contain Tool Instances in Workspace Mode.
+- Tool Runtime owns Tool Instance lifecycle.
+- Default Layout belongs to the Workspace definition; active Layout state belongs to the session.
 - Context updates automatically.
 - Workspace failures remain isolated.
 - State is restorable.

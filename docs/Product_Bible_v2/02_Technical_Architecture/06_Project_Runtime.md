@@ -32,7 +32,7 @@ The Project Runtime is responsible for:
 - activating Projects
 - unloading Projects
 - synchronizing Runtime state
-- managing Project Context
+- contributing assigned Project scopes and optional Project focus to Runtime Context
 - coordinating Runtime Services
 - managing Project lifetime
 - exposing active Projects
@@ -109,40 +109,40 @@ Active Projects participate in the Runtime.
 Active Projects may:
 
 - receive Context
-- open Workspaces
+- participate in opening Workspace sessions through Runtime Services
 - execute Tools
 - create Jobs
 - receive Events
 
 Multiple Projects may remain loaded simultaneously.
 
-Only one Project is normally focused.
+One Project may optionally be focused or primary while multiple Projects remain active or assigned.
 
 ---
 
 # Focus
 
-Project Focus determines the primary working Context.
+Project Focus identifies the optional primary Project for defaults and emphasis.
 
 Changing focus does not unload other Projects.
 
-Focus simply changes which Project currently provides Context to newly opened Workspaces.
+Focus influences defaults for newly opened Tools and Workspace sessions without removing other assigned Project scopes.
 
 ---
 
 # Runtime Context
 
-The Project Runtime provides the first layer of Context.
+The Project Runtime contributes the optional Project layer of Runtime Context.
 
 Examples include:
 
-- Project ID
-- Project Tags
+- zero, one or multiple assigned Project IDs and Tags
+- optional focused or primary Project ID
 - active Theme
 - available Objects
 - Runtime configuration
 
-Every Workspace automatically inherits this Context.
+Direct Tool Instances and active Workspace sessions inherit the applicable assigned scopes and optional focus from Runtime Context.
 
 ---
 
@@ -183,7 +183,7 @@ Each Project maintains its own Runtime State.
 
 Examples include:
 
-- opened Workspaces
+- opened Workspace sessions
 - focused Objects
 - camera position
 - selected Nodes

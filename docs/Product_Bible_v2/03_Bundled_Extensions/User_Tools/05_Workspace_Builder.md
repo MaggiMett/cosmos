@@ -2,9 +2,9 @@
 
 ## Purpose
 
-Workspace Builder allows users to create, customize and organize personal Workspaces.
+Workspace Builder allows users to create, customize and organize persistent personal Workspace definitions.
 
-A Workspace defines how the user prefers to work.
+A Workspace definition describes how the user prefers to work.
 
 It combines Tools, Layouts, Overlays and Context into one reusable working environment.
 
@@ -32,8 +32,8 @@ Every Workspace should become a personalized desk.
 
 Workspace Builder is responsible for:
 
-- creating Workspaces
-- editing Workspaces
+- creating Workspace definitions
+- editing Workspace definitions
 - organizing Tools
 - configuring Panels
 - configuring Layouts
@@ -59,32 +59,33 @@ Workspace Builder never modifies Persistence directly.
 
 ---
 
-# Workspace
+# Workspace Definition
 
-A Workspace represents one complete working environment.
+A Workspace definition represents one reusable working environment. Workspace Runtime opens a temporary active Workspace session from it.
 
-A Workspace may be:
+A Workspace definition may be:
 
 - global
-- project specific
+- assigned to one Project
+- assigned to multiple Projects
 
-Every Workspace is independent.
+Every Workspace definition is independent.
 
 ---
 
 # Workspace Components
 
-A Workspace may contain:
+A Workspace definition may contain:
 
 - Overlay
 - Panels
-- Tool Instances
+- Tool assignments and default placement
 - Layout
 - Theme overrides
 - Context filters
 - Project associations
 
-These components define how the Workspace behaves.
+These components define how an active Workspace session behaves when opened.
 
 ---
 
@@ -107,7 +108,7 @@ The Tool remains installed.
 
 # Panels
 
-Panels provide containers for Tool Instances.
+Panel configuration defines containers for Tool Instances in an active Workspace session.
 
 Users may:
 
@@ -123,7 +124,7 @@ Panels define presentation only.
 
 # Overlay
 
-Every Workspace uses exactly one Overlay.
+Every Workspace definition assigns exactly one Overlay.
 
 The Overlay defines:
 
@@ -138,7 +139,7 @@ Changing an Overlay never changes functionality.
 
 # Project Workspaces
 
-Users may create Workspaces specifically for one Project.
+Users may assign zero, one or multiple Project scopes to a Workspace definition.
 
 Example:
 
@@ -156,7 +157,7 @@ Automatically inherits:
 - Project Tags
 - Project Objects
 
-Project Workspaces reduce manual configuration.
+Project-scoped Workspaces reduce manual configuration. An optional focused or primary Project may provide defaults without removing other assigned scopes.
 
 ---
 
@@ -170,13 +171,13 @@ Examples include:
 - Planning
 - Writing
 
-Global Workspaces receive Context dynamically.
+Global Workspaces have no assigned Project scopes and receive Runtime Context dynamically.
 
 ---
 
 # Workspace Blueprints
 
-Every Workspace may be saved as a Blueprint.
+Every Workspace definition may be saved as a Blueprint.
 
 Blueprints preserve:
 
@@ -196,7 +197,8 @@ Workspace Builder configures Context behavior.
 
 Examples include:
 
-- default Project
+- assigned Project scopes
+- optional default focused or primary Project
 - preferred Tags
 - active Object types
 - default filters
@@ -226,9 +228,9 @@ Workspace customization never affects the global Theme unless explicitly request
 
 Workspace Builder never stores Runtime State.
 
-It defines Workspace configuration.
+It defines persistent Workspace configuration through Workspace Service.
 
-Runtime State belongs to Workspace Runtime.
+Active Workspace session state belongs to Workspace Runtime.
 
 ---
 
@@ -282,11 +284,11 @@ Instead of adapting to software, users continuously shape Cosmos into the worksp
 
 # Principles
 
-- Workspaces define environments.
+- Workspace definitions define environments.
 - Tools perform work.
-- Layout belongs to the Workspace.
-- Runtime State belongs to Workspace Runtime.
+- Default Layout belongs to the Workspace definition; active Layout state belongs to the session.
+- Active Workspace session State belongs to Workspace Runtime.
 - Users build their own workplaces.
 - Project Workspaces inherit Context.
 - Blueprints preserve Workspace configuration.
-- Every Workspace remains fully customizable.
+- Every Workspace definition remains fully customizable.

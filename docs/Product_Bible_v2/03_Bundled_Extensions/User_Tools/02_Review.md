@@ -106,7 +106,7 @@ Every Review Item contains:
 - summary
 - reason for Review
 - source Tool
-- affected Project
+- affected Projects (zero, one or multiple)
 - affected Objects
 - related Knowledge
 - supporting evidence
@@ -220,9 +220,9 @@ The user may work through the queue gradually.
 
 Review automatically inherits Runtime Context.
 
-Inside a Project-focused Workspace, Review primarily displays Items relevant to that Project.
+Inside a Workspace session with assigned Project scopes, Review primarily displays Items relevant to those scopes. An optional focused or primary Project may receive presentation emphasis.
 
-Global Review may display Items from every Project.
+With no assigned Project scopes, global Review may display Items from every Project.
 
 Context filters presentation.
 

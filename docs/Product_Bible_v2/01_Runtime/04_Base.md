@@ -18,13 +18,13 @@ The Base is responsible for:
 
 - providing a home environment
 - organizing Rooms
-- hosting Workspaces
+- hosting persistent Workspace definitions in Workspace Slots
 - housing the Companion
 - preserving the user's personal environment
 
 The Base never performs project work itself.
 
-Work happens inside Workspaces.
+Work happens inside active Workspace sessions.
 
 ---
 
@@ -62,9 +62,9 @@ The concrete appearance depends entirely on the active Theme.
 
 # Workspaces
 
-Rooms contain Workspaces.
+Rooms contain Workspace Slots associated with persistent Workspace definitions.
 
-A Workspace represents one configurable workplace.
+A Workspace definition represents one reusable configurable workplace. Opening it creates a temporary active Workspace session; closing that session does not remove the definition.
 
 Users may:
 
@@ -94,7 +94,7 @@ Users may completely customize or replace them.
 
 # Workspace Overlays
 
-Every Workspace uses an Overlay.
+Every Workspace definition assigns an Overlay.
 
 The Overlay represents the physical workplace.
 

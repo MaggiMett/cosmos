@@ -81,7 +81,7 @@ It provides permanent access to Rooms, Workspaces and the Companion.
 
 The Base exists independently from Projects.
 
-A Workspace may be opened globally or with one or more assigned Project scopes.
+A Workspace definition may be opened globally or with zero, one or multiple assigned Project scopes.
 
 ---
 
@@ -99,19 +99,21 @@ They do not contain business logic.
 
 # Workspaces
 
-Workspaces are configurable working environments.
+Workspace definitions are persistent, configurable working environments.
 
-A Workspace combines:
+A Workspace definition combines:
 
 - Layout
 - Overlay
 - Context
-- Tool collection
-- Window state
+- Tool assignments
+- default window configuration
 
-A Workspace defines how the user works.
+A Workspace definition defines how the user works.
 
 It never defines what the user works on.
+
+Workspace Runtime opens a temporary active Workspace session from a definition. The session provides the multi-window environment and contains its active Tool Instances.
 
 ---
 
@@ -210,22 +212,18 @@ Entities never own business logic.
 Context is composed additively through the active Runtime path.
 
 ```text
-Cosmos
-    ↓
-Optional Project Scope
-    ↓
-Room
-    ↓
-Workspace
-    ↓
-Tool
-    ↓
-Object
+Direct Tool Mode:
+Cosmos → Optional Project Scopes and Focus → Tool → Optional Object
+
+Workspace Mode:
+Cosmos → Optional Project Scopes and Focus → Room → Workspace Session → Tool → Optional Object
 ```
 
 Each layer contributes additional Context.
 
 Lower layers extend higher Context and never silently replace it.
+
+Assigned Project scopes may contain zero, one or multiple Projects. An optional focused or primary Project provides defaults and emphasis without replacing the assigned scopes.
 
 ---
 

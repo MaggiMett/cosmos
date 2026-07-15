@@ -144,16 +144,21 @@ Not to the UI.
 
 Every Job receives a Context Snapshot.
 
+The Snapshot is an immutable capture of Runtime Context at Job creation. It is not an independently assembled Context model.
+
 The Snapshot contains:
 
-- Project
-- Workspace (if applicable)
+- zero, one or multiple assigned Project scopes
+- optional focused or primary Project
+- Workspace session (if applicable)
 - Object
 - Tags
 - initiating user
 - Runtime configuration
 
 The Snapshot never changes while the Job is running.
+
+If a Job handler requires a task-specific Context Package, it requests that Package from Context Builder using the Snapshot. The Job Runtime and Job handler never assemble an independent Context Package.
 
 ---
 

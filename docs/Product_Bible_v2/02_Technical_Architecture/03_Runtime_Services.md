@@ -186,6 +186,10 @@ Context is never discovered inside the Service.
 
 The Runtime resolves Context before execution.
 
+This ordinary Runtime Context injection remains the default for synchronous Tool and Service actions.
+
+Long-running operations receive an immutable Context Snapshot. When a consumer requires a task-specific Context Package, it requests one from Context Builder rather than assembling Context inside the Service or consumer.
+
 This keeps Services deterministic.
 
 ---

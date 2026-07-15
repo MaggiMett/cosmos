@@ -70,7 +70,7 @@ Examples include:
 
 - installed Extensions
 - enabled Themes
-- Workspace Blueprints
+- persistent Workspace definitions and Workspace Blueprints
 - Entity identity and configuration
 - user preferences
 
@@ -82,7 +82,8 @@ Represents temporary user state.
 
 Examples include:
 
-- open Workspaces
+- active Workspace session state
+- Direct Tool Mode Tool Instance state
 - window positions
 - active selections
 - camera positions
@@ -126,6 +127,8 @@ Cache is never considered permanent.
 
 It may be safely regenerated.
 
+Persistent Workspace definitions remain durable when no Workspace session is active. Active Workspace sessions are temporary Runtime instances; only their restorable state is persisted.
+
 ---
 
 # Ownership
@@ -158,7 +161,15 @@ owns
 
 its persistent identity and configuration
 
+Workspace definition
+
+owns
+
+its persistent configuration
+
 Active Entity Runtime State references the immutable Entity ID.
+
+Workspace session state references the immutable Workspace definition ID. Direct Tool Mode state references its Tool Instance and Tool definition without creating a Workspace owner.
 
 Ownership should remain explicit.
 
@@ -265,10 +276,11 @@ It may always be regenerated.
 
 After unexpected shutdown:
 
-Persistence restores:
+Persistence makes the following state available for Runtime restoration:
 
 - Runtime State
-- Workspaces
+- restorable Workspace session state keyed to persistent Workspace definitions
+- eligible Direct Tool Mode Tool Instance state
 - temporary drafts
 - active sessions
 

@@ -2,15 +2,17 @@
 
 ## Purpose
 
-A Workspace is a configurable working environment inside Cosmos.
+A Workspace definition is a persistent, configurable working environment inside Cosmos.
 
-Workspaces provide places where users perform work using Tools.
+Workspace Runtime opens temporary active Workspace sessions from those definitions. Workspace sessions provide the multi-window places where users perform work using Tools.
 
 Unlike Projects, Workspaces do not define meaning.
 
 Unlike Tools, Workspaces do not perform actions.
 
-A Workspace combines Context, Layout, Tools and User Experience into one coherent environment.
+A Workspace definition combines Context configuration, Layout, assigned Tools and User Experience into one reusable environment.
+
+An active Workspace session realizes that definition with current Context, Tool Instances and Runtime State.
 
 ---
 
@@ -28,15 +30,21 @@ Users decide how they want to work.
 
 # Responsibilities
 
-A Workspace is responsible for:
+A Workspace definition is responsible for:
 
-- managing Tool instances
-- managing Layout
-- managing Panels
-- managing Window State
-- managing Context
-- restoring previous sessions
+- defining Layout and Panels
+- defining assigned Tools
+- defining Context additions
 - providing an Overlay
+- preserving reusable configuration
+
+An active Workspace session is responsible for:
+
+- containing Tool Instances
+- applying Layout and Panels
+- maintaining Window State
+- receiving Runtime Context
+- preserving restorable session state
 
 A Workspace never owns Knowledge or Objects.
 
@@ -44,7 +52,7 @@ A Workspace never owns Knowledge or Objects.
 
 # Workspace Identity
 
-Every Workspace possesses:
+Every Workspace definition possesses:
 
 - unique ID
 - display name
@@ -55,17 +63,18 @@ Every Workspace possesses:
 - context
 - assigned Tools
 - Theme overrides
-- runtime state
 
 Display names may be changed at any time.
 
 Internal IDs never change.
 
+Workspace session identity references the immutable Workspace definition ID. Session state is temporary Runtime State and is not part of the definition identity.
+
 ---
 
 # Workspace Context
 
-Every Workspace automatically inherits Context.
+Every active Workspace session automatically inherits Runtime Context.
 
 Context flows through the Runtime.
 
@@ -95,18 +104,19 @@ It never replaces it.
 
 Typical additions include:
 
-- Project Tags
+- zero, one or multiple assigned Project scopes
+- an optional focused or primary Project
 - User Tags
 - preferred Objects
 - active filters
 
-Every Tool automatically receives the current Workspace Context.
+Every Tool Instance in the active session automatically receives the current Workspace Context. A focused or primary Project provides defaults and emphasis without removing other assigned scopes.
 
 ---
 
 # Workspace Layout
 
-A Workspace stores its own Layout.
+A Workspace definition stores its default Layout. Its active Workspace session maintains the current Layout state.
 
 Examples include:
 
@@ -117,7 +127,7 @@ Examples include:
 - fullscreen panels
 - sidebar visibility
 
-Layouts belong to the Workspace.
+Default Layout configuration belongs to the Workspace definition. Current Layout state belongs to the active session.
 
 Changing a Layout never changes the underlying Project.
 
@@ -142,7 +152,9 @@ Panels contain no business logic.
 
 # Tool Instances
 
-Workspaces contain Tool instances.
+Active Workspace sessions contain Tool Instances.
+
+Tool Runtime owns each Tool Instance lifecycle. The Workspace session owns its containment and presentation placement.
 
 Multiple instances of the same Tool may exist simultaneously.
 
@@ -164,7 +176,7 @@ Each Tool Instance maintains its own state.
 
 # Overlay
 
-Every Workspace uses an Overlay.
+Every Workspace definition assigns an Overlay, which its active session loads.
 
 The Overlay represents the physical workplace.
 
@@ -220,7 +232,7 @@ Users remain free to customize or completely replace them.
 
 # Runtime State
 
-Every Workspace remembers:
+Every active Workspace session maintains restorable state for:
 
 - open Tool instances
 - panel positions
@@ -229,7 +241,7 @@ Every Workspace remembers:
 - camera state
 - Theme overrides
 
-Returning to a Workspace restores its previous state automatically.
+Reopening the persistent Workspace definition creates a new active session and restores its previous session state automatically.
 
 ---
 
@@ -288,7 +300,7 @@ Physical interaction strengthens immersion without reducing usability.
 
 # Extensibility
 
-Every Workspace is designed for extension.
+Every Workspace definition and session follows the same extensible Workspace contract.
 
 Future extensions may introduce:
 
@@ -314,14 +326,14 @@ Users should immediately understand where they are, what they can do and how the
 
 # Principles
 
-- Workspaces organize work.
+- Workspace definitions organize work.
 - Tools perform actions.
 - Projects provide meaning.
 - Objects provide focus.
-- Layout belongs to the Workspace.
+- Default Layout belongs to the Workspace definition; active Layout state belongs to the session.
 - Context is inherited automatically.
-- Multiple Tool instances are allowed.
+- Multiple Tool Instances are allowed in Workspace Mode.
 - Overlays define appearance.
 - Themes define atmosphere.
-- Users own their Workspaces.
+- Users own their Workspace definitions.
 - Everything is extensible.
