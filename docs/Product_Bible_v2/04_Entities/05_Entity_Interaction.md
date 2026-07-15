@@ -26,7 +26,7 @@ Entities never communicate directly.
 
 Every interaction passes through the Entity Runtime.
 
-The Runtime validates, coordinates and synchronizes all interactions.
+Entity Runtime preflights and coordinates interactions. Runtime Services authoritatively validate any requested Runtime action.
 
 This keeps Entities independent while allowing complex behavior to emerge.
 
@@ -37,13 +37,13 @@ This keeps Entities independent while allowing complex behavior to emerge.
 Entity Interaction is responsible for:
 
 - coordinating interactions
-- validating permissions
+- performing non-authoritative permission preflight for feedback
 - validating conditions
 - synchronizing participants
 - coordinating animations
 - coordinating dialogue
 - coordinating Runtime actions
-- publishing interaction Events
+- reporting completed interaction facts to the responsible Runtime Service for Event publication
 
 Interaction never performs business logic.
 
@@ -66,7 +66,7 @@ Entity Runtime
 
 ↓
 
-Validation
+Preflight and Interaction Validation
 
 ↓
 
@@ -172,13 +172,13 @@ A request contains:
 - requested action
 - Runtime Context
 
-The Runtime validates every request.
+Entity Runtime may preflight every request for feedback and validate non-business interaction conditions.
 
 ---
 
 # Validation
 
-Before execution the Runtime verifies:
+Before an interaction proceeds, Entity Runtime may preflight:
 
 - permissions
 - visibility
@@ -187,7 +187,7 @@ Before execution the Runtime verifies:
 - Scope compatibility
 - interaction availability
 
-Invalid requests are rejected safely.
+Failed preflight requests may be rejected early for feedback. Any Command that reaches a Runtime Service is always subject to authoritative permission and business validation there.
 
 ---
 
@@ -289,6 +289,8 @@ Examples:
 The Entity never executes these actions directly.
 
 Runtime Services remain responsible.
+
+For every Runtime action, the Entity sends a Command through the existing Service pipeline. Entity Interaction never authorizes or persists the action and never publishes the resulting Event itself.
 
 ---
 
@@ -429,7 +431,7 @@ Users should experience natural cooperation between Entities without losing the 
 
 - Entities never communicate directly.
 - The Runtime coordinates every interaction.
-- Permissions are always validated.
+- Entity permission preflight is non-authoritative; Runtime Services always validate authoritatively.
 - Context is inherited automatically.
 - Runtime Services perform Runtime work.
 - Conversations are interactions.

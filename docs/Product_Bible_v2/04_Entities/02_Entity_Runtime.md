@@ -112,7 +112,7 @@ restores Runtime State
 resolves Scope
 subscribes to permitted Events
 loads Behavior Rules
-validates Permissions
+preflights declared Permissions for activation feedback
 
 Only successfully initialized Entities become active.
 
@@ -381,7 +381,7 @@ Pet interaction requested
 
 ↓
 
-Permission and proximity validation
+Permission preflight and proximity validation
 
 ↓
 
@@ -417,7 +417,7 @@ Open Archive
 
 ↓
 
-Permission Check
+Non-Authoritative Permission Preflight
 
 ↓
 
@@ -429,7 +429,7 @@ Archive Tool Instance
 
 The Entity never controls the Tool directly.
 
-Runtime Services perform the action.
+Workspace Service performs the authoritative permission and business validation before executing the action. Entity Runtime preflight is feedback only.
 
 Work Execution
 
@@ -443,7 +443,7 @@ display a Review Item
 start a user-confirmed Job
 request Journeyman assistance
 
-All actions require appropriate Permissions.
+All actions require authoritative permission validation by the Runtime Service receiving the Command.
 
 Autonomous destructive work is never permitted by default.
 
@@ -457,7 +457,7 @@ The Entity Runtime remains responsible for:
 
 current State
 Context
-Permissions
+permission preflight feedback
 presentation
 resulting Runtime actions
 
@@ -571,9 +571,9 @@ Principles
 Entities live without AI.
 Runtime controls lifecycle.
 Scope controls availability.
-Events trigger behavior.
+Behavior Rules may react to completed Event facts.
 Behavior Rules remain deterministic.
-Permissions control actions.
+Runtime Services authoritatively enforce Permissions for Runtime actions.
 Runtime Services execute work.
 Avatars define presentation.
 Failures remain isolated.

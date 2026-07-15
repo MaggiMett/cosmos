@@ -31,7 +31,7 @@ The Bundle Runtime is responsible for:
 - resolving assigned Capability Bundles
 - validating Role compatibility
 - resolving dependencies
-- validating Permissions
+- validating Permission declarations and preflight availability
 - initializing Bundle instances
 - injecting Runtime Context
 - routing Events
@@ -159,7 +159,7 @@ Missing dependencies prevent activation.
 
 Circular Bundle dependencies are rejected.
 
-Permission Validation
+Permission Preflight
 
 Every Bundle declares required Permissions.
 
@@ -171,6 +171,8 @@ user configuration permits the capability
 Runtime Context allows the capability
 
 A Bundle never grants itself Permissions.
+
+This activation check is non-authoritative preflight. Runtime Services always perform authoritative permission validation for every Command issued by the Bundle.
 
 Initialization
 
@@ -287,11 +289,19 @@ Bundle Active Check
 
 ↓
 
-Permission Check
+Non-Authoritative Permission Preflight
+
+↓
+
+Command
 
 ↓
 
 Runtime Service
+
+↓
+
+Authoritative Permission and Business Validation
 
 ↓
 
@@ -300,6 +310,8 @@ Result
 Bundles prepare or coordinate actions.
 
 Runtime Services execute business logic.
+
+Bundle Runtime preflight provides feedback only and never authorizes execution.
 
 Bundle State
 
@@ -467,7 +479,7 @@ Bundle Definitions are reusable.
 Bundle Instances belong to Entities.
 Runtime controls lifecycle.
 Role compatibility is mandatory.
-Permissions are validated before activation.
+Permission declarations are preflighted before activation; Runtime Services enforce Permissions authoritatively.
 Context is injected.
 Runtime Services execute work.
 Bundle failures remain isolated.

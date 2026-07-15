@@ -24,9 +24,9 @@ System Tools and Job handlers execute scheduled work through the Job Runtime con
 
 # Philosophy
 
-Runtime work should be organized rather than immediate.
+Long-running Runtime work should be organized rather than immediate.
 
-Every task becomes a Job.
+Ordinary state changes remain synchronous Runtime Service transactions. Only long-running work becomes a Job.
 
 Every Job follows the same lifecycle.
 
@@ -43,7 +43,7 @@ The Job Scheduler is responsible for:
 - assigning compatible Job handlers
 - coordinating execution
 - respecting dependencies
-- managing retries
+- applying Job Runtime retry policies
 - balancing workload
 - monitoring Job progress
 
@@ -78,19 +78,11 @@ Queued
 
 ↓
 
-Waiting
-
-↓
-
-Assigned
+Scheduled
 
 ↓
 
 Running
-
-↓
-
-Validating
 
 ↓
 
@@ -105,7 +97,9 @@ or
 Cancelled
 ```
 
-The Scheduler manages every transition.
+Job Runtime owns this lifecycle. The Scheduler coordinates the `Queued`, `Scheduled` and `Running` transitions.
+
+Dependency waiting, handler assignment, validation and retry delay are scheduling details or stages within `Running`, not additional lifecycle states.
 
 ---
 
@@ -126,12 +120,12 @@ Queued Jobs remain immutable until assignment.
 
 # Job Priorities
 
-Suggested priorities include:
+Canonical priorities are:
 
-- Critical
-- High
-- Normal
+- User initiated
+- Interactive
 - Background
+- Maintenance
 
 Higher priority Jobs may execute before lower priority Jobs.
 
@@ -142,6 +136,8 @@ Priority never bypasses dependency requirements.
 # Job Handler Assignment
 
 The Scheduler assigns Jobs to compatible Job handlers and System Tools.
+
+Handler assignment is scheduling metadata and does not introduce an `Assigned` lifecycle state.
 
 Examples:
 
@@ -233,26 +229,23 @@ Parallel execution improves Runtime efficiency.
 
 ---
 
-# Scheduling Strategies
+# Scheduling Timing
 
-The Scheduler supports multiple strategies.
+The Scheduler supports multiple queue timing strategies.
 
 Examples include:
 
-- immediate
-- delayed
-- periodic
-- background
-- user initiated
-- event driven
+- immediate queueing
+- delayed queueing
+- periodic queueing
 
-Strategies remain configurable.
+Timing remains configurable and never changes the canonical Job priority vocabulary.
 
 ---
 
 # Event Integration
 
-The Scheduler reacts to Runtime Events.
+Subscribers may react to Runtime Events by requesting the appropriate Runtime Service. The Service performs authoritative validation and may create a long-running Job for the Scheduler.
 
 Examples:
 
@@ -260,7 +253,15 @@ KnowledgeProcessed
 
 ↓
 
-schedule Analysis
+Subscriber
+
+↓
+
+Analysis Command to Runtime Service
+
+↓
+
+Optional Analysis Job
 
 ---
 
@@ -268,7 +269,15 @@ JobCompleted
 
 ↓
 
-start Validation
+Subscriber
+
+↓
+
+Validation Command to Runtime Service
+
+↓
+
+Optional Validation Job
 
 ---
 
@@ -276,9 +285,17 @@ ReviewApproved
 
 ↓
 
-schedule Implementation
+Subscriber
 
-Events naturally create new work.
+↓
+
+Implementation Command to Runtime Service
+
+↓
+
+Optional Implementation Job
+
+Events only describe completed facts. They never create work, request work or create Jobs directly.
 
 ---
 
@@ -321,12 +338,15 @@ Every Job reports structured progress.
 
 Examples include:
 
+- created
 - queued
+- scheduled
 - running
-- waiting
-- validating
 - completed
 - failed
+- cancelled
+
+Validation and waiting may appear as a current-stage description while the Job remains `Running` or `Scheduled`; they are not lifecycle states.
 
 Progress remains observable throughout execution.
 
@@ -351,7 +371,7 @@ Partial work remains reviewable whenever possible.
 
 Execution is not completion.
 
-Every Job requiring validation enters Validation before completion.
+Validation occurs as a stage while the Job remains `Running`, or as a separate long-running Validation Job created by a Runtime Service.
 
 Validation may include:
 
@@ -361,7 +381,7 @@ Validation may include:
 - architecture validation
 - Review generation
 
-Only validated Jobs become completed.
+Required validation must succeed before the Job transitions to `Completed`.
 
 ---
 
@@ -408,7 +428,7 @@ Every Scheduler Extension follows the same Runtime contract.
 
 # Design Goal
 
-The Job Scheduler should coordinate all Runtime work in a predictable, transparent and scalable manner.
+The Job Scheduler should coordinate long-running Runtime work in a predictable, transparent and scalable manner.
 
 Users should never need to think about scheduling while always understanding what Cosmos is currently doing.
 
@@ -416,7 +436,9 @@ Users should never need to think about scheduling while always understanding wha
 
 # Principles
 
-- Every task becomes a Job.
+- Only long-running work becomes a Job.
+- Runtime Services create Jobs.
+- Events never create work or Jobs directly.
 - The Scheduler coordinates work.
 - Job handlers and System Tools execute work.
 - Dependencies are respected.

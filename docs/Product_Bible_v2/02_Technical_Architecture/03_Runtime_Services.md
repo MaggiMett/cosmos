@@ -117,6 +117,30 @@ Examples include:
 
 Commands modify the Runtime.
 
+Every state-changing action follows one pipeline:
+
+```text
+Client or Tool
+    ↓
+Command
+    ↓
+Runtime Service
+    ↓
+Authoritative Permission Validation
+    ↓
+Business Validation
+    ↓
+Transaction and Persistence
+    ↓
+Event Publication
+    ↓
+Optional Subscriber Reaction
+    ↓
+Optional Command or Request to a Runtime Service
+    ↓
+Optional Long-Running Job Creation by that Service
+```
+
 ---
 
 # Queries
@@ -159,11 +183,13 @@ Services produce Events.
 
 They do not consume them directly.
 
+Events describe completed facts and never request work or create Jobs. Subscribers may react by sending a new Command or request to the appropriate Runtime Service.
+
 ---
 
 # Validation
 
-Every request is validated before execution.
+Every request is validated before execution. The Runtime Service first performs the authoritative permission decision and then performs business validation.
 
 Validation may include:
 
@@ -175,6 +201,8 @@ Validation may include:
 - business rules
 
 Invalid requests never modify the Runtime.
+
+UI, Entity Runtime and Bundle Runtime may perform non-authoritative preflight checks for early feedback. A successful preflight never authorizes execution and never replaces Service validation.
 
 ---
 
@@ -208,6 +236,8 @@ Whenever multiple Runtime components change together, they belong to one transac
 
 Services enforce permissions.
 
+Runtime Services are the only authoritative permission enforcement boundary.
+
 Extensions never bypass the permission system.
 
 Examples include:
@@ -218,6 +248,16 @@ Examples include:
 - execute AI Providers
 
 Permission checks occur inside the Service layer.
+
+---
+
+# Jobs
+
+Runtime Services create Jobs only for delegated long-running work. Ordinary state changes complete synchronously inside the Service transaction.
+
+Neither Events nor subscribers create Jobs directly. A subscriber may request a Runtime Service, and that Service performs authoritative validation before optionally creating a Job.
+
+After Event publication, the originating Service may also create a required long-running Job directly from the validated Command, as Knowledge Service does for Capture processing. The Event is never the cause or request.
 
 ---
 

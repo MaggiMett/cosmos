@@ -22,7 +22,7 @@ It is not a System Tool, Extension or Runtime Service.
 
 Runtime components should never communicate directly.
 
-Instead, they publish and subscribe to Runtime Events.
+Runtime Services publish completed Event facts. Runtime components subscribe and may react through new Commands or requests to Runtime Services.
 
 This keeps the Runtime modular, extensible and predictable.
 
@@ -36,7 +36,7 @@ It never performs business logic.
 
 The Event Dispatcher is responsible for:
 
-- publishing Runtime Events
+- accepting Runtime Events published by Runtime Services
 - delivering Runtime Events
 - managing subscriptions
 - filtering subscribers
@@ -62,7 +62,7 @@ Examples include:
 - Provider Runtime
 - Theme Runtime
 
-Every Runtime component may publish Events.
+Runtime Services publish Events for completed actions. Core Runtime components report lifecycle facts through the appropriate existing Service boundary for publication.
 
 Every Runtime component may subscribe.
 
@@ -73,7 +73,7 @@ Every Runtime component may subscribe.
 Every Runtime Event follows the same lifecycle.
 
 ```text
-Runtime Component
+Runtime Service
 
 ↓
 
@@ -98,7 +98,7 @@ Subscriber Processing
 
 Publishers never know who receives an Event.
 
-Subscribers never know who published it.
+Subscribers receive the Event's explicit Origin Service field. They do not depend on any Dispatcher implementation detail or know which subscribers received the same Event.
 
 ---
 
@@ -106,13 +106,13 @@ Subscribers never know who published it.
 
 Every Runtime Event contains:
 
-- immutable Event ID
+- Event ID
 - Event Type
-- timestamp
-- publisher
-- Runtime Scope
-- payload
-- metadata
+- Timestamp
+- Runtime Context at creation
+- Origin Service
+- zero or more affected Object IDs
+- Metadata
 
 Events remain immutable after publication.
 
@@ -178,11 +178,11 @@ Categories remain extensible.
 
 # Publishing
 
-Runtime components publish Events.
+Runtime Services publish completed facts after successful transactions.
 
 Examples:
 
-Knowledge Processor
+Knowledge Service
 
 ↓
 
@@ -190,7 +190,7 @@ KnowledgeProcessed
 
 ---
 
-Journeyman
+Job Service
 
 ↓
 
@@ -198,13 +198,15 @@ JobCompleted
 
 ---
 
-Companion
+Workspace Service
 
 ↓
 
-ConversationStarted
+WorkspaceOpened
 
 Publishing never waits for subscribers.
+
+Tools, Entities, Bundles and other clients send Commands to Services; they do not publish authoritative action Events themselves.
 
 ---
 
@@ -234,7 +236,7 @@ KnowledgeProcessed
 
 ↓
 
-schedule analysis
+send Command or request to the appropriate Runtime Service
 
 Subscriptions remain explicit.
 
@@ -247,10 +249,9 @@ Subscribers receive only Events matching their subscriptions.
 Filtering may consider:
 
 - Event Type
-- Runtime Scope
-- Project
-- Workspace
-- Entity
+- Runtime Context
+- affected Object IDs
+- Metadata
 
 Filtering minimizes unnecessary processing.
 
@@ -258,15 +259,15 @@ Filtering minimizes unnecessary processing.
 
 # Event Ordering
 
-Events are delivered in publication order within the same Event stream.
+Events produced by one transaction are delivered in their transaction order.
 
-Ordering remains deterministic whenever possible.
+No deterministic ordering is guaranteed across independent transactions.
 
 ---
 
 # Event Scope
 
-Events may belong to different scopes.
+Event propagation scope is derived from Runtime Context and Metadata rather than a competing Event schema field.
 
 Examples include:
 
@@ -285,7 +286,7 @@ Event delivery should remain asynchronous whenever appropriate.
 
 Publishing should never block unrelated Runtime work.
 
-Critical Events may require synchronous delivery.
+Subscriber processing never changes the already completed transaction.
 
 ---
 
@@ -293,12 +294,13 @@ Critical Events may require synchronous delivery.
 
 The Dispatcher guarantees:
 
-- no duplicate delivery
-- deterministic ordering
+- at-least-once delivery to matching active subscriptions
+- possible duplicate delivery
+- transaction-local ordering
 - isolated subscriber failures
 - safe event propagation
 
-Subscribers remain independent.
+Subscribers remain independent and must be idempotent.
 
 ---
 
@@ -348,7 +350,7 @@ Every extension follows the same Event contract.
 
 The Event Dispatcher should become the nervous system of Cosmos.
 
-Every Runtime component should communicate through Events while remaining completely independent from every other component.
+Every Runtime component should receive completed facts through Events and request actions through Runtime Services while remaining independent from other component implementations.
 
 ---
 
@@ -356,9 +358,10 @@ Every Runtime component should communicate through Events while remaining comple
 
 - Components never communicate directly.
 - Events are immutable.
-- Publishing is independent.
+- Publication is independent from subscribers.
 - Subscription is explicit.
-- Delivery remains deterministic.
+- Delivery is at least once and may contain duplicates.
+- Ordering is deterministic only within one transaction.
 - Failures remain isolated.
 - Scope limits propagation.
 - The Event Dispatcher performs coordination only.

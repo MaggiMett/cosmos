@@ -2,9 +2,9 @@
 
 ## Purpose
 
-The Permission System controls what Runtime components are allowed to do.
+The Permission System defines the shared policy that Runtime Services use to decide what Runtime components are allowed to do.
 
-Every action that modifies or accesses the Runtime passes through the Permission System.
+Every action that modifies or accesses the Runtime is evaluated against the Permission System inside the receiving Runtime Service.
 
 Permissions protect the Core while allowing Extensions to remain powerful.
 
@@ -28,11 +28,12 @@ Trust should never be assumed.
 
 The Permission System is responsible for:
 
-- validating Runtime permissions
-- enforcing access control
-- protecting Runtime Services
-- limiting Extension capabilities
-- protecting external resources
+- defining shared permission policy
+- resolving permission information for Runtime Services
+- supporting non-authoritative preflight feedback
+- supporting authoritative access control inside Runtime Services
+- defining limits on Extension capabilities
+- defining policies for external resource access
 - exposing permission information
 - supporting future security policies
 
@@ -126,9 +127,9 @@ Examples:
 
 Examples:
 
-- create Jobs
+- request long-running Jobs
 - subscribe Events
-- publish Events
+- publish Events through Runtime Services
 - register Extensions
 
 ---
@@ -169,7 +170,7 @@ Examples include:
 
 Users grant trust.
 
-The Runtime enforces it.
+Runtime Services enforce it authoritatively.
 
 ---
 
@@ -188,17 +189,17 @@ requires
 - update Knowledge
 ```
 
-The Runtime validates permission declarations before activation.
+Extension activation preflight validates permission declarations before activation. This does not authorize later Commands.
 
 ---
 
 # Runtime Enforcement
 
-Permissions are enforced only by Runtime Services.
+Permissions are enforced authoritatively only by Runtime Services using the shared Permission System.
 
-Extensions never perform permission checks themselves.
+UI, Entity Runtime and Bundle Runtime may perform non-authoritative preflight checks for feedback. Extensions never authorize their own actions.
 
-Every Runtime request passes through the same validation layer.
+Every Runtime request still passes through authoritative Service validation, regardless of preflight outcome.
 
 This guarantees consistent behavior.
 
@@ -216,14 +217,14 @@ Smaller permission sets reduce risk and improve maintainability.
 
 # Permission Resolution
 
-Before executing a Command the Runtime determines:
+Before executing a Command the Runtime Service determines:
 
 - requesting component
 - granted permissions
 - required permission
 - current Runtime Context
 
-Only then is the Command executed.
+Only then does the Runtime Service perform business validation and execute the Command transaction.
 
 ---
 
@@ -281,7 +282,7 @@ Permission-related Events include:
 - ExtensionActivated
 - ExtensionDisabled
 
-The Event Model communicates permission changes to interested Runtime components.
+The responsible Runtime Service publishes completed permission facts through the Event Model.
 
 ---
 
@@ -305,6 +306,7 @@ Users should understand what every Extension is allowed to do while developers w
 
 - Every capability requires permission.
 - Runtime Services enforce permissions.
+- UI, Entity Runtime and Bundle Runtime preflight checks are non-authoritative.
 - Extensions declare permissions.
 - Permissions are capability based.
 - Least privilege is preferred.

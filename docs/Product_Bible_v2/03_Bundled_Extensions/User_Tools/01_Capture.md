@@ -36,10 +36,10 @@ Capture is responsible for:
 - preserving original user input
 - accepting external files
 - creating Capture drafts
-- submitting Knowledge
+- sending SubmitCapture Commands to Knowledge Service
 - providing Capture Templates
 - creating Blueprints
-- forwarding submitted Captures to the Knowledge Runtime
+- receiving submission results from Knowledge Service
 
 Capture never performs Knowledge Processing.
 
@@ -52,7 +52,6 @@ Capture uses the following Runtime systems:
 - Knowledge Service
 - Object Service
 - Tag Service
-- Job Service
 - Runtime Context
 - Event Model
 
@@ -167,13 +166,27 @@ Knowledge enters the Runtime only after explicit submission.
 
 Submission is the ingestion boundary. Knowledge Processor runs only after the submitted Knowledge has been stored.
 
-Submission performs:
+Submission follows the canonical action pipeline:
 
-- store original Capture
-- attach Runtime Context
-- inherit Tags
-- publish CaptureCreated
-- schedule Knowledge Processing Job
+```text
+Capture
+    ↓
+SubmitCapture Command
+    ↓
+Knowledge Service
+    ↓
+Authoritative Permission Validation
+    ↓
+Business Validation
+    ↓
+Transaction and Persistence of the original Capture, Runtime Context and inherited Tags
+    ↓
+CaptureCreated Event publication by Knowledge Service
+    ↓
+Knowledge Processing Job creation by Knowledge Service
+```
+
+Capture sends the Command. It never stores Knowledge, publishes the Event or creates the Job itself.
 
 The user may immediately continue working.
 
@@ -209,7 +222,7 @@ Users remain free to modify or remove suggested User Tags.
 
 Capture itself never analyzes content.
 
-After submission the Knowledge Runtime schedules background processing.
+After successful submission Knowledge Service creates the long-running Knowledge Processing Job, and Job Runtime schedules it.
 
 Typical processing includes:
 
@@ -297,7 +310,8 @@ Users should instinctively record ideas knowing that Cosmos will preserve them, 
 
 - Speed before structure.
 - Original Captures are immutable.
-- Submission stores Knowledge.
+- A successful SubmitCapture Command results in Knowledge Service storing Knowledge.
+- Capture submits a Command; Knowledge Service stores Knowledge, publishes the Event and creates the processing Job.
 - Processing is asynchronous.
 - Context is inherited.
 - Capture never performs analysis.

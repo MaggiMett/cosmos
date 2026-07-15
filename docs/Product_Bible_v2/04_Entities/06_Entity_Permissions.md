@@ -8,7 +8,7 @@ They protect the Runtime while allowing Entities to naturally assist the user.
 
 Permissions describe capabilities.
 
-The Runtime decides whether those capabilities may be executed.
+Runtime Services decide authoritatively whether those capabilities may be executed.
 
 ---
 
@@ -41,9 +41,9 @@ Runtime Services decide.
 Entity Permissions are responsible for:
 
 - defining Entity capabilities
-- restricting Runtime actions
-- validating interaction requests
-- protecting Runtime Services
+- providing non-authoritative preflight feedback
+- validating Permission Profile declarations
+- describing restrictions evaluated by Runtime Services
 - supporting future Entity Roles
 - ensuring predictable Runtime behavior
 
@@ -224,15 +224,11 @@ Entity
 
 ↓
 
-Permission Request
+Permission Preflight in Entity Runtime
 
 ↓
 
-Entity Runtime
-
-↓
-
-Permission System
+Command
 
 ↓
 
@@ -240,9 +236,19 @@ Runtime Service
 
 ↓
 
+Authoritative Permission Validation
+
+↓
+
+Business Validation and Execution
+
+↓
+
 Result
 
-Invalid requests never reach Runtime Services.
+Preflight may reject an unavailable capability early for feedback. It never authorizes execution.
+
+Every submitted Command reaches the Runtime Service boundary, which repeats the permission decision authoritatively before any business action.
 
 User Confirmation
 
@@ -258,7 +264,7 @@ deleting Resources
 
 Support Entities may prepare these actions.
 
-Only the user authorizes execution.
+The user supplies required confirmation. The receiving Runtime Service authoritatively validates that confirmation and all other Permissions before execution.
 
 Automatic Actions
 
@@ -358,7 +364,9 @@ AI Providers never grant Permissions.
 
 An AI Provider may suggest actions.
 
-The Entity Runtime validates whether the Entity is allowed to request them.
+Entity Runtime may preflight whether the Entity appears allowed to request them.
+
+The receiving Runtime Service always makes the authoritative permission decision.
 
 Intelligence never bypasses Runtime security.
 
@@ -399,6 +407,7 @@ Principles
 Every action requires permission.
 Entities request.
 Runtime Services execute.
+Runtime Services enforce Permissions authoritatively.
 AI never grants permissions.
 Users remain in control.
 Automatic actions are non-destructive.

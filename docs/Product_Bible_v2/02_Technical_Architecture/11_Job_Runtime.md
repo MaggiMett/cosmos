@@ -8,6 +8,8 @@ It executes background work independently from the user interface while ensuring
 
 Jobs execute delegated long-running work.
 
+Ordinary state changes remain synchronous Runtime Service transactions and never become Jobs.
+
 Runtime Services own validation, authorization and transactional business rules.
 
 Job handlers implement the asynchronous workflow by calling those Services and approved System Tools.
@@ -33,7 +35,7 @@ The Job Runtime is responsible for:
 - monitoring progress
 - handling retries
 - reporting status
-- publishing Job Events
+- reporting Job lifecycle facts to Job Service for Event publication
 - recovering interrupted Jobs
 - cancelling Jobs
 
@@ -75,6 +77,8 @@ Cancelled
 
 Only Running Jobs consume execution resources.
 
+Validation, handler assignment, dependency waiting and retry delay are internal stages or scheduling details. They are not additional Job lifecycle states.
+
 ---
 
 # Job Creation
@@ -102,6 +106,8 @@ Object Service
 Resource Generation Job
 
 Extensions never create Jobs directly.
+
+Events never create Jobs directly. A subscriber may react to an Event by sending a Command or request to a Runtime Service, which performs authoritative validation before optionally creating a long-running Job.
 
 ---
 
@@ -180,7 +186,7 @@ Progress reporting should remain lightweight.
 
 # Events
 
-The Job Runtime publishes:
+Job Service publishes completed Job lifecycle transitions and progress facts reported by Job Runtime:
 
 - JobCreated
 - JobQueued
@@ -291,6 +297,8 @@ Typical priorities include:
 - Background
 - Maintenance
 
+These four terms are the canonical Job priority vocabulary.
+
 User work always receives higher priority than maintenance work.
 
 ---
@@ -348,6 +356,7 @@ Long-running work should become almost invisible.
 # Principles
 
 - Jobs execute long-running work.
+- Ordinary state changes never become Jobs.
 - Runtime Services create Jobs.
 - Jobs receive Context Snapshots.
 - Jobs are asynchronous.

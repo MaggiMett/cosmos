@@ -29,10 +29,9 @@ This separation keeps the Runtime predictable, extensible and loosely coupled.
 The Event Model is responsible for:
 
 - notifying Runtime components
-- synchronizing Runtime state
-- supporting background processing
+- informing subscriber-driven Runtime state synchronization
+- supporting subscriber reactions
 - enabling extension interoperability
-- triggering asynchronous work
 - preserving Runtime consistency
 
 Events never contain business logic.
@@ -52,7 +51,11 @@ Runtime Service
 
 ↓
 
-Validation
+Authoritative Permission Validation
+
+↓
+
+Business Validation
 
 ↓
 
@@ -69,6 +72,14 @@ Event Publication
 ↓
 
 Subscribers
+
+↓
+
+Optional Command or Request to a Runtime Service
+
+↓
+
+Optional Long-Running Job Creation by that Service
 ```
 
 Events are published only after a successful transaction.
@@ -196,21 +207,23 @@ Consumers never modify Events.
 
 ---
 
-# Event Payload
+# Event Schema
 
 Every Event contains:
 
 - Event ID
 - Event Type
 - Timestamp
-- Runtime Context
+- Runtime Context at creation
 - Origin Service
-- Affected Objects
+- zero or more affected Object IDs
 - Metadata
 
-Payloads should remain compact.
+Event Metadata should remain compact.
 
 Large data should be queried through Runtime Services.
+
+Origin Service is visible to subscribers. There is no separate publisher, Runtime Scope or payload schema field; filtering scope is derived from Runtime Context, affected Object IDs and Metadata.
 
 ---
 
@@ -242,11 +255,15 @@ One failing subscriber must never prevent other subscribers from receiving the E
 
 Errors are isolated and reported separately.
 
+A subscriber may react by sending a Command or request to a Runtime Service. The subscriber never treats the Event itself as a Command and never creates a Job directly.
+
 ---
 
 # Idempotency
 
-Subscribers should safely process the same Event more than once.
+The Runtime provides at-least-once delivery to matching active subscriptions. Duplicate delivery may occur.
+
+Subscribers must safely process the same Event more than once.
 
 Duplicate Event delivery must never corrupt Runtime state.
 
@@ -271,9 +288,9 @@ They do not become the history themselves.
 
 ---
 
-# Long Running Work
+# Long-Running Work
 
-Some Events create Jobs instead of performing work immediately.
+Events never create Jobs or request work.
 
 Example:
 
@@ -281,23 +298,27 @@ KnowledgeCreated
 
 ↓
 
-Knowledge Processor Job
+Subscriber
 
 ↓
 
-Analysis Job
+Command or Request to Knowledge Service
 
 ↓
 
-Relationship Discovery
+Authoritative Validation
 
-The Runtime remains responsive while background work continues.
+↓
+
+Optional Knowledge Processing Job
+
+The Runtime Service decides whether the requested work is long-running and creates the Job when appropriate.
 
 ---
 
 # Extensibility
 
-New Extensions may publish and subscribe to Events.
+Extensions may subscribe to Events and send Commands through Runtime Services. Runtime Services publish Events for completed actions.
 
 Every Event must:
 
@@ -320,8 +341,10 @@ Every Runtime component should be able to react to changes while remaining compl
 - Commands request work.
 - Services perform work.
 - Events announce results.
+- Events never request work or create Jobs.
 - Events are immutable.
 - Events contain Context.
+- Event delivery is at least once and subscribers are idempotent.
 - Events never contain business logic.
 - Subscribers remain independent.
 - One failing subscriber never stops the Runtime.

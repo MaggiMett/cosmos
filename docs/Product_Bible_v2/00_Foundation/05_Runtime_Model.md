@@ -105,22 +105,30 @@ A Context Package is the minimal authorized task-specific view of a Context Snap
 Every state-changing interaction follows one consistent path.
 
 ```text
-User or Runtime Client
-    ↓
-Tool or API Adapter
+Client or Tool
     ↓
 Command
     ↓
 Runtime Service
     ↓
-Validation and Permission Check
+Authoritative Permission Validation
+    ↓
+Business Validation
     ↓
 Transaction and Persistence
     ↓
 Event Publication
+    ↓
+Optional Subscriber Reaction
+    ↓
+Optional Command or Request to a Runtime Service
+    ↓
+Optional Long-Running Job Creation by that Service
 ```
 
 Queries read through Runtime Services without changing state.
+
+UI, Entity Runtime and Bundle Runtime may perform non-authoritative preflight checks for feedback. Runtime Services always repeat the authoritative permission and business validation before execution.
 
 ---
 
@@ -193,6 +201,8 @@ They are immutable, contextual and published only after successful transactions.
 
 Events allow independent components to react without direct coupling.
 
+Events never request work or create Jobs. A subscriber may react by sending a Command or request to a Runtime Service.
+
 ---
 
 # Jobs
@@ -209,6 +219,8 @@ Examples include:
 - indexing
 
 Jobs receive Context Snapshots and never bypass Runtime Services.
+
+Ordinary state changes remain synchronous Service transactions. Only long-running work becomes a Job, and only Runtime Services create Jobs.
 
 ---
 
