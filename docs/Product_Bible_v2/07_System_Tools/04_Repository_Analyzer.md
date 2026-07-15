@@ -2,13 +2,15 @@
 
 ## Purpose
 
-The Repository Analyzer continuously understands the technical structure of project repositories.
+The Repository Analyzer performs demand-driven, read-only analysis of the technical structure of project repositories.
 
 It transforms observations about source code, configuration and project structure into structured analysis records that can be stored as Knowledge and used by Journeyman, the Knowledge Runtime and other System Tools.
 
 The Repository Analyzer understands projects.
 
 It does not modify them.
+
+Analysis runs only during import, on explicit request, or when an approved affected task requires fresh repository understanding.
 
 ---
 
@@ -45,8 +47,8 @@ The Repository Analyzer is responsible for:
 - detecting dependencies
 - identifying entry points
 - identifying configuration
-- generating repository metadata
-- detecting structural changes
+- generating repository analysis metadata
+- interpreting structural changes reported by Repository Runtime signals when analysis is triggered
 
 The Repository Analyzer never changes repository contents.
 
@@ -63,6 +65,8 @@ The Repository Analyzer operates on:
 - Provider Runtime (optional)
 
 Repository analysis always executes as Runtime Jobs.
+
+Repository Runtime may provide lightweight availability, file-change, branch-change and health signals, but those signals never execute this Tool directly. A validated Runtime Service request creates the analysis Job.
 
 ---
 
@@ -188,7 +192,7 @@ The Analyzer attempts to understand:
 - extension points
 - runtime contracts
 
-Architecture understanding improves over time.
+Architecture understanding improves through successive triggered analyses.
 
 ---
 
@@ -205,7 +209,7 @@ Repository Objects may include:
 - extensions
 - configuration objects
 
-Confirmed Objects are created as domain entities through Object Service. Durable descriptions and analysis of them may be stored separately as Knowledge.
+The Analyzer produces candidate Objects only. After review or task approval, accepted Objects are created as domain entities through Object Service; the Analyzer never creates them directly. Durable descriptions and analysis of them may be stored separately as Knowledge.
 
 ---
 
@@ -224,17 +228,16 @@ In Version 1 these technical connections may be stored as analysis Knowledge and
 
 ---
 
-# Change Detection
+# Change Signals and Re-analysis
 
-The Analyzer continuously detects:
+Repository Runtime may continuously report lightweight signals for:
 
-- added files
-- removed files
-- renamed files
-- structural changes
-- dependency updates
+- file changes, including additions, removals and renames
+- branch changes
+- repository availability
+- repository health
 
-Only changed areas require re-analysis whenever possible.
+The Analyzer does not continuously inspect or interpret those changes. Re-analysis requires an explicit request or approved affected-task trigger and should limit scope to changed areas whenever possible.
 
 ---
 
@@ -267,8 +270,8 @@ Context helps prioritize analysis.
 
 The Analyzer produces:
 
-- repository metadata
-- discovered Objects
+- repository analysis metadata
+- candidate Objects
 - candidate `Related` Relationships between Objects
 - technology profile
 - architecture summary
@@ -289,6 +292,8 @@ Repository knowledge may be used by:
 - Review Service
 
 The Repository Analyzer never performs implementation work.
+
+It never performs Runtime Translation, mutates Resource mappings or changes Project metadata. Accepted changes are requested through Runtime Services, and approved implementation belongs to Journeyman.
 
 ---
 
@@ -336,5 +341,5 @@ Users and Runtime clients should work with meaningful project understanding inst
 - AI enhances understanding.
 - Objects and Relationships remain domain records; durable analysis about them may become Knowledge.
 - Journeyman consumes repository understanding.
-- Structural changes are continuously detected.
+- Lightweight structural-change notifications belong to Repository Runtime; analysis remains demand-driven.
 - Understanding grows over time.

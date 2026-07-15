@@ -4,7 +4,7 @@
 
 The Project Runtime manages the lifecycle of Projects while Cosmos is running.
 
-It is responsible for loading, activating, synchronizing and unloading Projects while preserving Context and Runtime consistency.
+It is responsible for loading, activating, reflecting committed Project changes and unloading Projects while preserving Context and Runtime consistency.
 
 The Project Runtime is the bridge between persistent Project data and the active Runtime.
 
@@ -31,7 +31,7 @@ The Project Runtime is responsible for:
 - loading Projects
 - activating Projects
 - unloading Projects
-- synchronizing Runtime state
+- reflecting committed Project state in the active Runtime
 - contributing assigned Project scopes and optional Project focus to Runtime Context
 - coordinating Runtime Services
 - managing Project lifetime
@@ -148,7 +148,7 @@ Direct Tool Instances and active Workspace sessions inherit the applicable assig
 
 # Synchronization
 
-The Project Runtime continuously synchronizes:
+The Project Runtime keeps the active in-memory representation aligned with completed Runtime Service transactions for:
 
 - Runtime State
 - Object changes
@@ -156,7 +156,7 @@ The Project Runtime continuously synchronizes:
 - Resource references
 - Relationships
 
-Synchronization should remain transparent to the user.
+This is Runtime state coordination, not repository analysis or repository synchronization. Repository-derived Resource mapping or Project metadata changes require an explicit or affected-task trigger and the canonical Runtime Service transaction.
 
 ---
 
@@ -166,14 +166,13 @@ Projects may reference one or more external repositories.
 
 The Project Runtime never owns repository contents.
 
-Instead it maintains:
+Repository Runtime coordinates:
 
-- mappings
-- references
-- synchronization state
-- repository metadata
+- repository references
+- lightweight availability, file-change, branch-change and health signals
+- current mapping and repository state views
 
-Journeyman performs translation between semantic Objects and technical Resources.
+Repository Analyzer performs triggered read-only analysis. Journeyman performs Runtime Translation and approved implementation during affected tasks. Project Service persists repository references and Project metadata, while Resource Service persists Project-owned Resource mapping changes through the canonical Service pipeline.
 
 ---
 

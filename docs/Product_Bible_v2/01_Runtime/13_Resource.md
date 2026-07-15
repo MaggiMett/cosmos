@@ -155,7 +155,7 @@ Examples include:
 - IntelliJ
 - Unreal Engine
 
-Cosmos should detect changes without requiring users to work exclusively inside Cosmos.
+Repository Runtime may record lightweight file-change notifications without requiring users to work exclusively inside Cosmos. Interpreting those changes remains demand-driven.
 
 ---
 
@@ -163,14 +163,14 @@ Cosmos should detect changes without requiring users to work exclusively inside 
 
 Existing Resources may be mapped into Projects.
 
-Journeyman analyzes:
+Repository Analyzer performs the triggered, read-only analysis of:
 
 - directory structure
 - technologies
 - naming conventions
 - dependencies
 
-Project-owned mappings then connect Resources to existing or newly created Objects. The native assets remain owned by their repository or external source.
+Accepted Project-owned mappings then connect Resources to existing or newly created Objects through Resource Service and Persistence. Journeyman performs only approved affected implementation or Runtime Translation work. The native assets remain owned by their repository or external source.
 
 ---
 

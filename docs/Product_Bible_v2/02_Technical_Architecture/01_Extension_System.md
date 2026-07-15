@@ -52,7 +52,9 @@ Examples include:
 - Analysis Engine
 - Repository Analyzer
 - Context Builder
-- Runtime Translation
+- Journeyman
+
+Runtime Translation is a declared Journeyman capability used for approved affected tasks. It is not a separate System Tool Extension.
 
 ---
 

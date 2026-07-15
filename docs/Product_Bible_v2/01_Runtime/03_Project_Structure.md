@@ -42,7 +42,7 @@ Runtime Structure
 
 The user only works directly with the User Structure.
 
-Journeyman translates between both worlds when implementation, synchronization or validation is explicitly requested.
+Journeyman performs Runtime Translation between both worlds only during an approved affected implementation, synchronization or validation task.
 
 ---
 
@@ -102,7 +102,9 @@ The Runtime Structure always remains compatible with the target platform.
 
 # Runtime Translation
 
-Journeyman connects both structures.
+Runtime Translation is a capability of the Journeyman System Tool, not a separate System Tool identity.
+
+Journeyman connects both structures during approved affected tasks.
 
 The user decides:
 
@@ -110,7 +112,7 @@ The user decides:
 - what it means
 - how it is organized
 
-Journeyman decides:
+Within approved implementation work, Journeyman determines:
 
 - file locations
 - naming conventions
@@ -168,7 +170,7 @@ Objects simply reference these Resources.
 
 Existing repositories can be imported into Cosmos.
 
-Journeyman analyzes:
+Repository Analyzer performs the triggered, read-only analysis of:
 
 - directory structure
 - naming conventions
@@ -176,7 +178,7 @@ Journeyman analyzes:
 - dependencies
 - technologies
 
-Based on this analysis, Journeyman proposes an initial User Structure.
+Based on this analysis, Repository Analyzer produces candidate Objects and structure. Journeyman may use accepted results during approved implementation or Runtime Translation work.
 
 The user decides which suggestions should become part of the Project.
 
@@ -278,9 +280,9 @@ Product
 
 The logical structure grows together with the user's understanding.
 
-The Runtime grows together with implementation.
+The Runtime grows together with approved implementation.
 
-Both remain synchronized without becoming identical.
+Both remain connected without continuous analysis or mutation. Synchronization that changes Resource mappings or Project metadata occurs only through Runtime Services after an explicit or affected-task trigger.
 
 ---
 
@@ -300,6 +302,7 @@ Both perspectives remain permanently connected.
 
 - The user owns the User Structure.
 - Journeyman owns Runtime Translation.
+- Repository Analyzer owns read-only repository analysis.
 - Runtime compatibility is always preserved.
 - Objects connect both worlds.
 - Meaning is independent from implementation.

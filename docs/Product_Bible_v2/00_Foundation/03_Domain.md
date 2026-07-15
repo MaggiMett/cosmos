@@ -117,9 +117,11 @@ Examples:
 - Knowledge Processor
 - Analysis Engine
 - Repository Analyzer
-- Runtime Translation
+- Journeyman
 
 System Tools support the system itself and usually have no direct user interface.
+
+Runtime Translation is a Journeyman capability used during approved affected tasks, not a separate System Tool identity.
 
 System Tools remain task-oriented capabilities.
 

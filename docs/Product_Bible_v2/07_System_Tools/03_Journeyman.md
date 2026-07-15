@@ -45,10 +45,13 @@ Journeyman is responsible for:
 - coordinating Runtime systems
 - requesting reasoning
 - executing approved tasks
+- performing Runtime Translation during approved affected tasks
 - validating results
 - reporting progress
 
 Journeyman never owns project knowledge.
+
+Repository Analyzer owns read-only repository analysis. Journeyman consumes its results and owns approved implementation and Runtime Translation; it does not become a second repository analyzer.
 
 ---
 
@@ -165,11 +168,19 @@ planning
 reasoning
 code generation
 summarization
-architecture analysis
+implementation reasoning
 
 Journeyman coordinates Providers.
 
 Providers never execute Runtime work.
+
+Repository Work
+
+Repository Runtime supplies repository references, current mapping state and lightweight change signals. When an approved task requires fresh understanding, Repository Analyzer performs the triggered read-only analysis first.
+
+Journeyman then performs only the approved affected implementation and Runtime Translation. It requests any Resource mapping or Project metadata mutation through the appropriate Runtime Service and never writes mapping Persistence directly.
+
+Runtime Translation is a declared Journeyman capability. It is not a separate System Tool identity and never runs continuously.
 
 Job Execution
 
@@ -178,7 +189,7 @@ Every assignment becomes a Runtime Job.
 Examples include:
 
 implement feature
-analyze repository
+implement approved repository changes
 generate documentation
 refactor module
 execute migration
@@ -239,7 +250,7 @@ Journeyman A
 
 ↓
 
-Repository Analysis
+Implementation
 
 Journeyman B
 
@@ -306,12 +317,13 @@ Design Goal
 
 Journeyman should become the user's trusted implementation partner.
 
-Rather than acting as a coding assistant, Journeyman should understand goals, prepare structured execution, perform approved work and continuously improve projects while remaining fully transparent and controllable.
+Rather than acting as a coding assistant, Journeyman should understand goals, prepare structured execution, perform approved work and improve projects over time while remaining fully transparent and controllable.
 
 Principles
 Journeyman is a Runtime Worker.
 Journeyman is not an AI.
 System Tool Extension capabilities define skills.
+Journeyman is the sole owner of Runtime Translation.
 Providers extend reasoning.
 Runtime Services execute work.
 Planning precedes execution.

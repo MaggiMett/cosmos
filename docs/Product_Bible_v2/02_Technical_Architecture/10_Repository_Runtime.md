@@ -8,7 +8,7 @@ It allows users to organize Projects semantically while preserving complete comp
 
 The Repository Runtime never owns repositories.
 
-It understands them.
+It coordinates references, lightweight signals, mappings and repository state without analyzing or modifying repository contents.
 
 ---
 
@@ -33,13 +33,13 @@ Journeyman translates between them.
 The Repository Runtime is responsible for:
 
 - connecting Projects to repositories
-- maintaining Object ↔ Resource mappings
-- tracking repository state
-- coordinating Journeyman translation
-- detecting external changes
+- coordinating current Object ↔ Resource mapping state
+- tracking repository availability and health
+- recording file-change and branch-change notifications
+- coordinating triggered Repository Analyzer and Journeyman work
 - exposing repository information through Runtime Services
 
-The Repository Runtime never applies semantic or implementation changes on its own. Repository modifications occur through authorized Runtime Services and Journeyman Jobs.
+The Repository Runtime never analyzes repositories, performs Runtime Translation, applies semantic changes or performs implementation work. Repository and mapping mutations occur only through authorized Runtime Services during approved Journeyman tasks or accepted analysis results.
 
 ---
 
@@ -111,7 +111,7 @@ The semantic structure reflects understanding rather than file organization.
 
 # Translation Layer
 
-Journeyman continuously translates between:
+Runtime Translation is a capability of the Journeyman System Tool and occurs only during an approved affected task:
 
 ```text
 User Structure
@@ -128,6 +128,8 @@ Repository Structure
 The user defines meaning.
 
 Journeyman resolves implementation.
+
+Repository Runtime coordinates the required references and state. It never performs the translation itself.
 
 ---
 
@@ -150,7 +152,7 @@ Users continue working with one Object regardless of implementation complexity.
 
 Existing repositories may be imported.
 
-Journeyman analyzes:
+Repository Analyzer performs the explicitly triggered, read-only analysis of:
 
 - directory structure
 - technologies
@@ -158,7 +160,7 @@ Journeyman analyzes:
 - dependencies
 - project patterns
 
-Based on this analysis, Journeyman proposes an initial semantic Project Structure.
+Based on this analysis, Repository Analyzer produces candidate Objects, mappings and semantic structure for review. Accepted mutations are sent through Runtime Services; Journeyman performs any approved implementation or Runtime Translation work.
 
 The user decides what becomes part of the Project.
 
@@ -166,27 +168,26 @@ The user decides what becomes part of the Project.
 
 # Repository Monitoring
 
-The Repository Runtime records lightweight external change signals when available.
+The Repository Runtime may continuously record only lightweight external signals when available.
 
 Examples include:
 
-- file modifications
-- file creation
-- file deletion
-- repository updates
-- branch changes
+- repository availability
+- file-change notifications, including creation, modification, deletion and rename
+- branch-change notifications
+- repository health
 
-It does not continuously perform expensive full analysis.
+Signals report that repository state may have changed. They do not analyze, interpret, translate or mutate it.
 
-A complete validation or rescan occurs during import, when explicitly requested, or immediately before Journeyman performs work in the affected area.
+Repository analysis, architectural interpretation, Object discovery and mapping validation occur only during import, when explicitly requested, or when fresh results are required before an approved task in the affected area.
 
-Detected changes are translated into Runtime Events.
+Signals are published as completed-fact Runtime Events through the existing Event Model. An Event never starts analysis or translation directly; a Runtime Service may create the required long-running Job after validation.
 
 ---
 
 # Synchronization
 
-Synchronization is coordinated and demand-driven.
+Synchronization is coordinated and demand-driven whenever it analyzes repository content or mutates Resource mappings or Project metadata.
 
 User implementation requests
 
@@ -210,13 +211,19 @@ Repository Runtime signal
 
 ↓
 
-Validation before the next affected Journeyman task
+Explicit request or approved affected-task trigger
 
 ↓
 
-Object mappings updated through Runtime Services
+Repository Analyzer read-only analysis when required
+
+↓
+
+Accepted Resource mappings or Project metadata updated through Runtime Services
 
 Synchronization preserves user intent while maintaining repository compatibility.
+
+Project Service persists repository references and Project metadata. Resource Service persists Project-owned Resource mappings. Repository Runtime coordinates the resulting state but never writes Persistence itself.
 
 ---
 
@@ -274,7 +281,9 @@ If a repository becomes unavailable:
 - semantic Project data remains available
 - Object mappings remain preserved
 - Runtime Services continue operating where possible
-- synchronization resumes when the repository becomes available
+- lightweight availability and change signaling resumes when the repository becomes available
+
+Pending analysis, translation or mapping synchronization remains demand-driven and requires its explicit or affected-task trigger.
 
 ---
 
@@ -282,7 +291,7 @@ If a repository becomes unavailable:
 
 Future extensions may introduce support for additional repository types, development platforms and build systems.
 
-The Repository Runtime should require only new translators rather than architectural changes.
+Additional support should extend the existing Repository Analyzer or Journeyman System Tool contracts rather than introduce new Runtime systems or a separate Runtime Translation Tool.
 
 ---
 
@@ -290,9 +299,9 @@ The Repository Runtime should require only new translators rather than architect
 
 The Repository Runtime should make technical implementation feel invisible.
 
-Users organize Projects according to meaning while Journeyman continuously maintains compatibility with the underlying repository.
+Users organize Projects according to meaning while Journeyman maintains compatibility during approved affected tasks.
 
-Both perspectives remain synchronized without ever becoming identical.
+Both perspectives may be synchronized through demand-driven tasks without ever becoming identical.
 
 ---
 
@@ -301,6 +310,8 @@ Both perspectives remain synchronized without ever becoming identical.
 - Repositories remain independent.
 - Cosmos organizes meaning.
 - Journeyman performs translation.
+- Repository Analyzer performs read-only analysis on demand.
+- Only lightweight repository signals may be continuous.
 - Objects connect both worlds.
 - Repository compatibility is always preserved.
 - Synchronization is bidirectional.

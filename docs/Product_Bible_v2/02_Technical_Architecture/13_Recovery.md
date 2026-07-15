@@ -106,11 +106,12 @@ Long-running Jobs may be resumed.
 Examples include:
 
 - Knowledge Processing
-- Repository Analysis
 - AI Jobs
 - Resource Generation
 
 Only resumable Jobs restart automatically.
+
+Repository Analysis and Runtime Translation Jobs never restart automatically during startup recovery. They remain available for explicit resume or retry under their original approved task.
 
 Non-resumable Jobs remain available for manual retry.
 
@@ -133,15 +134,23 @@ One Extension must never prevent Cosmos from starting.
 
 # Repository Recovery
 
-Repositories are revalidated during startup.
+Startup recovery may automatically check only:
+
+- repository availability
+- repository health
+- integrity of persisted repository references and Resource mappings
+
+These checks do not scan or interpret repository contents. Recovery never starts repository analysis, Object discovery, Runtime Translation, mapping mutation or implementation work automatically.
 
 If a repository is temporarily unavailable:
 
 - semantic Project data remains available
 - Object mappings remain intact
-- synchronization resumes automatically when possible
+- lightweight availability and change signaling resumes when possible
 
 Repository failures never remove Project information.
+
+Any expensive analysis or synchronization that mutates Resource mappings or Project metadata requires a later explicit request or approved affected-task trigger through Runtime Services.
 
 ---
 

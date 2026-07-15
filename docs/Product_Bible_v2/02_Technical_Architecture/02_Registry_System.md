@@ -278,7 +278,13 @@ cosmos.user-tool.blueprint-builder
 
 requires:
 
-cosmos.system-tool.runtime-translation >= 1.0
+cosmos.system-tool.journeyman >= 1.0
+
+required capability:
+
+runtime_translation
+
+Runtime Translation resolves through the existing Journeyman System Tool identity. No separate Runtime Translation Registry Entry exists.
 
 The Registry System validates dependencies before activation.
 

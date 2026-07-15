@@ -70,13 +70,15 @@ Examples include:
 - Analysis Engine
 - Repository Analyzer
 - Context Builder
-- Runtime Translation
+- Journeyman
 
 System Tools usually have no direct user interface.
 
-They operate automatically in the background.
+They may operate in the background when a Runtime task triggers them. Repository analysis and Journeyman Runtime Translation remain demand-driven.
 
 System Tools remain Extensions that execute task-oriented work through Runtime contracts.
+
+Runtime Translation is a capability of the Journeyman System Tool, not a separate Tool definition or Tool Instance.
 
 Runtime Services, Registries, Persistence, Entity Runtime, Provider Runtime, Theme Runtime, Event Dispatcher and Job Scheduler are Core Runtime infrastructure and are not Tool definitions or Tool Instances.
 

@@ -234,11 +234,13 @@ Examples include:
 - Analysis Engine
 - Context Builder
 - Repository Analyzer
-- Runtime Translation
+- Journeyman
 
 They operate through Runtime contracts and should avoid unnecessary user interruption.
 
 System Tools execute task-oriented capabilities.
+
+Runtime Translation is a demand-driven capability of Journeyman during approved affected tasks, not a separate System Tool identity. Repository Analyzer performs triggered read-only repository analysis.
 
 Runtime Services, Registries, Persistence, the Entity Runtime, Provider Runtime, Theme Runtime, Event Dispatcher and Job Scheduler are Core Runtime infrastructure rather than System Tools.
 

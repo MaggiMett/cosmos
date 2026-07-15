@@ -1,5 +1,11 @@
 # Architecture Audit
 
+## Historical Status
+
+This document is a historical record of an earlier correction pass and is superseded by the current Product Bible, `ARCHITECTURE_REVIEW_V1.md` and the completed architecture work items. Its readiness statement and "Remaining Non-Blocking Design Work" section are not current Architecture Freeze evidence.
+
+Where this audit discusses repository behavior, the current canonical contract is narrower: only repository availability, file-change notifications, branch-change notifications and repository health may be continuous. Repository analysis, architectural interpretation, Object discovery, Resource mapping or Project metadata mutation, Runtime Translation and implementation are demand-driven. Repository Analyzer owns triggered read-only analysis; Journeyman owns approved implementation and Runtime Translation during affected tasks.
+
 ## Result
 
 The reviewed Product Bible is structurally coherent and ready for the Bundled Extensions and Blueprint phase.
