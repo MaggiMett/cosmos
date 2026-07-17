@@ -1,0 +1,288 @@
+# Cosmos V1 Implementation Roadmap
+
+**Version:** 1.0
+**Status:** Authoritative
+**Purpose:** Autonomous implementation roadmap for Codex
+
+---
+
+# Purpose
+
+This document defines the implementation order for Cosmos Version 1.
+
+Codex is expected to execute every Sprint autonomously.
+
+After successfully completing one Sprint, Codex should immediately continue with the next Sprint.
+
+User interaction is only required when a genuine blocking issue occurs.
+
+---
+
+# Authority
+
+Implementation must follow the following priority:
+
+1. Product Bible
+2. Experience
+3. Visual Specifications
+4. This Roadmap
+
+If documentation conflicts, Codex must stop and request clarification.
+
+---
+
+# General Rules
+
+For every Sprint Codex must:
+
+- implement the required functionality
+- keep the architecture clean
+- reuse existing systems whenever possible
+- avoid temporary solutions
+- avoid duplicated implementations
+- write production-ready code
+- keep the project buildable at all times
+
+---
+
+# Sprint Workflow
+
+Every Sprint follows exactly the same process.
+
+## 1.
+
+Read all required documentation.
+
+---
+
+## 2.
+
+Create an implementation plan.
+
+---
+
+## 3.
+
+Implement the Sprint.
+
+---
+
+## 4.
+
+Run all available checks.
+
+Examples:
+
+- formatting
+- linting
+- type checking
+- unit tests
+- integration tests
+- frontend build
+- backend build
+
+---
+
+## 5.
+
+Fix every issue discovered during testing.
+
+Repeat until every check succeeds.
+
+---
+
+## 6.
+
+Verify that the Sprint satisfies the Product Bible, Experience and Visual Specifications.
+
+---
+
+## 7.
+
+Commit the completed Sprint.
+
+---
+
+## 8.
+
+Push the completed Sprint.
+
+---
+
+## 9.
+
+Immediately continue with the next Sprint.
+
+No user confirmation is required.
+
+---
+
+# Sprint Plan
+
+## Sprint 0
+
+Foundation
+
+Status:
+
+Completed
+
+---
+
+## Sprint 1
+
+Application Framework
+
+Goals:
+
+- application shell
+- routing
+- window runtime
+- workspace runtime
+- basic navigation
+- theme loading
+- startup flow
+
+---
+
+## Sprint 2
+
+Cosmos
+
+Goals:
+
+- Cosmos Map
+- camera
+- navigation bar
+- projects
+- nodes
+- connections
+- companion
+- ship
+
+---
+
+## Sprint 3
+
+Base
+
+Goals:
+
+- Base
+- Main Room
+- Rooms
+- Workspace furniture
+- cockpit
+- room transitions
+
+---
+
+## Sprint 4
+
+Workspace System
+
+Goals:
+
+- Workspace Window
+- Tool runtime
+- multi-window workflow
+- workspace persistence
+
+---
+
+## Sprint 5
+
+Core Tools
+
+Goals:
+
+- Files
+- Archive
+- Capture
+- Review
+- Journeyman
+
+---
+
+## Sprint 6
+
+Object Interaction
+
+Goals:
+
+- object windows
+- context menus
+- dialogs
+- notifications
+- drag & drop
+- selection
+- editing
+
+---
+
+## Sprint 7
+
+Integration
+
+Goals:
+
+- connect all systems
+- polish interactions
+- fix inconsistencies
+- improve performance
+- remove temporary code
+
+---
+
+## Sprint 8
+
+Release Candidate
+
+Goals:
+
+- full verification
+- bug fixing
+- UI consistency
+- final testing
+- production readiness
+
+---
+
+# Commit Policy
+
+Every completed Sprint must produce:
+
+- one clean commit
+- one successful push
+
+The repository must remain usable after every Sprint.
+
+---
+
+# Stop Conditions
+
+Codex must only stop when:
+
+- documentation contains contradictions
+- required documentation is missing
+- user approval is required
+- credentials are required
+- external dependencies cannot be resolved
+- continuation would risk damaging user work
+
+Implementation difficulty is **not** a valid stop condition.
+
+---
+
+# Completion
+
+Cosmos Version 1 is complete when:
+
+- every Sprint has been completed
+- every verification passes
+- the application builds successfully
+- the frontend is usable
+- the backend is operational
+- the implementation matches the Product Bible, Experience and Visual Specifications
+
+Only then should the implementation be considered complete.
