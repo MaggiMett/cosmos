@@ -1,6 +1,6 @@
 import type { ApiError, ApiRequestOptions, ApiResult } from "./contracts";
 
-const defaultBaseUrl = import.meta.env.VITE_COSMOS_API_BASE_URL ?? "";
+const defaultBaseUrl = import.meta.env.VITE_COSMOS_API_BASE_URL ?? "/api";
 
 export class CosmosApiClient {
   private readonly baseUrl: string;

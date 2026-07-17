@@ -4,19 +4,22 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "vite build --config vite.build.config.ts --configLoader runner",
+    "build": "vite build --config vite.app.config.ts --configLoader runner",
+    "build:runtime": "vite build --config vite.build.config.ts --configLoader runner",
+    "dev": "vite --host 127.0.0.1 --config vite.app.config.ts --configLoader runner",
+    "preview": "vite preview --host 127.0.0.1 --config vite.app.config.ts --configLoader runner",
     "test": "vitest run --environment node",
     "typecheck": "vue-tsc --noEmit"
   },
-  "peerDependencies": {
-    "vue": "^3.5.22"
+  "dependencies": {
+    "vue": "^3.5.22",
+    "vue-router": "^4.5.1"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.4",
     "typescript": "^5.9.3",
     "vite": "^6.3.5",
     "vitest": "^2.1.9",
-    "vue": "^3.5.22",
     "vue-tsc": "^2.2.12"
   }
 }

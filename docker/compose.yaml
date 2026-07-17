@@ -1,10 +1,17 @@
 services:
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/frontend.Dockerfile
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
   backend:
     build:
       context: ..
       dockerfile: docker/backend.Dockerfile
-    environment:
-      COSMOS_CORS_ORIGINS: http://127.0.0.1:5173
     ports:
       - "8000:8000"
     volumes:

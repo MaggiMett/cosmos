@@ -38,7 +38,10 @@ def create_app(
     async def lifespan(app: Starlette) -> AsyncIterator[None]:
         active_runtime.initialize()
         app.state.runtime = active_runtime
-        yield
+        try:
+            yield
+        finally:
+            active_runtime.shutdown()
 
     app = Starlette(
         debug=False,

@@ -40,6 +40,17 @@ def main() -> None:
             frontend_tool("vite"),
             "build",
             "--config",
+            "vite.app.config.ts",
+            "--configLoader",
+            "runner",
+        ],
+        cwd=frontend,
+    )
+    run(
+        [
+            frontend_tool("vite"),
+            "build",
+            "--config",
             "vite.build.config.ts",
             "--configLoader",
             "runner",

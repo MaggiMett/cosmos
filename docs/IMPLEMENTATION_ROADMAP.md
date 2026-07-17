@@ -133,6 +133,10 @@ Completed
 
 Application Framework
 
+Status:
+
+Completed
+
 Goals:
 
 - application shell
