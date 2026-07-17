@@ -193,6 +193,10 @@ Goals:
 
 Workspace System
 
+Status:
+
+Completed
+
 Goals:
 
 - fixed Workspace Environment Window

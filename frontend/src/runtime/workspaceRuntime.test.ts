@@ -1,66 +1,119 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { CosmosApiClient } from "./apiClient";
+import { ToolRuntime } from "./toolRuntime";
 import { WindowRuntime } from "./windowRuntime";
-import { WorkspaceRuntime, WorkspaceRuntimeError } from "./workspaceRuntime";
+import { WorkspaceRuntime, type WorkspaceSession } from "./workspaceRuntime";
 
-const definition = {
-  objectId: "cosmos.workspace.knowledge",
-  displayName: "Knowledge Workspace",
-  context: { projectScopeIds: ["project.alpha"], focusedProjectId: "project.alpha" },
-  environmentBounds: { x: 100, y: 80, width: 1200, height: 800 },
+const session: WorkspaceSession = {
+  objectId: "cosmos.workspace-session.a",
+  definition: {
+    objectId: "cosmos.workspace.knowledge",
+    displayName: "Knowledge Workspace",
+    description: "Research and understanding.",
+    icon: "Knowledge",
+    overlay: "KnowledgeDesk",
+    defaultLayout: {},
+    contextConfiguration: { projectScopeIds: ["project.alpha"] },
+    assignedToolIds: [],
+    themeOverride: "",
+    sourceProjectId: "cosmos.project.system.knowledge",
+  },
+  environmentWindow: {
+    objectId: "cosmos.window.workspace.a",
+    displayName: "Knowledge Workspace",
+    role: "workspace_environment",
+  },
+  context: {
+    projectScopeIds: ["project.alpha"],
+    focusedProjectId: "project.alpha",
+    roomId: "cosmos.room.main",
+    workspaceSessionId: "cosmos.workspace-session.a",
+  },
+  state: "active",
+  restorableState: {
+    tools: [],
+    selectedObjectId: null,
+    filters: {},
+    camera: {},
+    panels: {},
+  },
 };
 
 describe("WorkspaceRuntime", () => {
-  it("opens temporary sessions with distinct fixed Environment Windows", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("opens a service-owned temporary session with a fixed Environment Window", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(json(session, 201)));
     const windows = new WindowRuntime();
-    const ids = ["session-a", "session-b"];
-    const runtime = new WorkspaceRuntime(windows, () => ids.shift() ?? "unexpected");
+    const api = new CosmosApiClient("http://cosmos.test");
+    const tools = new ToolRuntime(windows, api);
+    const runtime = new WorkspaceRuntime(windows, api, tools);
 
-    const first = runtime.open(definition);
-    const second = runtime.open({ ...definition, objectId: "cosmos.workspace.creation" });
+    const opened = await runtime.open({
+      definitionObjectId: session.definition.objectId,
+      roomId: "cosmos.room.main",
+      environmentBounds: { x: 60, y: 50, width: 1200, height: 800 },
+    });
 
-    expect(runtime.get(first.sessionId).state).toBe("background");
-    expect(second.state).toBe("active");
-    expect(windows.get(second.environmentWindowObjectId).capabilities).toMatchObject({
+    expect(opened.state).toBe("active");
+    expect(windows.get(opened.environmentWindow.objectId).capabilities).toMatchObject({
       movable: false,
       resizable: false,
+      closable: true,
     });
-    expect(first.environmentWindowObjectId).not.toBe(second.environmentWindowObjectId);
+    expect(runtime.state.phase).toBe("ready");
   });
 
-  it("focuses and closes sessions without removing their definitions", () => {
+  it("persists layout before closing without removing the Workspace definition", async () => {
+    const responses = [session, session, { ...session, state: "closed" }];
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(() => Promise.resolve(json(responses.shift()))));
     const windows = new WindowRuntime();
-    const runtime = new WorkspaceRuntime(windows, () => "session-a");
-    const session = runtime.open(definition);
-
-    expect(runtime.focus(session.sessionId).state).toBe("active");
-    expect(runtime.close(session.sessionId)).toMatchObject({
-      definitionObjectId: definition.objectId,
-      state: "closed",
+    const api = new CosmosApiClient("http://cosmos.test");
+    const tools = new ToolRuntime(windows, api);
+    const runtime = new WorkspaceRuntime(windows, api, tools);
+    const opened = await runtime.open({
+      definitionObjectId: session.definition.objectId,
+      roomId: "cosmos.room.main",
+      environmentBounds: { x: 60, y: 50, width: 1200, height: 800 },
     });
+
+    const closed = await runtime.close(opened.objectId);
+
+    expect(closed.state).toBe("closed");
+    expect(closed.definition.objectId).toBe("cosmos.workspace.knowledge");
     expect(runtime.list()).toEqual([]);
   });
 
-  it("enforces additive Project focus", () => {
-    const runtime = new WorkspaceRuntime(new WindowRuntime(), () => "session-a");
-
-    expect(() =>
-      runtime.open({
-        ...definition,
-        context: { projectScopeIds: ["project.alpha"], focusedProjectId: "project.beta" },
-      }),
-    ).toThrowError(WorkspaceRuntimeError);
-  });
-
-  it("restores the focused session when another Workspace fails to open", () => {
+  it("compensates the backend session when local Window initialization fails", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(json(session, 201));
+    vi.stubGlobal("fetch", fetchMock);
     const windows = new WindowRuntime();
-    const runtime = new WorkspaceRuntime(windows, () => "session-a");
-    const active = runtime.open(definition);
+    windows.open({
+      objectId: session.environmentWindow.objectId,
+      role: "workspace_environment",
+      title: "Existing",
+      bounds: { x: 0, y: 0, width: 1000, height: 700 },
+    });
+    const api = new CosmosApiClient("http://cosmos.test");
+    const runtime = new WorkspaceRuntime(windows, api, new ToolRuntime(windows, api));
 
-    expect(() => runtime.open({ ...definition, objectId: "cosmos.workspace.creation" })).toThrow(
-      "Duplicate Workspace session ID",
-    );
-    expect(runtime.get(active.sessionId).state).toBe("active");
-    expect(windows.get(active.environmentWindowObjectId).state).toBe("active");
+    await expect(
+      runtime.open({
+        definitionObjectId: session.definition.objectId,
+        roomId: "cosmos.room.main",
+        environmentBounds: { x: 60, y: 50, width: 1200, height: 800 },
+      }),
+    ).rejects.toThrow("already open");
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(runtime.state.phase).toBe("failed");
   });
 });
+
+function json(value: unknown, status = 200): Response {
+  return new Response(JSON.stringify(value ?? {}), {
+    status,
+    headers: { "content-type": "application/json" },
+  });
+}

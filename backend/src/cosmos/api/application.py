@@ -95,6 +95,92 @@ async def companion_message(request: Request) -> JSONResponse:
         return _service_error(error)
 
 
+async def workspace_definition(request: Request) -> JSONResponse:
+    try:
+        return JSONResponse(
+            request.app.state.runtime.workspaces.definition(
+                request.path_params["workspace_id"], _local_owner_context()
+            )
+        )
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
+async def open_workspace(request: Request) -> JSONResponse:
+    try:
+        payload = await _json_object(request)
+        value = request.app.state.runtime.workspaces.open(
+            request.path_params["workspace_id"],
+            _string(payload, "roomId"),
+            _local_owner_context(),
+        )
+        return JSONResponse(value, status_code=201)
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
+async def workspace_session(request: Request) -> JSONResponse:
+    try:
+        session_id = request.path_params["session_id"]
+        owner = _local_owner_context()
+        if request.method == "GET":
+            return JSONResponse(request.app.state.runtime.workspaces.get(session_id, owner))
+        if request.method == "DELETE":
+            return JSONResponse(request.app.state.runtime.workspaces.close(session_id, owner))
+        payload = await _json_object(request)
+        state = payload.get("restorableState")
+        if not isinstance(state, dict):
+            raise RuntimeServiceError("validation_failed", "restorableState must be an object.")
+        return JSONResponse(request.app.state.runtime.workspaces.save_state(session_id, state, owner))
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
+async def focus_workspace(request: Request) -> JSONResponse:
+    try:
+        return JSONResponse(
+            request.app.state.runtime.workspaces.focus(
+                request.path_params["session_id"], _local_owner_context()
+            )
+        )
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
+async def open_workspace_tool(request: Request) -> JSONResponse:
+    try:
+        payload = await _json_object(request)
+        bounds = payload.get("bounds")
+        if not isinstance(bounds, dict):
+            raise RuntimeServiceError("validation_failed", "bounds must be an object.")
+        value = request.app.state.runtime.workspaces.open_tool(
+            request.path_params["session_id"],
+            _string(payload, "toolDefinitionId"),
+            bounds,
+            _local_owner_context(),
+        )
+        return JSONResponse(value, status_code=201)
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
+async def workspace_tool(request: Request) -> JSONResponse:
+    try:
+        session_id = request.path_params["session_id"]
+        instance_id = request.path_params["instance_id"]
+        owner = _local_owner_context()
+        if request.method == "DELETE":
+            return JSONResponse(
+                request.app.state.runtime.workspaces.close_tool(session_id, instance_id, owner)
+            )
+        payload = await _json_object(request)
+        return JSONResponse(
+            request.app.state.runtime.workspaces.update_tool(session_id, instance_id, payload, owner)
+        )
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
 def create_app(
     settings: RuntimeSettings | None = None,
     runtime: CosmosRuntime | None = None,
@@ -121,6 +207,28 @@ def create_app(
             Route("/cosmos/camera", update_camera, methods=["PUT"]),
             Route("/objects/{object_id:str}/position", move_node, methods=["PUT"]),
             Route("/companion/messages", companion_message, methods=["POST"]),
+            Route("/workspaces/{workspace_id:str}", workspace_definition),
+            Route("/workspaces/{workspace_id:str}/sessions", open_workspace, methods=["POST"]),
+            Route(
+                "/workspace-sessions/{session_id:str}",
+                workspace_session,
+                methods=["GET", "PUT", "DELETE"],
+            ),
+            Route(
+                "/workspace-sessions/{session_id:str}/focus",
+                focus_workspace,
+                methods=["POST"],
+            ),
+            Route(
+                "/workspace-sessions/{session_id:str}/tools",
+                open_workspace_tool,
+                methods=["POST"],
+            ),
+            Route(
+                "/workspace-sessions/{session_id:str}/tools/{instance_id:str}",
+                workspace_tool,
+                methods=["PUT", "DELETE"],
+            ),
         ],
         lifespan=lifespan,
     )
@@ -130,7 +238,7 @@ def create_app(
         app.add_middleware(
             CORSMiddleware,
             allow_origins=list(active_settings.cors_origins),
-            allow_methods=["GET", "POST", "PUT"],
+            allow_methods=["GET", "POST", "PUT", "DELETE"],
             allow_headers=["*"],
         )
 
@@ -153,6 +261,10 @@ def _local_owner_context(
                 "relationships.write",
                 "runtime_state.read",
                 "runtime_state.write",
+                "tools.read",
+                "tools.write",
+                "workspaces.read",
+                "workspaces.write",
             }
         ),
     )
@@ -175,6 +287,13 @@ def _number(payload: dict[str, object], key: str) -> float:
     return float(value)
 
 
+def _string(payload: dict[str, object], key: str) -> str:
+    value = payload.get(key)
+    if not isinstance(value, str) or not value.strip():
+        raise RuntimeServiceError("validation_failed", f"{key} must be a non-empty string.")
+    return value
+
+
 def _service_error(error: RuntimeServiceError) -> JSONResponse:
-    status = 403 if error.code == "permission_denied" else 404 if error.code == "object_not_found" else 422
+    status = 403 if error.code == "permission_denied" else 404 if error.code.endswith("_not_found") else 422
     return JSONResponse({"code": error.code, "message": str(error)}, status_code=status)

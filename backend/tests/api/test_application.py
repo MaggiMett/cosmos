@@ -51,3 +51,37 @@ def test_base_api_exposes_main_room_and_workshop_without_parallel_models(tmp_pat
     assert response.status_code == 200
     assert response.json()["base"]["objectId"] == "cosmos.base.default"
     assert [room["slug"] for room in response.json()["rooms"]] == ["main", "workshop"]
+
+
+def test_workspace_api_opens_persists_and_closes_temporary_sessions(tmp_path: Path) -> None:
+    settings = RuntimeSettings(runtime_path=tmp_path / "Runtime", port=0)
+
+    with TestClient(create_app(settings)) as client:
+        definition = client.get("/workspaces/cosmos.workspace.knowledge")
+        opened = client.post(
+            "/workspaces/cosmos.workspace.knowledge/sessions",
+            json={"roomId": "cosmos.room.main"},
+        )
+        session_id = opened.json()["objectId"]
+        saved = client.put(
+            f"/workspace-sessions/{session_id}",
+            json={
+                "restorableState": {
+                    "tools": [],
+                    "selectedObjectId": None,
+                    "filters": {"scope": "all"},
+                    "camera": {},
+                    "panels": {},
+                }
+            },
+        )
+        closed = client.delete(f"/workspace-sessions/{session_id}")
+        missing = client.get(f"/workspace-sessions/{session_id}")
+
+    assert definition.status_code == 200
+    assert definition.json()["displayName"] == "Knowledge Workspace"
+    assert opened.status_code == 201
+    assert opened.json()["state"] == "active"
+    assert saved.json()["restorableState"]["filters"] == {"scope": "all"}
+    assert closed.json()["state"] == "closed"
+    assert missing.status_code == 404

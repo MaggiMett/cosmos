@@ -11,7 +11,7 @@ from cosmos.persistence import (
     RuntimeStateRepository,
     SQLitePersistence,
 )
-from cosmos.runtime import EventDispatcher, ProviderRuntime, Registry, RuntimeContext
+from cosmos.runtime import EventDispatcher, ProviderRuntime, Registry, RuntimeContext, ToolRuntime
 from cosmos.services import (
     BaseService,
     CompanionService,
@@ -19,6 +19,8 @@ from cosmos.services import (
     ObjectService,
     ProjectService,
     RelationshipService,
+    ToolService,
+    WorkspaceService,
     create_version_one_object_contract,
 )
 
@@ -52,6 +54,8 @@ class CosmosRuntime:
     relationships: RelationshipService
     companion: CompanionService
     base: BaseService
+    tools: ToolService
+    workspaces: WorkspaceService
     cosmos_map: CosmosMapService
     startup: StartupReport = StartupReport(phase=StartupPhase.CREATED)
 
@@ -68,6 +72,9 @@ class CosmosRuntime:
         relationships = RelationshipService(RelationshipRepository(persistence), objects, events)
         companion = CompanionService(objects)
         base = BaseService(objects, companion)
+        runtime_state = RuntimeStateRepository(persistence)
+        tools = ToolService(objects, ToolRuntime(objects.contract), events)
+        workspaces = WorkspaceService(objects, runtime_state, tools, events)
         return cls(
             settings=settings,
             persistence=persistence,
@@ -79,10 +86,12 @@ class CosmosRuntime:
             relationships=relationships,
             companion=companion,
             base=base,
+            tools=tools,
+            workspaces=workspaces,
             cosmos_map=CosmosMapService(
                 objects,
                 relationships,
-                RuntimeStateRepository(persistence),
+                runtime_state,
                 companion,
             ),
         )
@@ -118,6 +127,10 @@ class CosmosRuntime:
                         "relationships.write",
                         "runtime_state.read",
                         "runtime_state.write",
+                        "tools.read",
+                        "tools.write",
+                        "workspaces.read",
+                        "workspaces.write",
                     }
                 )
             )

@@ -8,6 +8,8 @@ from cosmos.services.object_service import CreateObjectCommand, ObjectService
 from cosmos.services.project_service import PREPARED_AREAS, CreateProjectCommand, ProjectService
 from cosmos.services.relationship_service import RelationshipService
 from cosmos.services.schemas import create_version_one_object_contract
+from cosmos.services.tool_service import ToolService
+from cosmos.services.workspace_service import WorkspaceService
 
 __all__ = [
     "BASE_ID",
@@ -25,5 +27,7 @@ __all__ = [
     "ProjectService",
     "RelationshipService",
     "RuntimeServiceError",
+    "ToolService",
+    "WorkspaceService",
     "create_version_one_object_contract",
 ]

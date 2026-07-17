@@ -7,6 +7,7 @@ import { BaseRuntime } from "./baseRuntime";
 import { CosmosMapRuntime } from "./cosmosMapRuntime";
 import { ThemeRegistry } from "./themeRegistry";
 import { ThemeRuntime } from "./themeRuntime";
+import { ToolRuntime } from "./toolRuntime";
 import { TransitionRuntime } from "./transitionRuntime";
 import { WindowRuntime } from "./windowRuntime";
 import { WorkspaceRuntime } from "./workspaceRuntime";
@@ -17,6 +18,7 @@ export interface CosmosFrontendRuntime {
   base: BaseRuntime;
   cosmosMap: CosmosMapRuntime;
   themes: ThemeRuntime;
+  tools: ToolRuntime;
   transitions: TransitionRuntime;
   windows: WindowRuntime;
   workspaces: WorkspaceRuntime;
@@ -36,6 +38,7 @@ export function createCosmosFrontendRuntime(apiBaseUrl?: string): CosmosFrontend
   registry.register(cosmosTheme);
   const themes = new ThemeRuntime(registry, transitions, cosmosTheme.objectId);
   const windows = new WindowRuntime();
+  const tools = new ToolRuntime(windows, api);
   const cosmosMap = new CosmosMapRuntime(api);
   const base = new BaseRuntime(api);
 
@@ -45,9 +48,10 @@ export function createCosmosFrontendRuntime(apiBaseUrl?: string): CosmosFrontend
     base,
     cosmosMap,
     themes,
+    tools,
     transitions,
     windows,
-    workspaces: new WorkspaceRuntime(windows),
+    workspaces: new WorkspaceRuntime(windows, api, tools),
   };
 }
 

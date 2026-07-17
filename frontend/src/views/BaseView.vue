@@ -14,7 +14,13 @@
     </div>
 
     <article v-if="snapshot && room" class="base-environment" :aria-label="`${room.displayName} environment`">
-      <button class="base-environment__close" type="button" aria-label="Return to Cosmos" @click="closeBase">
+      <button
+        v-if="!backgroundOnly"
+        class="base-environment__close"
+        type="button"
+        aria-label="Return to Cosmos"
+        @click="closeBase"
+      >
         <span aria-hidden="true">×</span>
       </button>
 
@@ -93,10 +99,14 @@
 
       <p v-if="selectedSlot" class="selection-note" role="status">
         <strong>{{ selectedSlot.workspace?.displayName ?? "Empty Workspace Slot" }}</strong>
-        <span>{{ selectedSlot.workspace ? "Ready for Sprint 4" : "Available for a future Workspace" }}</span>
+        <span>{{ selectedSlot.workspace ? "Opening Workspace" : "Available for a future Workspace" }}</span>
       </p>
 
-      <CompanionWindowHost ref="companionWindowHost" :current-location="room.displayName" />
+      <CompanionWindowHost
+        v-if="!backgroundOnly"
+        ref="companionWindowHost"
+        :current-location="room.displayName"
+      />
     </article>
   </section>
 </template>
@@ -112,6 +122,7 @@ import type { BaseSnapshot, WorkspaceSlot } from "../runtime/baseRuntime";
 import { useCosmosRuntime } from "../runtime/plugin";
 
 const runtime = useCosmosRuntime();
+const props = withDefaults(defineProps<{ backgroundOnly?: boolean }>(), { backgroundOnly: false });
 const route = useRoute();
 const router = useRouter();
 const state = runtime.base.state;
@@ -139,7 +150,11 @@ function load() {
 }
 
 function select(objectId: string) {
-  runtime.base.select(state.selectedObjectId === objectId ? null : objectId);
+  const slot = room.value?.workspaceSlots.find((candidate) => candidate.objectId === objectId);
+  runtime.base.select(objectId);
+  if (slot?.workspace && !props.backgroundOnly) {
+    void router.push(`/workspaces/${slot.workspace.objectId}`);
+  }
 }
 
 function closeBase() {

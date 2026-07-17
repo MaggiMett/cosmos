@@ -20,6 +20,10 @@ def owner_context() -> RuntimeContext:
                 "relationships.write",
                 "runtime_state.read",
                 "runtime_state.write",
+                "tools.read",
+                "tools.write",
+                "workspaces.read",
+                "workspaces.write",
             }
         )
     )
@@ -143,3 +147,56 @@ def test_base_uses_tagged_rooms_slots_workspaces_cockpit_companion_and_pet(tmp_p
     assert snapshot["door"]["roomBId"] == "cosmos.room.workshop"
     assert snapshot["companion"]["objectId"] == "cosmos.entity.companion.default"
     assert snapshot["pet"]["systemTags"] == ["Entity", "Pet", "System"]
+
+
+def test_workspace_sessions_restore_contained_tool_instances_and_layout(tmp_path: Path) -> None:
+    runtime = CosmosRuntime.build(RuntimeSettings(runtime_path=tmp_path / "Runtime", port=0))
+    runtime.initialize()
+    context = owner_context()
+    tool = runtime.objects.create(
+        CreateObjectCommand(
+            identity=ObjectIdentity(
+                object_id="cosmos.tool.test",
+                display_name="Test Tool",
+                description="A test-only Tool definition.",
+                creator="cosmos.tests",
+                lifecycle_state="active",
+                created_at=datetime.now(UTC),
+            ),
+            system_tags=frozenset({"Tool"}),
+            properties={
+                "category": "UserTool",
+                "component_id": "cosmos.tool.test",
+                "version": "1.0.0",
+                "entry_point": "tests:tool",
+                "icon": "Test",
+                "capabilities": [],
+                "permissions": [],
+                "minimum_window_size": {"width": 320, "height": 240},
+            },
+        ),
+        context,
+    )
+
+    opened = runtime.workspaces.open("cosmos.workspace.knowledge", "cosmos.room.main", context)
+    record = runtime.workspaces.open_tool(
+        str(opened["objectId"]),
+        tool.identity.object_id,
+        {"x": 120, "y": 90, "width": 520, "height": 420},
+        context,
+    )
+    runtime.workspaces.update_tool(
+        str(opened["objectId"]),
+        str(record["instanceId"]),
+        {"bounds": {"x": 180, "y": 110, "width": 560, "height": 440}, "focusOrder": 3},
+        context,
+    )
+    runtime.workspaces.close(str(opened["objectId"]), context)
+
+    restored = runtime.workspaces.open("cosmos.workspace.knowledge", "cosmos.room.main", context)
+    restored_tool = restored["restorableState"]["tools"][0]
+
+    assert restored["systemTags"] == ["System", "WorkspaceSession"]
+    assert restored["environmentWindow"]["role"] == "workspace_environment"
+    assert restored_tool["instanceId"] == record["instanceId"]
+    assert restored_tool["bounds"] == {"x": 180.0, "y": 110.0, "width": 560.0, "height": 440.0}

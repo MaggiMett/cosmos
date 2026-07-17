@@ -2,7 +2,7 @@
 
 Cosmos is a new implementation of the personal operating system defined by `Product_Bible_V2`, `Experience_V1`, and `Architecture_Review_V3`.
 
-Sprint 3 adds the fixed Base environment, Main Room, Workshop, cockpit, Workspace furniture, Companion, Pet, and Room transitions without implementing productive Workspace features.
+Sprint 4 adds fixed Workspace Environment Windows, isolated Tool Runtime lifecycles, multi-window layout foundations, and durable Workspace restoration without partially implementing the core Tools assigned to Sprint 5.
 
 ## Repository map
 
@@ -46,7 +46,7 @@ The development server is available at `http://127.0.0.1:5173` and proxies `/api
 
 The backend exposes `/health`, `/ready`, and the Runtime Service-backed Cosmos Map API. The frontend waits for readiness before activating the spatial application routes.
 
-## Sprint 3 runtime
+## Sprint 4 runtime
 
 The runnable implementation provides:
 
@@ -65,8 +65,14 @@ The runnable implementation provides:
 - the Main Room cockpit, Knowledge and Creation furniture, seated Companion, Pet, and Workshop door
 - one additional Workshop Room with four empty physical Workspace Slots
 - serialized environment transitions between Cosmos, Base, and Rooms
+- persistent Workspace definitions opening as temporary active sessions
+- one fixed, header-bearing Workspace Environment Window above the originating Room
+- a calm empty Canvas and compact Tool Area for newly opened Workspaces
+- isolated Direct and Workspace Tool Instance lifecycles
+- multiple contained Tool Windows with movement, resizing, focus, Close, and boundary recovery
+- SQLite-backed restoration of open Tool instances, bounds, focus order, Tool state, selection, filters, camera, and fixed Panel configuration
 
-Productive Workspace Tools are implemented by later roadmap Sprints.
+The Files, Archive, Capture, Review, and Journeyman Tool capabilities are implemented in Sprint 5.
 
 ## Architectural authority
 

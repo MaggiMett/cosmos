@@ -71,6 +71,13 @@ export class CosmosApiClient {
     return this.request(path, { ...options, method: "PUT", body });
   }
 
+  delete<T>(
+    path: string,
+    options: Omit<ApiRequestOptions, "method" | "body"> = {},
+  ): Promise<ApiResult<T>> {
+    return this.request(path, { ...options, method: "DELETE" });
+  }
+
   private urlFor(path: string, query?: ApiRequestOptions["query"]): string {
     const url = `${this.baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
     const params = new URLSearchParams();

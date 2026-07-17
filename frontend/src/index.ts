@@ -10,6 +10,7 @@ export { BaseRuntime } from "./runtime/baseRuntime";
 export { CosmosMapRuntime, focusedProjectId } from "./runtime/cosmosMapRuntime";
 export { ThemeRegistry } from "./runtime/themeRegistry";
 export { DomThemePresenter, ThemeRuntime } from "./runtime/themeRuntime";
+export { ToolRuntime } from "./runtime/toolRuntime";
 export { TransitionRuntime } from "./runtime/transitionRuntime";
 export { WindowRuntime, WindowRuntimeError, capabilitiesFor } from "./runtime/windowRuntime";
 export { WorkspaceRuntime, WorkspaceRuntimeError } from "./runtime/workspaceRuntime";
@@ -28,6 +29,11 @@ export type {
   BaseWorkspace,
   WorkspaceSlot,
 } from "./runtime/baseRuntime";
+export type {
+  FrontendToolInstance,
+  PersistedToolRecord,
+  ToolDefinition,
+} from "./runtime/toolRuntime";
 export type {
   CompanionReply,
   CosmosMapSnapshot,

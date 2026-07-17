@@ -3,6 +3,7 @@ import { useRoute } from "vue-router";
 
 const CosmosView = defineAsyncComponent(() => import("./CosmosView.vue"));
 const BaseView = defineAsyncComponent(() => import("./BaseView.vue"));
+const WorkspaceView = defineAsyncComponent(() => import("./WorkspaceView.vue"));
 
 export default defineComponent({
   name: "EnvironmentView",
@@ -14,6 +15,13 @@ export default defineComponent({
         return h("div", { class: "environment-view" }, [
           h(CosmosView, { backgroundOnly: true, inert: true, "aria-hidden": "true" }),
           h(BaseView),
+        ]);
+      }
+      if (route.meta.environment === "workspace") {
+        return h("div", { class: "environment-view" }, [
+          h(CosmosView, { backgroundOnly: true, inert: true, "aria-hidden": "true" }),
+          h(BaseView, { backgroundOnly: true, inert: true, "aria-hidden": "true" }),
+          h(WorkspaceView),
         ]);
       }
       return h("section", {

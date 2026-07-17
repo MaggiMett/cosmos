@@ -141,4 +141,64 @@ def create_version_one_object_contract() -> ObjectContract:
             (PropertyDefinition("base_object_id", PropertyKind.STRING, ""),),
         ),
     )
+    contract.register_system_tag(
+        "Tool",
+        PropertySchema(
+            "cosmos.schema.tool",
+            1,
+            (
+                PropertyDefinition("category", PropertyKind.STRING, "UserTool"),
+                PropertyDefinition("component_id", PropertyKind.STRING, ""),
+                PropertyDefinition("version", PropertyKind.STRING, "1.0.0"),
+                PropertyDefinition("entry_point", PropertyKind.STRING, ""),
+                PropertyDefinition("icon", PropertyKind.STRING, "Tool"),
+                PropertyDefinition("capabilities", PropertyKind.ARRAY, []),
+                PropertyDefinition("permissions", PropertyKind.ARRAY, []),
+                PropertyDefinition("minimum_window_size", PropertyKind.OBJECT, {}),
+            ),
+        ),
+    )
+    contract.register_system_tag(
+        "WorkspaceSession",
+        PropertySchema(
+            "cosmos.schema.workspace-session",
+            1,
+            (
+                PropertyDefinition("workspace_definition_id", PropertyKind.STRING, ""),
+                PropertyDefinition("room_id", PropertyKind.STRING, ""),
+                PropertyDefinition("runtime_state", PropertyKind.OBJECT, {}),
+                PropertyDefinition("session_state", PropertyKind.STRING, "created"),
+            ),
+        ),
+    )
+    contract.register_system_tag(
+        "ToolInstance",
+        PropertySchema(
+            "cosmos.schema.tool-instance",
+            1,
+            (
+                PropertyDefinition("tool_definition_id", PropertyKind.STRING, ""),
+                PropertyDefinition("workspace_session_id", PropertyKind.STRING, ""),
+                PropertyDefinition("execution_mode", PropertyKind.STRING, "workspace"),
+                PropertyDefinition("runtime_state", PropertyKind.OBJECT, {}),
+                PropertyDefinition("lifecycle_state", PropertyKind.STRING, "created"),
+            ),
+        ),
+    )
+    contract.register_system_tag(
+        "Window",
+        PropertySchema(
+            "cosmos.schema.window",
+            1,
+            (
+                PropertyDefinition("window_role", PropertyKind.STRING, "tool"),
+                PropertyDefinition("parent_window_id", PropertyKind.STRING, ""),
+                PropertyDefinition("bounds", PropertyKind.OBJECT, {}),
+                PropertyDefinition("window_state", PropertyKind.STRING, "inactive"),
+                PropertyDefinition("focus_order", PropertyKind.INTEGER, 0),
+            ),
+        ),
+    )
+    contract.register_system_tag("EnvironmentWindow")
+    contract.register_system_tag("ToolWindow")
     return contract

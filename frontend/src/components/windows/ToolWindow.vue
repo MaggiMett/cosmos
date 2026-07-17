@@ -1,6 +1,7 @@
 <template>
   <section
     class="tool-window"
+    :class="{ 'tool-window--active': active }"
     role="dialog"
     :aria-label="title"
     :style="windowStyle"
@@ -28,11 +29,13 @@ import { computed, onBeforeUnmount } from "vue";
 
 import type { WindowBounds } from "../../runtime/windowRuntime";
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   title: string;
   bounds: WindowBounds;
   minimumSize?: { width: number; height: number };
-}>();
+  focusOrder?: number;
+  active?: boolean;
+}>(), { focusOrder: 0, active: true });
 
 const emit = defineEmits<{
   close: [];
@@ -48,6 +51,7 @@ const windowStyle = computed(() => ({
   top: `${props.bounds.y}px`,
   width: `${props.bounds.width}px`,
   height: `${props.bounds.height}px`,
+  zIndex: 40 + props.focusOrder,
 }));
 
 function startMove(event: PointerEvent) {
@@ -115,6 +119,11 @@ onBeforeUnmount(() => stopActivePointer?.());
   background: rgba(8, 12, 28, 0.92);
   box-shadow: 0 28px 90px rgba(0, 0, 0, 0.52), inset 0 1px rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(22px);
+}
+
+.tool-window--active {
+  border-color: rgba(196, 181, 253, 0.48);
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.6), 0 0 28px rgba(139, 92, 246, 0.08);
 }
 
 .tool-window__header {
