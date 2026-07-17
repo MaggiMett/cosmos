@@ -120,3 +120,26 @@ def test_nodes_relationships_camera_and_companion_share_runtime_contracts(tmp_pa
             focused_project_id=project.identity.object_id,
         ),
     ).message.startswith("You are focused")
+
+
+def test_base_uses_tagged_rooms_slots_workspaces_cockpit_companion_and_pet(tmp_path: Path) -> None:
+    runtime = CosmosRuntime.build(RuntimeSettings(runtime_path=tmp_path / "Runtime", port=0))
+    runtime.initialize()
+
+    snapshot = runtime.base.snapshot(owner_context())
+
+    assert snapshot["base"]["systemTags"] == ["Base", "System"]
+    assert [(room["slug"], len(room["workspaceSlots"])) for room in snapshot["rooms"]] == [
+        ("main", 2),
+        ("workshop", 4),
+    ]
+    assert all(slot["workspace"] is not None for slot in snapshot["rooms"][0]["workspaceSlots"])
+    assert all(slot["workspace"] is None for slot in snapshot["rooms"][1]["workspaceSlots"])
+    assert [workspace["displayName"] for workspace in snapshot["unassignedWorkspaces"]] == [
+        "Graphics Workspace"
+    ]
+    assert snapshot["cockpit"]["roomId"] == "cosmos.room.main"
+    assert snapshot["door"]["roomAId"] == "cosmos.room.main"
+    assert snapshot["door"]["roomBId"] == "cosmos.room.workshop"
+    assert snapshot["companion"]["objectId"] == "cosmos.entity.companion.default"
+    assert snapshot["pet"]["systemTags"] == ["Entity", "Pet", "System"]

@@ -40,3 +40,14 @@ def test_cosmos_map_api_restores_state_and_handles_companion_without_ai(tmp_path
     }
     assert invalid.status_code == 422
     assert invalid.json()["code"] == "validation_failed"
+
+
+def test_base_api_exposes_main_room_and_workshop_without_parallel_models(tmp_path: Path) -> None:
+    settings = RuntimeSettings(runtime_path=tmp_path / "Runtime", port=0)
+
+    with TestClient(create_app(settings)) as client:
+        response = client.get("/base")
+
+    assert response.status_code == 200
+    assert response.json()["base"]["objectId"] == "cosmos.base.default"
+    assert [room["slug"] for room in response.json()["rooms"]] == ["main", "workshop"]

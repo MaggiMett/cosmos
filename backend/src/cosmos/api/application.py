@@ -36,6 +36,13 @@ async def cosmos_map(request: Request) -> JSONResponse:
         return _service_error(error)
 
 
+async def base_snapshot(request: Request) -> JSONResponse:
+    try:
+        return JSONResponse(request.app.state.runtime.base.snapshot(_local_owner_context()))
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
 async def update_camera(request: Request) -> JSONResponse:
     try:
         payload = await _json_object(request)
@@ -110,6 +117,7 @@ def create_app(
             Route("/health", health),
             Route("/ready", readiness),
             Route("/cosmos/map", cosmos_map),
+            Route("/base", base_snapshot),
             Route("/cosmos/camera", update_camera, methods=["PUT"]),
             Route("/objects/{object_id:str}/position", move_node, methods=["PUT"]),
             Route("/companion/messages", companion_message, methods=["POST"]),

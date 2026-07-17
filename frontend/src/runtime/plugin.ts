@@ -3,6 +3,7 @@ import { inject, type InjectionKey, type Plugin } from "vue";
 import { cosmosTheme } from "../themes/cosmos";
 import { CosmosApiClient } from "./apiClient";
 import { ApplicationRuntime } from "./applicationRuntime";
+import { BaseRuntime } from "./baseRuntime";
 import { CosmosMapRuntime } from "./cosmosMapRuntime";
 import { ThemeRegistry } from "./themeRegistry";
 import { ThemeRuntime } from "./themeRuntime";
@@ -13,6 +14,7 @@ import { WorkspaceRuntime } from "./workspaceRuntime";
 export interface CosmosFrontendRuntime {
   api: CosmosApiClient;
   application: ApplicationRuntime;
+  base: BaseRuntime;
   cosmosMap: CosmosMapRuntime;
   themes: ThemeRuntime;
   transitions: TransitionRuntime;
@@ -35,10 +37,12 @@ export function createCosmosFrontendRuntime(apiBaseUrl?: string): CosmosFrontend
   const themes = new ThemeRuntime(registry, transitions, cosmosTheme.objectId);
   const windows = new WindowRuntime();
   const cosmosMap = new CosmosMapRuntime(api);
+  const base = new BaseRuntime(api);
 
   return {
     api,
     application: new ApplicationRuntime(api, themes, cosmosTheme.objectId),
+    base,
     cosmosMap,
     themes,
     transitions,

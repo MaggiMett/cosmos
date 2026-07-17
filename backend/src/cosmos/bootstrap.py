@@ -13,6 +13,7 @@ from cosmos.persistence import (
 )
 from cosmos.runtime import EventDispatcher, ProviderRuntime, Registry, RuntimeContext
 from cosmos.services import (
+    BaseService,
     CompanionService,
     CosmosMapService,
     ObjectService,
@@ -50,6 +51,7 @@ class CosmosRuntime:
     projects: ProjectService
     relationships: RelationshipService
     companion: CompanionService
+    base: BaseService
     cosmos_map: CosmosMapService
     startup: StartupReport = StartupReport(phase=StartupPhase.CREATED)
 
@@ -65,6 +67,7 @@ class CosmosRuntime:
         )
         relationships = RelationshipService(RelationshipRepository(persistence), objects, events)
         companion = CompanionService(objects)
+        base = BaseService(objects, companion)
         return cls(
             settings=settings,
             persistence=persistence,
@@ -75,6 +78,7 @@ class CosmosRuntime:
             projects=ProjectService(settings.runtime_path, persistence, objects, events),
             relationships=relationships,
             companion=companion,
+            base=base,
             cosmos_map=CosmosMapService(
                 objects,
                 relationships,
@@ -119,6 +123,7 @@ class CosmosRuntime:
             )
             self.projects.ensure_version_one_system_projects(system_context)
             self.companion.ensure_default(system_context)
+            self.base.ensure_default(system_context)
 
             self.startup = StartupReport(
                 phase=StartupPhase.READY,

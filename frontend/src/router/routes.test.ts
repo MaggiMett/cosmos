@@ -21,11 +21,18 @@ describe("Cosmos routing", () => {
   it("serializes navigation through the shared Shell transition runtime", async () => {
     const transitions = new TransitionRuntime();
     const router = createCosmosRouter({ history: createMemoryHistory(), transitions });
+    const kinds: string[] = [];
+    const enqueue = transitions.enqueue.bind(transitions);
+    transitions.enqueue = (request) => {
+      kinds.push(request.kind);
+      return enqueue(request);
+    };
 
     await router.push("/base");
     await router.push("/base/rooms/main");
 
     expect(router.currentRoute.value.meta.environment).toBe("room");
+    expect(kinds).toEqual(["environment", "environment"]);
     expect(transitions.active).toBeNull();
   });
 

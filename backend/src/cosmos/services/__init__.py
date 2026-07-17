@@ -1,9 +1,6 @@
-"""Authoritative business-service boundary.
+"""Authoritative business-service boundary."""
 
-Feature services are intentionally absent in Sprint 0. Future Commands and Queries
-enter Persistence, Registries, Events, Jobs, and Providers only through this package.
-"""
-
+from cosmos.services.base_service import BASE_ID, MAIN_ROOM_ID, WORKSHOP_ROOM_ID, BaseService
 from cosmos.services.companion_service import COMPANION_ID, CompanionReply, CompanionService
 from cosmos.services.cosmos_map_service import CosmosMapService
 from cosmos.services.errors import RuntimeServiceError
@@ -13,8 +10,12 @@ from cosmos.services.relationship_service import RelationshipService
 from cosmos.services.schemas import create_version_one_object_contract
 
 __all__ = [
+    "BASE_ID",
     "COMPANION_ID",
+    "MAIN_ROOM_ID",
     "PREPARED_AREAS",
+    "WORKSHOP_ROOM_ID",
+    "BaseService",
     "CompanionReply",
     "CompanionService",
     "CosmosMapService",

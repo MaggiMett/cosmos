@@ -11,6 +11,7 @@ from cosmos.services.companion_service import CompanionService
 from cosmos.services.errors import RuntimeServiceError, require_permission
 from cosmos.services.object_service import ObjectService
 from cosmos.services.relationship_service import RelationshipService
+from cosmos.services.serialization import object_payload
 
 CAMERA_SCOPE = "cosmos.map"
 CAMERA_KEY = "camera"
@@ -80,7 +81,7 @@ class CosmosMapService:
             "focusedProjectId": focused.identity.object_id if focused else None,
             "projects": project_payloads,
             "connections": connections,
-            "companion": _object_payload(companion),
+            "companion": object_payload(companion),
         }
 
     def camera(self, context: RuntimeContext) -> dict[str, JSONValue]:
@@ -129,7 +130,7 @@ def _focused_project(projects: tuple[CosmosObject, ...], camera: dict[str, JSONV
 
 def _project_payload(project: CosmosObject, nodes: list[CosmosObject]) -> dict[str, JSONValue]:
     return {
-        **_object_payload(project),
+        **object_payload(project),
         "vision": project.properties["vision"],
         "color": project.properties["project_color"],
         "x": project.properties["position_x"],
@@ -140,20 +141,10 @@ def _project_payload(project: CosmosObject, nodes: list[CosmosObject]) -> dict[s
 
 def _node_payload(node: CosmosObject) -> dict[str, JSONValue]:
     return {
-        **_object_payload(node),
+        **object_payload(node),
         "x": node.properties["position_x"],
         "y": node.properties["position_y"],
         "parentObjectId": node.properties["parent_object_id"],
         "hierarchyLevel": node.properties["hierarchy_level"],
         "skin": node.properties["skin"],
-    }
-
-
-def _object_payload(value: CosmosObject) -> dict[str, JSONValue]:
-    return {
-        "objectId": value.identity.object_id,
-        "displayName": value.identity.display_name,
-        "description": value.identity.description,
-        "systemTags": sorted(value.system_tags),
-        "userTags": sorted(value.user_tags),
     }

@@ -174,6 +174,10 @@ Goals:
 
 Base
 
+Status:
+
+Completed
+
 Goals:
 
 - Base

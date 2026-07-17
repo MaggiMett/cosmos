@@ -6,6 +6,7 @@ export {
   useCosmosRuntime,
 } from "./runtime/plugin";
 export { ApplicationRuntime } from "./runtime/applicationRuntime";
+export { BaseRuntime } from "./runtime/baseRuntime";
 export { CosmosMapRuntime, focusedProjectId } from "./runtime/cosmosMapRuntime";
 export { ThemeRegistry } from "./runtime/themeRegistry";
 export { DomThemePresenter, ThemeRuntime } from "./runtime/themeRuntime";
@@ -20,6 +21,13 @@ export type {
   ReadinessResponse,
 } from "./runtime/contracts";
 export type { ApplicationPhase, ApplicationRuntimeState } from "./runtime/applicationRuntime";
+export type {
+  BaseObjectSummary,
+  BaseRoom,
+  BaseSnapshot,
+  BaseWorkspace,
+  WorkspaceSlot,
+} from "./runtime/baseRuntime";
 export type {
   CompanionReply,
   CosmosMapSnapshot,

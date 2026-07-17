@@ -60,4 +60,85 @@ def create_version_one_object_contract() -> ObjectContract:
             ),
         ),
     )
+    contract.register_system_tag(
+        "Base",
+        PropertySchema(
+            "cosmos.schema.base",
+            1,
+            (PropertyDefinition("main_room_id", PropertyKind.STRING, ""),),
+        ),
+    )
+    contract.register_system_tag(
+        "Room",
+        PropertySchema(
+            "cosmos.schema.room",
+            1,
+            (
+                PropertyDefinition("base_object_id", PropertyKind.STRING, ""),
+                PropertyDefinition("room_slug", PropertyKind.STRING, ""),
+                PropertyDefinition("room_order", PropertyKind.INTEGER, 0),
+                PropertyDefinition("atmosphere", PropertyKind.STRING, "Calm"),
+            ),
+        ),
+    )
+    contract.register_system_tag(
+        "Door",
+        PropertySchema(
+            "cosmos.schema.door",
+            1,
+            (
+                PropertyDefinition("base_object_id", PropertyKind.STRING, ""),
+                PropertyDefinition("room_a_id", PropertyKind.STRING, ""),
+                PropertyDefinition("room_b_id", PropertyKind.STRING, ""),
+            ),
+        ),
+    )
+    contract.register_system_tag(
+        "Cockpit",
+        PropertySchema(
+            "cosmos.schema.cockpit",
+            1,
+            (
+                PropertyDefinition("base_object_id", PropertyKind.STRING, ""),
+                PropertyDefinition("room_id", PropertyKind.STRING, ""),
+            ),
+        ),
+    )
+    contract.register_system_tag(
+        "Workspace",
+        PropertySchema(
+            "cosmos.schema.workspace",
+            1,
+            (
+                PropertyDefinition("icon", PropertyKind.STRING, "Workspace"),
+                PropertyDefinition("overlay", PropertyKind.STRING, "Desk"),
+                PropertyDefinition("default_layout", PropertyKind.OBJECT, {}),
+                PropertyDefinition("context_configuration", PropertyKind.OBJECT, {}),
+                PropertyDefinition("assigned_tool_ids", PropertyKind.ARRAY, []),
+                PropertyDefinition("theme_override", PropertyKind.STRING, ""),
+                PropertyDefinition("source_project_id", PropertyKind.STRING, ""),
+            ),
+        ),
+    )
+    contract.register_system_tag(
+        "WorkspaceSlot",
+        PropertySchema(
+            "cosmos.schema.workspace-slot",
+            1,
+            (
+                PropertyDefinition("room_id", PropertyKind.STRING, ""),
+                PropertyDefinition("workspace_definition_id", PropertyKind.STRING, ""),
+                PropertyDefinition("placement", PropertyKind.STRING, ""),
+                PropertyDefinition("slot_skin", PropertyKind.STRING, "Workbench"),
+            ),
+        ),
+    )
+    contract.register_system_tag(
+        "Pet",
+        PropertySchema(
+            "cosmos.schema.pet",
+            1,
+            (PropertyDefinition("base_object_id", PropertyKind.STRING, ""),),
+        ),
+    )
     return contract

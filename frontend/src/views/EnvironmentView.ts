@@ -2,6 +2,7 @@ import { defineAsyncComponent, defineComponent, h } from "vue";
 import { useRoute } from "vue-router";
 
 const CosmosView = defineAsyncComponent(() => import("./CosmosView.vue"));
+const BaseView = defineAsyncComponent(() => import("./BaseView.vue"));
 
 export default defineComponent({
   name: "EnvironmentView",
@@ -9,6 +10,12 @@ export default defineComponent({
     const route = useRoute();
     return () => {
       if (route.meta.environment === "cosmos") return h(CosmosView);
+      if (route.meta.environment === "base" || route.meta.environment === "room") {
+        return h("div", { class: "environment-view" }, [
+          h(CosmosView, { backgroundOnly: true, inert: true, "aria-hidden": "true" }),
+          h(BaseView),
+        ]);
+      }
       return h("section", {
         class: "environment-view",
         "data-environment": route.meta.environment,

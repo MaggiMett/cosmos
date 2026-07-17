@@ -86,16 +86,17 @@
         </article>
       </div>
 
-      <CosmosNavigation
-        :current-location="currentLocation"
-        :left-neighbor="neighbors.left"
-        :right-neighbor="neighbors.right"
-        :quick-travel-open="quickTravelOpen"
-        @travel="travelToProject"
-        @toggle-quick-travel="quickTravelOpen = !quickTravelOpen"
-      />
+      <template v-if="!backgroundOnly">
+        <CosmosNavigation
+          :current-location="currentLocation"
+          :left-neighbor="neighbors.left"
+          :right-neighbor="neighbors.right"
+          :quick-travel-open="quickTravelOpen"
+          @travel="travelToProject"
+          @toggle-quick-travel="quickTravelOpen = !quickTravelOpen"
+        />
 
-      <aside v-if="quickTravelOpen" id="quick-travel" class="quick-travel" aria-label="Quick Travel">
+        <aside v-if="quickTravelOpen" id="quick-travel" class="quick-travel" aria-label="Quick Travel">
         <header>
           <span>Quick Travel</span>
           <button type="button" aria-label="Close Quick Travel" @click="quickTravelOpen = false">×</button>
@@ -114,23 +115,16 @@
           <i :style="{ background: project.color, boxShadow: `0 0 14px ${project.color}` }" aria-hidden="true" />
           <span><strong>{{ project.displayName }}</strong><small>{{ project.vision }}</small></span>
         </button>
-      </aside>
+        </aside>
 
-      <CosmosHomeHub @companion="openCompanion" @ship="openBase" />
+        <CosmosHomeHub @companion="openCompanion" @ship="openBase" />
 
-      <CompanionConversation
-        v-if="conversationWindow"
-        :bounds="conversationWindow.bounds"
-        :current-location="currentLocation"
-        @close="closeCompanion"
-        @focus="focusCompanion"
-        @move="moveCompanion"
-        @resize="resizeCompanion"
-      />
+        <CompanionWindowHost ref="companionWindowHost" :current-location="currentLocation" />
 
-      <p class="navigation-help" :class="{ 'navigation-help--visible': spaceHeld }">
-        Hold Space and drag to move · Scroll to zoom
-      </p>
+        <p class="navigation-help" :class="{ 'navigation-help--visible': spaceHeld }">
+          Hold Space and drag to move · Scroll to zoom
+        </p>
+      </template>
     </template>
   </section>
 </template>
@@ -139,14 +133,14 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 
-import CompanionConversation from "../components/cosmos/CompanionConversation.vue";
 import CosmosHomeHub from "../components/cosmos/CosmosHomeHub.vue";
 import CosmosNavigation from "../components/cosmos/CosmosNavigation.vue";
+import CompanionWindowHost from "../components/cosmos/CompanionWindowHost.vue";
 import type { CosmosMapSnapshot, MapNode, MapProject } from "../runtime/cosmosMapRuntime";
 import { useCosmosRuntime } from "../runtime/plugin";
-import type { WindowBounds, WindowInstance } from "../runtime/windowRuntime";
 
 const runtime = useCosmosRuntime();
+withDefaults(defineProps<{ backgroundOnly?: boolean }>(), { backgroundOnly: false });
 const router = useRouter();
 const state = runtime.cosmosMap.state;
 const snapshot = computed(() => state.snapshot as CosmosMapSnapshot | null);
@@ -156,7 +150,7 @@ const spaceHeld = ref(false);
 const quickTravelOpen = ref(false);
 const cameraDrag = ref<PointerDrag | null>(null);
 const nodeDrag = ref<NodeDrag | null>(null);
-const conversationWindow = ref<Readonly<WindowInstance> | null>(null);
+const companionWindowHost = ref<InstanceType<typeof CompanionWindowHost> | null>(null);
 let resizeObserver: ResizeObserver | null = null;
 let cameraSaveTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -377,37 +371,7 @@ function scheduleCameraSave() {
 }
 
 function openCompanion() {
-  if (conversationWindow.value) {
-    focusCompanion();
-    return;
-  }
-  const width = Math.min(520, viewport.width - 40);
-  const height = Math.min(560, viewport.height - 160);
-  conversationWindow.value = runtime.windows.open({
-    objectId: "cosmos.window.tool.companion-conversation",
-    role: "tool",
-    title: "Companion",
-    bounds: { x: Math.max(20, viewport.width - width - 54), y: 92, width, height },
-    minimumSize: { width: 360, height: 360 },
-  });
-}
-
-function closeCompanion() {
-  if (!conversationWindow.value) return;
-  runtime.windows.close(conversationWindow.value.objectId);
-  conversationWindow.value = null;
-}
-
-function focusCompanion() {
-  if (conversationWindow.value) conversationWindow.value = runtime.windows.focus(conversationWindow.value.objectId);
-}
-
-function moveCompanion(position: { x: number; y: number }) {
-  if (conversationWindow.value) conversationWindow.value = runtime.windows.move(conversationWindow.value.objectId, position);
-}
-
-function resizeCompanion(size: { width: number; height: number }) {
-  if (conversationWindow.value) conversationWindow.value = runtime.windows.resize(conversationWindow.value.objectId, size);
+  companionWindowHost.value?.open();
 }
 
 function openBase() {
@@ -452,7 +416,6 @@ onBeforeUnmount(() => {
   window.removeEventListener("blur", onWindowBlur);
   resizeObserver?.disconnect();
   if (cameraSaveTimer) clearTimeout(cameraSaveTimer);
-  if (conversationWindow.value) closeCompanion();
 });
 </script>
 

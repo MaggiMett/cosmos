@@ -1,17 +1,7 @@
 <template>
   <div class="home-hub" aria-label="Cosmos home">
     <button class="companion-object" type="button" aria-label="Talk to Companion" @click="$emit('companion')">
-      <span class="companion-object__helmet" aria-hidden="true">
-        <span class="companion-object__visor">
-          <span class="companion-object__face">
-            <i class="companion-object__eye companion-object__eye--left" />
-            <i class="companion-object__eye companion-object__eye--right" />
-            <i class="companion-object__smile" />
-          </span>
-          <span class="companion-object__reflection" />
-        </span>
-        <span class="companion-object__collar" />
-      </span>
+      <CompanionAvatar />
       <span class="home-hub__label">Companion</span>
     </button>
 
@@ -30,6 +20,8 @@
 </template>
 
 <script setup lang="ts">
+import CompanionAvatar from "../entities/CompanionAvatar.vue";
+
 defineEmits<{ companion: []; ship: [] }>();
 </script>
 
@@ -84,84 +76,6 @@ defineEmits<{ companion: []; ship: [] }>();
   margin-bottom: 54px;
   border-radius: 50% !important;
   animation: companion-float 6s ease-in-out infinite;
-}
-
-.companion-object__helmet {
-  position: absolute;
-  inset: 4%;
-  border: 2px solid rgba(226, 232, 240, 0.72);
-  border-radius: 50%;
-  background: radial-gradient(circle at 40% 30%, #f8fafc, #cbd5e1 58%, #64748b 100%);
-  box-shadow: 0 0 26px rgba(125, 211, 252, 0.2), inset -8px -10px 14px rgba(30, 41, 59, 0.3);
-  transition: filter 160ms ease, transform 160ms ease;
-}
-
-.companion-object:hover .companion-object__helmet,
-.companion-object:focus-visible .companion-object__helmet {
-  filter: brightness(1.12);
-  transform: translateY(-3px);
-}
-
-.companion-object__visor {
-  position: absolute;
-  inset: 14% 10% 18%;
-  overflow: hidden;
-  border: 2px solid rgba(125, 211, 252, 0.46);
-  border-radius: 48% 48% 44% 44%;
-  background: radial-gradient(circle at 48% 56%, #1e293b, #07101f 74%);
-  box-shadow: inset 0 0 16px rgba(125, 211, 252, 0.18);
-}
-
-.companion-object__face {
-  position: absolute;
-  inset: 24% 20% 18%;
-  border-radius: 46%;
-  background: radial-gradient(circle at 46% 38%, #f7d7bd, #bd8268 86%);
-}
-
-.companion-object__eye {
-  position: absolute;
-  top: 38%;
-  width: 8%;
-  height: 10%;
-  border-radius: 50%;
-  background: #172033;
-  animation: companion-blink 6.5s infinite;
-}
-
-.companion-object__eye--left { left: 29%; }
-.companion-object__eye--right { right: 29%; }
-
-.companion-object__smile {
-  position: absolute;
-  bottom: 22%;
-  left: 40%;
-  width: 20%;
-  height: 10%;
-  border-bottom: 2px solid #6e3c35;
-  border-radius: 50%;
-}
-
-.companion-object__reflection {
-  position: absolute;
-  top: 9%;
-  left: 14%;
-  width: 36%;
-  height: 13%;
-  transform: rotate(-15deg);
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.18);
-}
-
-.companion-object__collar {
-  position: absolute;
-  z-index: -1;
-  right: 18%;
-  bottom: -10%;
-  left: 18%;
-  height: 30%;
-  border-radius: 20px 20px 8px 8px;
-  background: linear-gradient(90deg, #64748b, #e2e8f0 45%, #64748b);
 }
 
 .ship-object {
@@ -236,12 +150,10 @@ defineEmits<{ companion: []; ship: [] }>();
 .ship-object__engine--right { right: 22%; }
 
 @keyframes companion-float { 50% { transform: translateY(-5px) rotate(1deg); } }
-@keyframes companion-blink { 0%, 46%, 50%, 100% { transform: scaleY(1); } 48% { transform: scaleY(0.12); } }
 @keyframes ship-hover { 50% { transform: translateY(-3px); } }
 
 @media (prefers-reduced-motion: reduce) {
   .companion-object,
-  .companion-object__eye,
   .ship-object__vessel {
     animation: none;
   }

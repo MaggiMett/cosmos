@@ -2,7 +2,7 @@
 
 Cosmos is a new implementation of the personal operating system defined by `Product_Bible_V2`, `Experience_V1`, and `Architecture_Review_V3`.
 
-Sprint 2 adds the Cosmos Map and its durable spatial Runtime without implementing Capture, Knowledge, Base Rooms, or productive Workspace features.
+Sprint 3 adds the fixed Base environment, Main Room, Workshop, cockpit, Workspace furniture, Companion, Pet, and Room transitions without implementing productive Workspace features.
 
 ## Repository map
 
@@ -46,7 +46,7 @@ The development server is available at `http://127.0.0.1:5173` and proxies `/api
 
 The backend exposes `/health`, `/ready`, and the Runtime Service-backed Cosmos Map API. The frontend waits for readiness before activating the spatial application routes.
 
-## Sprint 2 runtime
+## Sprint 3 runtime
 
 The runnable implementation provides:
 
@@ -61,8 +61,12 @@ The runnable implementation provides:
 - the three documented Version 1 System Projects with physical Prepared Structures
 - the global Companion Entity and permanent Ship access to Base
 - top-center orientation, geographical neighbors, and Quick Travel
+- the fixed, borderless Base environment above the still-active Cosmos setting
+- the Main Room cockpit, Knowledge and Creation furniture, seated Companion, Pet, and Workshop door
+- one additional Workshop Room with four empty physical Workspace Slots
+- serialized environment transitions between Cosmos, Base, and Rooms
 
-Base Rooms and productive Workspace Tools are implemented by later roadmap Sprints.
+Productive Workspace Tools are implemented by later roadmap Sprints.
 
 ## Architectural authority
 

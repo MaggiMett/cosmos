@@ -20,9 +20,9 @@ export function createCosmosRouter(options: CosmosRouterOptions = {}): Router {
   const router = createRouter({ history, routes: routeRecords });
 
   if (options.transitions) {
-    router.beforeEach((to) =>
+    router.beforeEach((to, from) =>
       options.transitions?.enqueue({
-        kind: "navigation",
+        kind: to.meta.environment === from.meta.environment ? "navigation" : "environment",
         targetId: String(to.name ?? to.path),
         run: () => true,
       }),
