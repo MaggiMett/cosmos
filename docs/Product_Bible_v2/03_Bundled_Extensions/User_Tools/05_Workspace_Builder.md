@@ -132,13 +132,14 @@ Panel configuration defines containers for Tool Instances in an active Workspace
 
 Users may:
 
-- dock Tools
-- float Tools
-- resize Panels
-- hide Panels
-- restore Panels
+- add and remove Tools
+- set default Tool Window positions
+- set default Tool Window sizes
+- configure fixed Panel visibility
 
 Panels define presentation only.
+
+Version 1 does not support Tool Window docking, snapping, minimizing or maximizing. Workspace Environment Window placement and sizing are fixed. Future versions may extend Workspace Builder with those capabilities.
 
 ---
 

@@ -4,7 +4,7 @@
 
 A Workspace definition is a persistent, configurable working environment inside Cosmos.
 
-A persistent Workspace definition is an Object with the `Workspace` System Tag. Its active Environment Window, Tool Windows and Tool Instances remain Objects with their own identities and lifetimes.
+A persistent Workspace definition is an Object with the `Workspace` System Tag. Its active Workspace Environment Window, Tool Windows and Tool Instances remain Objects with their own identities and lifetimes.
 
 Workspace Runtime opens temporary active Workspace sessions from those definitions. Workspace sessions provide the multi-window places where users perform work using Tools.
 
@@ -15,6 +15,8 @@ Unlike Tools, Workspaces do not perform actions.
 A Workspace definition combines Context configuration, Layout, assigned Tools and User Experience into one reusable environment.
 
 An active Workspace session realizes that definition with current Context, Tool Instances and Runtime State.
+
+In Version 1, the Workspace Environment Window is a fixed working environment with fixed placement and sizing. It is not freely dragged or resized. Tool Windows inside it are movable, resizable and closable.
 
 ---
 
@@ -122,12 +124,11 @@ A Workspace definition stores its default Layout. Its active Workspace session m
 
 Examples include:
 
-- panel positions
-- floating windows
-- docked windows
-- split layouts
-- fullscreen panels
-- sidebar visibility
+- Tool Window positions
+- Tool Window sizes
+- Tool Window open state
+- Tool Window focus order
+- fixed Tool Area configuration
 
 Default Layout configuration belongs to the Workspace definition. Current Layout state belongs to the active session.
 
@@ -149,6 +150,8 @@ Examples include:
 Panels exist only to organize Tool instances.
 
 Panels contain no business logic.
+
+Version 1 Panels are definition-owned fixed regions. Tool Windows do not dock or snap into Panels. Dynamic docking, snapping and split-layout management are future capabilities.
 
 ---
 
@@ -237,7 +240,8 @@ Users remain free to customize or completely replace them.
 Every active Workspace session maintains restorable state for:
 
 - open Tool instances
-- panel positions
+- Tool Window positions and sizes
+- Tool Window focus order
 - selected Objects
 - current filters
 - camera state
@@ -311,6 +315,8 @@ Future extensions may introduce:
 - new interaction methods
 - specialized Workspace Builders
 - collaborative workspaces
+- more flexibly sized Workspace Environment Windows
+- Tool Window minimize, maximize, docking and snapping
 
 Extensions should integrate into the existing Workspace model.
 

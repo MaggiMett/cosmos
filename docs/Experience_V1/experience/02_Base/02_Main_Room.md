@@ -116,7 +116,7 @@ Hovering over them should display:
 - subtle outline
 - soft glow
 
-Selecting a workspace opens it as a full-size workspace window.
+Selecting a Workspace opens it as a fixed, full-size Workspace Environment Window.
 
 Version 1 prioritizes maximum working space over maintaining visibility of the room.
 

@@ -183,7 +183,7 @@ Workspace System
 
 Goals:
 
-- Workspace Window
+- fixed Workspace Environment Window
 - Tool runtime
 - multi-window workflow
 - workspace persistence

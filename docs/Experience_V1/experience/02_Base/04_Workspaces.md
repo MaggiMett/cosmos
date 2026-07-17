@@ -47,7 +47,7 @@ It is the user's workplace.
 
 When opened, the Workspace provides one large working surface.
 
-Individual tool windows exist inside this workspace.
+Individual movable, resizable and closable Tool Windows exist inside this fixed Workspace Environment Window.
 
 The Workspace itself acts as the foundation for productive work.
 
@@ -59,7 +59,7 @@ Opening a Workspace creates one primary working window.
 
 This working surface occupies the available workspace area.
 
-Individual tools open as movable windows on top of this working surface.
+Individual Tools open as movable and resizable Tool Windows on top of this fixed working surface. They may be closed, but Version 1 does not minimize, maximize, dock or snap them.
 
 Examples include:
 

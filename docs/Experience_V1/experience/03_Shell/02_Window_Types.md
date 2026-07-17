@@ -64,7 +64,9 @@ In Version 1, Environment Windows use fixed placement and sizing.
 
 They replace or cover the current environment while preserving the user's overall position inside the Cosmos.
 
-The universal Window foundation must still allow future movement, resizing and multi-display placement without changing the Environment identity.
+Base and Room Environment Windows are borderless and fixed. The Workspace Environment Window is also fixed: it cannot be freely dragged or resized.
+
+The universal Window foundation must still allow future Workspace Environment Window sizing flexibility without changing the Environment identity.
 
 ---
 
@@ -86,10 +88,11 @@ Tool Windows may be:
 - moved
 - resized
 - overlapped
-- minimized
-- restored
+- closed
 
 Their complete layout is remembered by the current Workspace.
+
+Version 1 does not support minimizing, maximizing, restoring, docking or snapping Tool Windows.
 
 ---
 
@@ -107,6 +110,19 @@ Examples include:
 Surface Windows always belong to another Window.
 
 They never become independent working environments.
+
+---
+
+# Version 1 Capability Matrix
+
+| Window role | Placement and sizing | Movable | Resizable | Close behavior |
+| --- | --- | --- | --- | --- |
+| Base Environment Window | Fixed | No | No | Leave the environment |
+| Room Environment Window | Fixed | No | No | Leave the environment |
+| Workspace Environment Window | Fixed | No | No | Close the active environment |
+| Tool Window | User-arranged inside its Workspace | Yes | Yes | Close the Tool Window |
+
+Minimize, maximize / restore, docking and snapping are unavailable for every Window role in Version 1.
 
 ---
 
@@ -146,7 +162,7 @@ Workspace Object
 
 ↓
 
-Workspace Window
+Workspace Environment Window
 
 Node
 
@@ -174,10 +190,10 @@ This may include:
 
 - position
 - size
-- visibility
-- pinned state
+- open state
+- focus order
 
-Environment Windows instead remember the environment they represent.
+Tool Windows persist those values. Environment Windows instead remember the environment they represent and retain their fixed Version 1 placement and sizing.
 
 ---
 
@@ -185,7 +201,7 @@ Environment Windows instead remember the environment they represent.
 
 The Window system is designed to expand naturally across multiple displays.
 
-Windows may:
+Future movable Windows may:
 
 - remain on a single display
 - span multiple displays
@@ -228,8 +244,9 @@ The interaction experience always remains consistent.
 
 Future versions may enable additional capabilities on existing Window Objects, including:
 
-- movable and resizable Environment Windows
+- more flexible Workspace Environment Window sizing
 - multiple parallel Environment Windows
+- minimize and maximize / restore
 - docking
 - snap layouts
 - detachable windows

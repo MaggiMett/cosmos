@@ -83,6 +83,7 @@ The minimum size should prevent content from becoming unusable.
 
 - borderless
 - no Header
+- fixed placement and sizing
 - fills approximately eighty percent of the viewport
 
 ---
@@ -91,15 +92,16 @@ The minimum size should prevent content from becoming unusable.
 
 - borderless
 - no Header
+- fixed placement and sizing
 - visually integrated into the Base
 
 ---
 
-## Workspace Window
+## Workspace Environment Window
 
 - Header visible
-- movable
-- resizable
+- fixed placement and sizing
+- no free dragging or resizing
 - intended for focused work
 
 ---
@@ -109,6 +111,7 @@ The minimum size should prevent content from becoming unusable.
 - Header visible
 - movable
 - resizable
+- closable
 - optimized for supporting tasks
 
 ---
@@ -154,7 +157,7 @@ A soft shadow provides depth.
 
 ## Header
 
-Workspace and Tool Windows use a visually distinct Header.
+Workspace Environment Windows and Tool Windows use a visually distinct Header.
 
 Base and Room Windows remain borderless.
 
@@ -162,13 +165,11 @@ Base and Room Windows remain borderless.
 
 ## Window Controls
 
-Workspace and Tool Windows provide:
+Workspace Environment Windows and Tool Windows provide:
 
-- Minimize
-- Maximize / Restore
 - Close
 
-Control appearance is Theme-defined.
+Version 1 does not provide Minimize or Maximize / Restore controls. Control appearance is Theme-defined.
 
 ---
 
@@ -179,9 +180,10 @@ Windows support:
 - default
 - active
 - inactive
-- minimized
-- maximized
-- resizing
+- opening
+- closing
+- moving, for Tool Windows
+- resizing, for Tool Windows
 
 The active Window receives subtle visual emphasis.
 
@@ -195,12 +197,12 @@ Examples include:
 
 - opening
 - closing
-- minimizing
-- maximizing
 - moving
 - resizing
 
 Animations should feel smooth and responsive.
+
+Movement and resizing animations apply only to Tool Windows in Version 1.
 
 ---
 
@@ -208,8 +210,11 @@ Animations should feel smooth and responsive.
 
 Possible future additions include:
 
+- minimize
+- maximize / restore
 - docking
 - snapping
+- more flexible Workspace Environment Window sizing
 - window grouping
 - detachable multi-monitor windows
 - animated window transitions

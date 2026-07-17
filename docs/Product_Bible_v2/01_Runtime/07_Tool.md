@@ -178,14 +178,15 @@ Edit Resource
 
 User Tools may appear as:
 
-- floating windows
-- docked panels
-- side panels
-- fullscreen editors
+- movable Tool Windows
+- resizable Tool Windows
+- closable Tool Windows
 
 Presentation is determined by the Workspace.
 
 Not by the Tool.
+
+Version 1 does not support Tool Window minimize, maximize, docking or snapping. Those presentation capabilities may extend the same Tool Window contract in future versions.
 
 ---
 

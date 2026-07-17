@@ -119,7 +119,7 @@ It never defines what the user works on.
 
 Workspace Runtime opens a temporary active Workspace session from a definition. The session provides the multi-window environment and contains its active Tool Instances.
 
-The persistent Workspace definition, its Runtime Window and its Tool Windows are Objects with distinct identities and appropriate System Tags.
+The persistent Workspace definition, its fixed Workspace Environment Window and its Tool Windows are Objects with distinct identities and appropriate System Tags. In Version 1, the Environment Window has fixed placement and sizing; contained Tool Windows are movable, resizable and closable.
 
 ---
 

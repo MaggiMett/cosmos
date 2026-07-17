@@ -62,8 +62,9 @@ After startup the Runtime restores:
 - active Projects
 - active Workspaces
 - Tool Instances
-- window layouts
-- panel positions
+- fixed Workspace Environment Window state
+- Tool Window positions, sizes, open state and focus order
+- fixed Panel configuration
 - camera positions
 - user selections
 

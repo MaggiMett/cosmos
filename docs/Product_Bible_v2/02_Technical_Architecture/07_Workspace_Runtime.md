@@ -79,8 +79,9 @@ Background Workspace sessions continue preserving:
 
 - Tool state
 - Layout
-- Window positions
-- Panel configuration
+- Tool Window positions and sizes
+- Tool Window open state and focus order
+- fixed Panel configuration
 
 ---
 
@@ -116,14 +117,15 @@ Direct Tool Mode has no Workspace session and is outside Workspace Runtime owner
 
 The Workspace Runtime manages:
 
-- floating windows
-- docked panels
-- split layouts
-- fullscreen Tools
-- sidebar visibility
-- panel arrangement
+- the fixed Workspace Environment Window
+- movable and resizable Tool Windows
+- Tool Window open and close state
+- Tool Window focus order
+- fixed Tool Area and Panel configuration
 
 Layout changes affect only the current Workspace session.
+
+Version 1 does not provide free movement or resizing of the Workspace Environment Window, nor Tool Window minimize, maximize, docking or snapping.
 
 ---
 
@@ -137,7 +139,7 @@ Examples include:
 - right panel
 - inspector
 - bottom panel
-- floating window
+- Tool Area
 
 Panels host Tool Instances.
 
@@ -264,6 +266,8 @@ Future extensions may introduce:
 - VR Workspaces
 - custom panel systems
 - advanced layout managers
+- more flexibly sized Workspace Environment Windows
+- Tool Window minimize, maximize, docking and snapping
 
 All extensions integrate through the same Workspace Runtime contract.
 

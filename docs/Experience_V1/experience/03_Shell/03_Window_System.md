@@ -45,7 +45,7 @@ Windows always originate from an interactive object.
 
 Examples include:
 
-- Workspace Object → Workspace Window
+- Workspace Object → Workspace Environment Window
 - Companion → Chat Window
 - Node → Tool Window
 
@@ -53,11 +53,22 @@ Opening a Window should always feel connected to its source.
 
 ---
 
+# Version 1 Capability Boundary
+
+Version 1 distinguishes fixed environments from working tools.
+
+- Base and Room Environment Windows are borderless, fixed and not resizable.
+- The Workspace Environment Window has fixed placement and sizing and cannot be freely dragged or resized.
+- Tool Windows are movable, resizable and closable.
+- Minimize, maximize / restore, docking and snapping are not supported.
+
+---
+
 # Closing Windows
 
-Version 1 supports opening and closing Windows.
+Version 1 supports opening and closing Tool Windows and entering or leaving Environment Windows.
 
-Closing a Window removes it from the current Workspace.
+Closing a Tool Window removes it from the current Workspace session.
 
 The Workspace remembers the previous state.
 
@@ -83,7 +94,7 @@ Focus changes should always feel immediate and predictable.
 
 # Movement
 
-Movable Windows may be repositioned freely inside the current Workspace.
+Movable Tool Windows may be repositioned freely inside the current Workspace Environment Window.
 
 Dragging a Window changes only its position.
 
@@ -93,7 +104,7 @@ Windows remain completely independent from one another.
 
 # Resizing
 
-Resizable Windows support resizing from all edges and corners.
+Resizable Tool Windows support resizing from all edges and corners.
 
 Each Window defines its own minimum size.
 

@@ -26,7 +26,7 @@ A physical object integrated into the environment.
 
 Open State
 
-An interactive Workspace Window opened above the environment.
+An interactive, fixed Workspace Environment Window opened above the environment.
 
 The physical Workspace always remains part of the room.
 
@@ -62,7 +62,7 @@ Their position contributes to the room's architecture.
 
 ## Interaction
 
-Selecting a Workspace opens its corresponding Workspace Window.
+Selecting a Workspace opens its corresponding Workspace Environment Window.
 
 The physical Workspace itself remains visible behind the opened Window.
 
@@ -152,7 +152,7 @@ Examples include:
 - subtle highlight on interaction
 - smooth Workspace opening
 - gentle ambient lighting
-- soft transition into the Workspace Window
+- soft transition into the Workspace Environment Window
 
 Animations should reinforce immersion.
 

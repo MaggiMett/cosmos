@@ -50,7 +50,7 @@ Remaining:
 ## Workspaces
 
 - [x] Workspace
-- [x] Workspace Window
+- [x] Workspace Environment Window
 
 ---
 

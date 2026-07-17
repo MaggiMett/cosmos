@@ -34,7 +34,7 @@ Instead, they continue working inside one larger Cosmos.
 
 The Shell treats all connected displays as one continuous workspace.
 
-Windows may:
+Future Tool Windows may:
 
 - remain on a single display
 - move freely between displays
@@ -81,9 +81,9 @@ When the original display configuration returns, Cosmos may automatically restor
 
 # Window Placement
 
-Windows move freely throughout the virtual workspace.
+Future Tool Windows may move freely throughout the virtual workspace. Environment Window placement remains controlled by the Shell; Version 1 Environment Windows stay fixed on its single display.
 
-Version 1 intentionally avoids forced snapping between displays.
+Version 1 does not implement snapping, docking or alignment tools.
 
 Future versions may introduce optional snapping, docking or alignment tools.
 
@@ -111,8 +111,8 @@ Display layouts are persistent.
 
 Cosmos remembers:
 
-- Window positions
-- Window sizes
+- Tool Window positions
+- Tool Window sizes
 - display assignment
 - spanning behavior
 

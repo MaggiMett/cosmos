@@ -1,4 +1,4 @@
-# Workspace Window
+# Workspace Environment Window
 
 **Version:** 1.0  
 **Status:** Authoritative  
@@ -8,7 +8,7 @@
 
 # Purpose
 
-The Workspace Window is the user's primary working environment.
+The Workspace Environment Window is the user's primary working environment.
 
 It provides a flexible canvas where Tools can be opened, arranged and used together.
 
@@ -20,7 +20,9 @@ Only the active Tools differ.
 
 # Overview
 
-A Workspace Window is a large, open working area.
+A Workspace Environment Window is a large, open working area with fixed Version 1 placement and sizing.
+
+It cannot be freely dragged or resized.
 
 It intentionally contains no predefined functionality.
 
@@ -74,6 +76,8 @@ Selecting a Tool opens its own Window inside the Workspace.
 
 Multiple Tool Windows may remain open simultaneously.
 
+Tool Windows are movable, resizable and closable. Version 1 does not minimize, maximize, dock or snap them.
+
 Every Tool Window follows the universal Window Template.
 
 ---
@@ -103,7 +107,7 @@ The Workspace should always prioritize available working space.
 
 ## Appearance
 
-The Workspace Window follows the active Cosmos Theme.
+The Workspace Environment Window follows the active Cosmos Theme.
 
 The Canvas remains visually calm to avoid competing with Tool Windows.
 
@@ -160,5 +164,7 @@ Possible future additions include:
 - customizable Tool Areas
 - saved Workspace layouts
 - multiple Tool Areas
+- more flexible Workspace Environment Window sizing
+- Tool Window minimize, maximize / restore, docking and snapping
 - detachable Tool Windows
 - multi-monitor Workspaces
