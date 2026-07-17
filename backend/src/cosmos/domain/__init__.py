@@ -7,6 +7,7 @@ from cosmos.domain.objects import (
     PropertyKind,
     PropertySchema,
 )
+from cosmos.domain.relationships import Relationship, RelationshipType
 
 __all__ = [
     "CosmosObject",
@@ -16,4 +17,6 @@ __all__ = [
     "PropertyDefinition",
     "PropertyKind",
     "PropertySchema",
+    "Relationship",
+    "RelationshipType",
 ]

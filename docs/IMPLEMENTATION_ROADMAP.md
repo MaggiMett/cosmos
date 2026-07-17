@@ -153,6 +153,10 @@ Goals:
 
 Cosmos
 
+Status:
+
+Completed
+
 Goals:
 
 - Cosmos Map

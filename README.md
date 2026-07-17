@@ -2,7 +2,7 @@
 
 Cosmos is a new implementation of the personal operating system defined by `Product_Bible_V2`, `Experience_V1`, and `Architecture_Review_V3`.
 
-Sprint 1 adds the runnable application framework without implementing Capture, Knowledge, Companion, Base, Cosmos Map, or productive Workspace features.
+Sprint 2 adds the Cosmos Map and its durable spatial Runtime without implementing Capture, Knowledge, Base Rooms, or productive Workspace features.
 
 ## Repository map
 
@@ -44,11 +44,11 @@ pnpm --dir frontend dev
 
 The development server is available at `http://127.0.0.1:5173` and proxies `/api` to the backend at `http://127.0.0.1:8000`. The Docker Compose configuration provides the same application and backend pairing.
 
-The backend foundation exposes `/health` and `/ready`. The frontend waits for readiness before activating the spatial application routes.
+The backend exposes `/health`, `/ready`, and the Runtime Service-backed Cosmos Map API. The frontend waits for readiness before activating the spatial application routes.
 
-## Sprint 1 runtime
+## Sprint 2 runtime
 
-The application framework provides:
+The runnable implementation provides:
 
 - a spatial route hierarchy for Cosmos, Base, Room, and Workspace environments
 - the approved Version 1 Window capability matrix
@@ -56,8 +56,13 @@ The application framework provides:
 - registry-backed Theme loading with the Cosmos fallback Theme
 - one serialized Shell transition queue
 - explicit startup, failure, retry, and shutdown states
+- a persistent pan/zoom camera with cursor-centered zoom and Project focus
+- Project galaxies, universal Node Objects, structural and `Related` Connection representations
+- the three documented Version 1 System Projects with physical Prepared Structures
+- the global Companion Entity and permanent Ship access to Base
+- top-center orientation, geographical neighbors, and Quick Travel
 
-These are framework contracts only. Their user-facing environments and Tools are implemented by later roadmap Sprints.
+Base Rooms and productive Workspace Tools are implemented by later roadmap Sprints.
 
 ## Architectural authority
 

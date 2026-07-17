@@ -13,5 +13,11 @@
     "strict": true,
     "types": ["vitest/globals", "vite/client"]
   },
-  "include": ["src/**/*.ts", "src/**/*.test.ts", "src/**/*.vue", "vite.app.config.ts", "vite.build.config.ts"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.test.ts",
+    "src/**/*.vue",
+    "vite.app.config.ts",
+    "vite.build.config.ts"
+  ]
 }

@@ -16,11 +16,17 @@ def test_sqlite_initialization_applies_foundation_once(tmp_path: Path) -> None:
             row["name"] for row in connection.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
         }
 
-    assert [(row["version"], row["name"]) for row in migrations] == [(1, "0001_foundation.sql")]
+    assert [(row["version"], row["name"]) for row in migrations] == [
+        (1, "0001_foundation.sql"),
+        (2, "0002_cosmos_map.sql"),
+    ]
     assert {
         "objects",
         "object_system_tags",
         "object_schema_versions",
         "object_properties",
         "object_user_tags",
+        "prepared_structures",
+        "relationships",
+        "runtime_state",
     }.issubset(tables)

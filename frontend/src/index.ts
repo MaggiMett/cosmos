@@ -6,6 +6,7 @@ export {
   useCosmosRuntime,
 } from "./runtime/plugin";
 export { ApplicationRuntime } from "./runtime/applicationRuntime";
+export { CosmosMapRuntime, focusedProjectId } from "./runtime/cosmosMapRuntime";
 export { ThemeRegistry } from "./runtime/themeRegistry";
 export { DomThemePresenter, ThemeRuntime } from "./runtime/themeRuntime";
 export { TransitionRuntime } from "./runtime/transitionRuntime";
@@ -19,6 +20,15 @@ export type {
   ReadinessResponse,
 } from "./runtime/contracts";
 export type { ApplicationPhase, ApplicationRuntimeState } from "./runtime/applicationRuntime";
+export type {
+  CompanionReply,
+  CosmosMapSnapshot,
+  MapCamera,
+  MapCompanion,
+  MapConnection,
+  MapNode,
+  MapProject,
+} from "./runtime/cosmosMapRuntime";
 export type { CosmosFrontendRuntime, CosmosRuntimePluginOptions } from "./runtime/plugin";
 export type { ThemeDefinition } from "./runtime/themeRegistry";
 export type { ThemePresenter } from "./runtime/themeRuntime";
