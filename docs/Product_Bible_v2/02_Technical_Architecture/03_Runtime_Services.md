@@ -73,6 +73,25 @@ Neither Runtime component replaces the Runtime Service boundary.
 
 ---
 
+# Universal Object Mutations
+
+Object Service is the authoritative business boundary for durable Object identity, System Tag, Property Schema and Property changes.
+
+For every Object mutation it validates:
+
+- immutable Object identity
+- permitted System Tag composition
+- all Property Schemas activated by that composition
+- presence and validity of every required Property
+- ownership and lifetime rules
+- Prepared Structure changes when applicable
+
+Tag Service owns User Tag mutations and preserves user ownership. Collections and grouping views query Objects through User Tags; they do not create a separate collection record type.
+
+Project Service creates `Project` and `Project + System` Objects through the same Object contract and coordinates durable Prepared Structure records with physical creation. A Project is not reported as created until both the authoritative commit and required physical structures exist.
+
+---
+
 # Single Source of Truth
 
 Business logic exists only once.
@@ -174,6 +193,8 @@ Completed-Fact Event Publication
 The owning Service assigns or verifies the immutable definition ID, explicit version and declared scope. Updates create a new definition version; existing consumers retain their referenced version until an explicit migration or selection. Installed Extension-provided definitions must already have passed shared Extension Validation. User-created definitions are validated against the same category schema by the owning Service before persistence and Registry update.
 
 User Tools never persist or register Blueprint definitions directly. Registries expose validated definitions but never become mutation or business-logic owners.
+
+Structure Template creation uses the normal Object Service pipeline. Each included Node becomes an independent `Template + Structure` Object with complete Properties and explicit parent-child template references. No Blueprint Registry mutation or grouped-template record is created.
 
 ---
 

@@ -160,7 +160,7 @@ Repository Analyzer performs the explicitly triggered, read-only analysis of:
 - dependencies
 - project patterns
 
-Based on this analysis, Repository Analyzer produces candidate Objects, mappings and semantic structure for review. Accepted mutations are sent through Runtime Services; Journeyman performs any approved implementation or Runtime Translation work.
+Based on this analysis, Repository Analyzer produces candidate Objects, mappings and semantic structure for review. Accepted mutations are sent through Runtime Services; Journeyman orchestrates any approved implementation or Runtime Translation work through the selected development Provider.
 
 The user decides what becomes part of the Project.
 
@@ -309,7 +309,7 @@ Both perspectives may be synchronized through demand-driven tasks without ever b
 
 - Repositories remain independent.
 - Cosmos organizes meaning.
-- Journeyman performs translation.
+- Journeyman orchestrates Runtime Translation through the selected development Provider.
 - Repository Analyzer performs read-only analysis on demand.
 - Only lightweight repository signals may be continuous.
 - Objects connect both worlds.

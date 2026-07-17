@@ -1,5 +1,7 @@
 # Architecture Review V2
 
+> **Historical record:** Superseded by [`Architecture_Review_V3.md`](../Architecture_Review_V3.md). Findings below describe the earlier corpus and are not current normative requirements or freeze status.
+
 ## Review mandate
 
 This report is an independent verification pass against the current Product Bible for Architecture Freeze V1.0. The current Product Bible was treated as canonical. `ARCHITECTURE_AUDIT.md` and `ARCHITECTURE_REVIEW_V1.md` were inspected because they are Markdown documents in the review tree, but their prior findings and readiness conclusions were treated only as historical context.

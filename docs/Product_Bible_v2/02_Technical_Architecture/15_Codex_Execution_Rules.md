@@ -2,13 +2,15 @@
 
 ## Purpose
 
-This document defines the mandatory execution rules for every AI Developer working on Cosmos.
+This document defines the mandatory execution rules for Codex as the first Version 1 development Provider behind the Journeyman experience. Other Providers may adopt equivalent rules through their own validated Provider profiles.
 
 The goal is not simply to generate code.
 
 The goal is to preserve architectural consistency while allowing the system to evolve safely over many years.
 
 Every implementation must respect the Product Bible before modifying the Runtime.
+
+Codex does not define Journeyman experience or Provider Runtime architecture. Journeyman supplies the provider-neutral task experience; Provider Runtime selects and invokes Codex through its adapter.
 
 ---
 

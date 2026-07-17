@@ -139,13 +139,13 @@ These associations are not Version 1 Relationship endpoints. Version 1 Relations
 
 # Tags
 
-Knowledge inherits Context Tags automatically.
+Knowledge receives structural System Tags from Context automatically. Inherited User Tags remain Context inputs or suggestions until the user explicitly applies them.
 
 Knowledge may additionally contain User Tags.
 
 System Tags describe origin and structure.
 
-User Tags describe meaning.
+User Tags describe user-defined meaning and are never persisted or changed silently.
 
 Tags continuously evolve together with the Project.
 

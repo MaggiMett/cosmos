@@ -4,6 +4,8 @@
 
 The Base is the user's home inside Cosmos.
 
+The Base and every independently interactive element inside it use the universal Object Model. Base, Room, Door, Workspace and Companion responsibilities are System-Tag-activated Object roles.
+
 It is the place where users return between Projects, organize their personal working environment and access their Workspaces.
 
 The Base is not a dashboard.

@@ -56,9 +56,12 @@ Examples include:
 
 - Projects
 - Objects
+- Object System Tags, active schema references and complete Properties
 - Knowledge
 - Relationships (`Related` only in Version 1)
 - Tags
+- Structure Template Objects and parent-child template references
+- Prepared Structure records and physical-path mappings
 
 ---
 
@@ -323,6 +326,12 @@ Version 1 uses a conservative local-first storage profile:
 - JSON manifests inside each Project `.cosmos/` directory are portable projections of committed Project mappings and Project-owned Extension definitions. They are not an independent source of truth.
 - Native repositories and external sources store Resources.
 - Dedicated cache directories store rebuildable indexes, embeddings, previews and analysis results.
+
+Prepared Structures are not cache or virtual UI state. For Project or structural Object creation, Persistence stages the corresponding Project-managed locations for Knowledge, Files, Themes, Workspaces, Templates and Extensions, commits the authoritative SQLite records, and finalizes the physical locations before reporting success. Empty locations are valid and persist.
+
+If staging, commit or finalization fails, the creation operation fails and Recovery reconciles the staged locations and authoritative record before the Object can become visible. The UI must never expose a Ghost Structure.
+
+Prepared paths mirror the validated Cosmos Object hierarchy but remain separate from native repository Resource ownership. Path mappings are durable Project metadata; native source trees are never reorganized implicitly.
 
 SQLite is the authoritative transactional store for Version 1.
 

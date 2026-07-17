@@ -47,7 +47,7 @@ Entity Roles define:
 - default permissions
 - expected interactions
 - supported Runtime actions
-- default Behavior Profile
+- default Behaviour Profile
 
 Roles never implement business logic.
 
@@ -64,7 +64,7 @@ Every Role possesses:
 - description
 - default permissions
 - supported interactions
-- default Behavior Profile
+- default Behaviour Profile
 - compatible Runtime capabilities
 
 Roles are reusable.
@@ -266,7 +266,7 @@ Worker Entity
 - focused
 - task-oriented
 
-Behavior may later be customized through Personality Profiles.
+Behaviour may later be customized through Personality Profiles.
 
 ---
 

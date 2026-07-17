@@ -4,6 +4,8 @@
 
 A Tool represents a reusable capability inside Cosmos.
 
+A Tool definition and every independently addressable Tool Instance use the universal Object Model. User Tool and System Tool are System-Tag and capability combinations, not separate identity classes.
+
 Tools allow users or the system to perform specific tasks while remaining independent from Projects, Workspaces and Themes.
 
 Every task-oriented capability that follows the Tool contract is implemented as a Tool.
@@ -187,7 +189,7 @@ Not by the Tool.
 
 ---
 
-# Theme Behaviour
+# Theme Representation
 
 Themes never change Tool functionality.
 

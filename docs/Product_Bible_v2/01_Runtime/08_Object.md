@@ -2,94 +2,165 @@
 
 ## Purpose
 
-Objects are the fundamental working entities inside Cosmos.
+Object is the universal identity and state model of Cosmos.
 
-Every meaningful concept that belongs to a Project eventually becomes an Object.
+Every independently addressable visible or interactive element inside Cosmos is represented by an Object. Reusable definitions that users can address, including Themes, Skins and Templates, are Objects as well even when they are not currently visible.
 
-Objects connect ideas, knowledge, implementation and relationships into one coherent entity.
+Projects, Nodes, Workspaces, Windows, Tools, Themes, Templates, Entities and similar concepts are not parallel identity systems. They are Object roles expressed through System Tags, activated Property Schemas and complete Properties.
 
-Objects define meaning.
-
-They never define presentation or implementation.
+Domain records such as Knowledge, Resources and Relationships remain distinct contracts. An Object may reference them, and any visible or interactive representation of them is still an Object.
 
 ---
 
-# Philosophy
+# Universal Structure
 
-Users think in Objects.
+Every Object follows one conceptual sequence:
 
-Not in files.
+```text
+Identity
+↓
+System Tags
+↓
+Property Schemas
+↓
+Properties
+↓
+User Tags
+```
 
-Not in folders.
-
-Not in repositories.
-
-Cosmos therefore organizes Projects around Objects instead of technical implementation.
-
-Objects remain stable while their implementation may evolve over time.
-
----
-
-# Responsibilities
-
-Objects are responsible for:
-
-- representing meaning
-- connecting Knowledge
-- referencing Resource mappings
-- storing metadata
-- referencing Project-owned Relationships
-- preserving history
-- tracking versions
-
-Objects never perform work themselves.
-
-Tools operate on Objects.
+The sequence is universal. Role-specific documents define the responsibilities activated by particular System Tag combinations; they do not define separate Object classes.
 
 ---
 
 # Identity
 
-Every Object possesses:
+Every Object has one immutable ID.
+
+Identity remains stable when:
+
+- its display name changes
+- its Theme or Skin changes
+- its visual representation changes
+- its Properties change
+- its User Tags change
+- it appears in another View
+
+An Object may be represented in multiple places without duplicating identity.
+
+Identity metadata includes:
 
 - immutable ID
 - display name
 - description
-- object type
 - creation date
 - creator
-- current state
+- lifecycle state
 
-Display names may change.
-
-The internal ID never changes.
+Display names and metadata may evolve. The immutable ID does not.
 
 ---
 
-# Object Types
+# System Tags
 
-Cosmos does not define fixed Object types.
+System Tags compose an Object's functional identity.
 
 Examples include:
 
-- Item
-- Character
-- Lore Entry
-- Building
-- Quest
-- Feature
-- API
-- Dashboard
-- Texture
-- Model
+- `Project`
+- `Node`
+- `Workspace`
+- `Window`
+- `Tool`
+- `Theme`
+- `Template`
+- `Entity`
+- `System`
 
-Users and Extensions may introduce additional Object types.
+System Tags may be combined. A Project that extends Cosmos is a normal Object with `Project + System`; it is not an instance of a separate System Project class.
+
+System Tags activate capabilities and Property Schemas. Cosmos owns their vocabulary and applies them through validated Runtime Service operations. Users do not silently mutate System Tags as if they were User Tags.
+
+Adding a role should prefer a new combination of existing System Tags. A new dedicated class or parallel identity model is justified only when the universal Object contract cannot express the requirement.
+
+---
+
+# Property Schemas
+
+The active System Tag combination determines the Property Schemas composed for an Object.
+
+Each active schema defines:
+
+- required Properties
+- value types and constraints
+- explicit default values
+- validation rules
+- compatibility requirements
+
+Schema composition is additive. When several System Tags are active, their schemas are composed and validated as one complete Object contract.
+
+An Object is valid only when every required Property of every active schema exists and contains a valid value. Missing capability is represented by an explicit default such as `Static`, `Silent`, `None` or another schema-defined value, not by an incomplete schema.
+
+Object Service validates System Tag, schema and Property changes before Persistence commits them.
+
+---
+
+# Properties
+
+Properties describe the Object's current state.
+
+Examples include:
+
+- name and configuration
+- placement and dimensions
+- current Skin or Theme reference
+- active condition
+- lifecycle state
+- role-specific settings
+
+Properties never replace identity. Changing a Property changes the state of the existing Object.
+
+Transient Objects use the same Property rules as persistent Objects. Lifetime changes persistence behavior, not the Object Model.
+
+---
+
+# User Tags
+
+User Tags describe user-defined meaning, organization and discovery.
+
+They support:
+
+- search
+- filtering
+- grouping
+- discovery
+- reusable collection views
+
+Collections emerge from shared Tags and queries. Cosmos does not introduce a dedicated collection or grouping identity when User Tags already express the requirement.
+
+Users own User Tags. Cosmos may suggest tags, but it never silently adds, removes or rewrites them. An Object's display name remains Identity metadata and does not require a duplicate automatic User Tag.
+
+---
+
+# Scope and Lifetime
+
+Objects may be:
+
+- Project-owned
+- Cosmos-global
+- System-owned
+- Runtime-only
+
+Project-owned semantic Objects have one primary Project. Universal Objects that describe Cosmos itself, reusable global definitions or temporary Runtime state do not require a primary Project.
+
+Scope never creates a different Object class. It is expressed through System Tags, Properties and ownership references.
+
+Runtime Objects include Windows, Notifications and temporary Panels. They retain stable identity for their Runtime lifetime and follow the same schema validation rules.
 
 ---
 
 # Knowledge
 
-Objects collect Knowledge.
+Objects may reference Knowledge records.
 
 Knowledge may include:
 
@@ -99,11 +170,9 @@ Knowledge may include:
 - promoted discussion records
 - References
 - Research
-- Blueprints
+- durable descriptions or analyses of Blueprints and Templates
 
-Knowledge explains the Object.
-
-It never replaces it.
+Knowledge explains an Object. It never replaces the Object or a reusable definition.
 
 ---
 
@@ -122,131 +191,78 @@ Examples include:
 - localization
 - documentation
 
-Resources remain inside the original repository.
-
-Objects simply provide meaningful access to them.
+Resources remain owned by their native repository or external source. Object identity remains stable when mapped Resources change.
 
 ---
 
-# Relationships
+# Relationships and Connections
 
-Objects are the only Version 1 Relationship endpoints. Each Relationship is a Project-owned record referenced by both endpoint Objects.
+Objects are the two endpoints of Version 1 Relationship records.
 
-The current Version 1 type is:
+The sole Version 1 Relationship type is `Related`. Specialized semantic types remain future extensions.
 
-- Related
-
-Future specialized type examples include:
-
-- parent
-- child
-- dependency
-- reference
-
-Version 1 only requires the universal relationship:
-
-Related
-
-Additional relationship types may be introduced later without changing the architecture.
+A visible Connection is an Object representation of either structural placement, an accepted `Related` Relationship or a non-persistent discovery candidate. The Connection does not redefine the underlying record. Removing a representation does not remove the Objects it connects.
 
 ---
 
-# Tags
+# Representation and Themes
 
-Objects inherit Context Tags automatically.
+Themes represent Objects.
 
-Objects may additionally possess User Tags.
+They never define Object identity, capabilities, interaction rules, schemas or business behavior.
 
-System Tags describe structure.
-
-User Tags describe meaning.
-
-Tags continuously evolve together with the Project.
+The same Object may appear through different Nodes, Windows, search results, Archive entries or Theme Components. Every representation resolves to the same immutable Object ID.
 
 ---
 
-# Versions
+# Prepared Structures
 
-Objects evolve over time.
+Expandable Objects use Prepared Structures and Extension Points rather than parallel growth systems.
 
-History should never be lost.
+Prepared Structures:
 
-Objects support:
+- exist physically when the owning Object is created
+- mirror the real Cosmos structure
+- may remain empty indefinitely
+- use complete default Properties
+- expand through the same System Tag and schema rules
 
-- revisions
-- alternative branches
-- historical versions
-
-Older versions remain accessible.
-
----
-
-# Views
-
-Objects may be opened through different Views.
-
-Examples include:
-
-- Overview
-- Knowledge
-- Resources
-- Relationships
-- Blueprint
-- History
-
-Views present the same Object from different perspectives.
-
-The Object itself never changes.
-
----
-
-# Runtime
-
-Objects remain independent from:
-
-- Themes
-- Workspaces
-- Tools
-- Windows
-
-They exist continuously inside the Project regardless of what is currently open.
+Prepared does not mean required. Ghost, virtual or lazily invented structures are not valid Prepared Structures.
 
 ---
 
 # Extensibility
 
-Objects are designed for continuous growth.
+Future capability should extend Objects through:
 
-Future Extensions may introduce:
+- existing or new System Tag combinations
+- composed Property Schemas
+- complete Properties
+- User Tags
+- Prepared Structures
+- Extension Points
 
-- additional Object types
-- custom metadata
-- specialized Views
-- validation rules
-- custom Blueprints
-
-The Object model should remain stable while allowing unlimited specialization.
+Extensions may add validated definitions and capabilities. They do not introduce a second Object Model.
 
 ---
 
 # Design Goal
 
-Users should experience one coherent Object instead of many disconnected files.
+Cosmos should expose one coherent identity and state model regardless of what an Object represents or how it is rendered.
 
-An Object should become the single place where every piece of information about one concept comes together.
-
-Objects bridge human understanding and technical implementation.
+Implementation should be able to reason about every Object through the same contracts without type-specific identity systems or incomplete state.
 
 ---
 
 # Principles
 
-- Objects represent meaning.
-- Objects are independent.
-- Objects reference Knowledge.
-- Objects reference Resource mappings.
-- Objects preserve history.
-- Objects reference Project-owned Relationships.
-- Objects inherit Context.
-- Objects never depend on presentation.
-- Objects continuously evolve.
+- Every independently addressable visible or interactive element is represented by an Object.
+- Reusable Themes, Skins and Templates are Objects.
+- Identity is permanent and representation-independent.
+- System Tags compose roles and activate Property Schemas.
+- Active schemas always produce complete Properties.
+- User Tags express user-defined meaning and emergent collections.
+- Themes define appearance only.
+- Runtime lifetime does not create a separate Object Model.
+- Prepared Structures exist physically and mirror Cosmos.
+- Future growth extends the universal Object contract.

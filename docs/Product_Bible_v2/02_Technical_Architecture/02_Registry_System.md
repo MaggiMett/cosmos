@@ -83,6 +83,8 @@ Registries manage definitions only.
 
 Active Entity State remains owned by the Entity Runtime.
 
+Normal Objects are discovered through Object Service, System Tags and User Tag queries rather than registered as component definitions. This includes Structure Template Objects and System Project Objects. No Structure Template Registry, collection Registry or System Project Registry exists in Version 1.
+
 ---
 
 # Blueprint Taxonomy and Ownership
@@ -92,6 +94,10 @@ The canonical Blueprint definition categories are:
 - Object Blueprint
 - Capture Template
 - Workspace Blueprint
+
+These definitions are user-addressable Objects with stable Object identity and category System Tags. The category Registry indexes their validated definition payload and version; it does not create a second identity.
+
+Structure Templates remain outside this taxonomy. They capture reusable parent-child Node structure, while Object Blueprints define one Object's System Tags, Property Schema and complete defaults.
 
 Each category uses its category-specific Registry built on the shared Registry contract. The Registry manages definition identity, metadata, version, availability and resolution; it never owns Tool drafts, instantiated Objects, Capture content, Workspace definitions or active Workspace sessions.
 
@@ -136,6 +142,7 @@ cosmos.user-tool.capture
 cosmos.system-tool.knowledge-processor
 cosmos.theme.galaxy
 cosmos.provider.codex
+```
 Display names may change.
 
 Component IDs never change.

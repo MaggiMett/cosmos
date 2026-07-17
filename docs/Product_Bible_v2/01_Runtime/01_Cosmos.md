@@ -74,9 +74,9 @@ Each Project is visualized as a constellation.
 
 Constellations represent structure rather than storage.
 
-Nodes represent Objects.
+Nodes are Objects with the `Node` System Tag and represent Object roles without duplicating identity.
 
-Connections represent Relationships.
+Connection Objects represent structural placement, accepted Relationships or non-persistent discovery candidates.
 
 The visual structure should help users understand complexity without exposing technical implementation.
 
@@ -84,7 +84,7 @@ The visual structure should help users understand complexity without exposing te
 
 # Nodes
 
-Nodes provide direct access to Objects.
+Node Objects provide direct access to the identity and capabilities composed by their System Tags.
 
 They may represent:
 

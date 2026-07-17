@@ -18,7 +18,7 @@ Cosmos organizes meaning.
 
 The user works with concepts.
 
-Journeyman works with implementation.
+Journeyman provides the implementation experience and orchestration. The selected development Provider performs provider-specific implementation.
 
 Both structures coexist without replacing each other.
 
@@ -42,7 +42,7 @@ Runtime Structure
 
 The user only works directly with the User Structure.
 
-Journeyman performs Runtime Translation between both worlds only during an approved affected implementation, synchronization or validation task.
+Journeyman orchestrates Runtime Translation between both worlds only during an approved affected implementation, synchronization or validation task.
 
 ---
 
@@ -66,6 +66,8 @@ The User Structure contains:
 - Relationships
 - Context
 - Knowledge
+
+It also contains the Project's Prepared Structures. These are physical, Project-managed locations that mirror the real Cosmos organization; they do not create a third semantic hierarchy.
 
 The user owns this structure completely.
 
@@ -100,6 +102,29 @@ The Runtime Structure always remains compatible with the target platform.
 
 ---
 
+# Prepared Structures
+
+Every new Project physically receives these prepared Project-managed areas:
+
+```text
+Knowledge
+Files
+Themes
+Workspaces
+Templates
+Extensions
+```
+
+Empty areas are valid. Prepared means available, not required.
+
+Prepared paths mirror the validated Object and Node structure. Creating, moving or removing a structural Object updates the applicable mirrored prepared paths through Runtime Services. Prepared Structures never reorganize the native Runtime Structure or transfer ownership of external Resources.
+
+No Ghost Structures are valid: the UI, Tools, AI providers and Extensions may only advertise a prepared path after its physical creation succeeds.
+
+Active System Tags determine which additional prepared paths and complete defaults apply. The same preparation contract serves user Projects and System Projects.
+
+---
+
 # Runtime Translation
 
 Runtime Translation is a capability of the Journeyman System Tool, not a separate System Tool identity.
@@ -112,7 +137,7 @@ The user decides:
 - what it means
 - how it is organized
 
-Within approved implementation work, Journeyman determines:
+Within approved implementation work, Journeyman presents the task constraints while the selected development Provider determines:
 
 - file locations
 - naming conventions
@@ -123,7 +148,7 @@ Within approved implementation work, Journeyman determines:
 
 Meaning belongs to the user.
 
-Implementation belongs to Journeyman.
+Implementation execution belongs to the selected development Provider behind the Journeyman experience.
 
 ---
 
@@ -131,7 +156,7 @@ Implementation belongs to Journeyman.
 
 Objects are the bridge between both structures.
 
-Every Object exists inside the User Structure.
+Every Project-owned semantic Object exists inside the User Structure. Global definitions and Runtime-only Objects use the same Object Model without pretending to belong to a Project.
 
 Objects may reference one or many Runtime Resources.
 
@@ -198,10 +223,11 @@ Initially they consist only of:
 - Knowledge
 - Objects
 - Relationships
+- their empty physical Prepared Structures
 
 Implementation starts only when the user decides to build something.
 
-Journeyman then creates the required Runtime Resources.
+Journeyman requests the selected development Provider to create the required Runtime Resources within the approved task, permissions and Prepared Structures.
 
 ---
 
@@ -223,6 +249,8 @@ Examples:
 Branches are organizational Objects.
 
 They never represent technical folders.
+
+Reusable structural branches may be captured as independent Structure Template Objects. Each included Node becomes one `Template + Structure` Object; parent-child template references preserve the reusable pattern. Shared User Tags produce collections without a separate template-group record.
 
 ---
 
@@ -294,7 +322,7 @@ Project Structure should allow users to think like creators rather than programm
 
 Users organize meaning.
 
-Journeyman manages implementation.
+Journeyman orchestrates and presents implementation performed by the selected development Provider.
 
 Both perspectives remain permanently connected.
 
@@ -303,10 +331,12 @@ Both perspectives remain permanently connected.
 # Principles
 
 - The user owns the User Structure.
-- Journeyman owns Runtime Translation.
+- Journeyman owns the Runtime Translation experience and orchestration; the selected Provider performs implementation execution.
 - Repository Analyzer owns read-only repository analysis.
 - Runtime compatibility is always preserved.
 - Objects connect both worlds.
 - Meaning is independent from implementation.
 - Existing repositories remain usable.
 - Projects grow continuously.
+- Prepared Structures physically mirror Cosmos and never become Ghost Structures.
+- Structure Templates are independent Objects and contain structure only.

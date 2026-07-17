@@ -20,6 +20,8 @@ It connects projects, knowledge, tools, Entities and intelligent systems into on
 
 Cosmos is the highest-level domain object.
 
+Every independently addressable visible or interactive element within it uses the universal Object identity and state model.
+
 ---
 
 # Project
@@ -42,6 +44,8 @@ A Project is a logical domain.
 
 It is not limited to a single repository, application or technology.
 
+A Project is an Object whose Project role is expressed by the `Project` System Tag. A System Project is the same Object contract with the additional `System` System Tag; it is not a separate Project class.
+
 ---
 
 # Base
@@ -54,6 +58,8 @@ The Base is independent from the currently active Project.
 
 Its visual appearance is defined by the active Theme.
 
+The Base and its independently interactive elements are Objects with role-specific System Tags and Properties.
+
 ---
 
 # Room
@@ -65,6 +71,8 @@ Each Room provides one or more Workspace Slots.
 Rooms primarily organize the user's working environment.
 
 They do not contain project logic.
+
+A Room is an Object with the `Room` System Tag.
 
 ---
 
@@ -83,6 +91,8 @@ Workspaces define:
 Workspaces are independent from their visual appearance.
 
 Users may freely create, modify and organize Workspaces.
+
+A Workspace definition is an Object with the `Workspace` System Tag. Its active Window and Tool representations remain separate Objects.
 
 ---
 
@@ -127,13 +137,15 @@ System Tools remain task-oriented capabilities.
 
 Core Runtime infrastructure is not a Tool.
 
+A Tool definition is an Object with the `Tool` System Tag. User Tool and System Tool responsibilities are composed through System Tags and capabilities rather than separate identity classes.
+
 ---
 
 # Object
 
-Objects represent meaningful entities inside a Project.
+Object is the universal identity and state model of Cosmos.
 
-An Object is the primary working unit of Cosmos.
+Every independently addressable visible or interactive element is represented by an Object. Reusable definitions such as Themes, Skins and Templates are Objects even when not currently visible.
 
 Objects may reference:
 
@@ -145,17 +157,17 @@ Objects may reference:
 
 Objects remain independent from their visual representation.
 
+Every Object follows `Identity → System Tags → Property Schemas → Properties → User Tags`. Domain concepts such as Project, Node, Workspace, Window, Tool, Theme, Template and Entity are Object roles, not parallel identity systems.
+
 ---
 
 # Node
 
-Nodes are the visual representation of Objects inside Cosmos.
+A Node is an Object with the `Node` System Tag and provides the map representation of an Object role.
 
 Nodes organize Projects spatially.
 
-Nodes never define meaning.
-
-Meaning belongs to the underlying Object.
+The same Object may combine `Node` with tags such as `ProjectRoot`, `Domain`, `Cluster`, `Object` or `Detail`. No separate Node class hierarchy or duplicate semantic identity is created.
 
 ---
 
@@ -224,6 +236,8 @@ Examples:
 
 System Tags are generated and managed by Cosmos.
 
+System Tags compose Object roles, activate capabilities and select the Property Schemas that must be complete for the Object.
+
 ---
 
 ## User Tags
@@ -241,6 +255,8 @@ Examples:
 Users are fully responsible for maintaining their own tagging strategy.
 
 Cosmos may suggest improvements but never changes User Tags automatically.
+
+Grouping, collections and discovery emerge from shared User Tags and queries rather than a dedicated collection model.
 
 ---
 
@@ -311,6 +327,8 @@ Themes may customize:
 
 Themes never change the underlying domain model.
 
+Themes are Objects, but their Theme role is limited to appearance. A Theme represents another Object and never defines its identity, behavior or capabilities.
+
 ---
 
 # Companion
@@ -332,9 +350,12 @@ The Companion never replaces user decisions.
 - Technical implementation is not part of the Domain.
 - Every Project follows the same Domain Model.
 - Meaning belongs to Objects.
-- Nodes visualize Objects.
+- System Tags compose Object roles and activate complete Property Schemas.
+- Nodes are tag-composed Object representations.
 - Knowledge grows continuously.
 - Resources implement Objects.
 - Context is inherited.
 - Entities provide Runtime presence without owning business logic.
+- Themes define appearance only.
+- User Tag collections emerge without a separate grouping system.
 - Everything is designed to be extensible.

@@ -12,6 +12,8 @@ A Project defines meaning.
 
 It does not define implementation.
 
+A Project is a normal Object with the `Project` System Tag. Project responsibilities are activated through the universal Object Model; Project is not a separate identity system.
+
 ---
 
 # Vision
@@ -77,11 +79,11 @@ The structure should reflect understanding rather than file organization.
 
 # Objects
 
-Projects consist of Objects.
+Projects organize Project-owned Objects.
 
 Objects are the primary entities that users create, explore and evolve.
 
-Every Object has exactly one primary Project. It may still be referenced from other Projects through Knowledge and Relationships without duplication.
+Every Project-owned semantic Object has exactly one primary Project. Cosmos-global, System-owned, reusable definition and Runtime-only Objects do not require a primary Project. Any Object may still be referenced from another Project without duplicating identity.
 
 Objects may reference:
 
@@ -140,6 +142,33 @@ A Project may connect to zero, one or multiple repositories.
 Repositories implement parts of the Project Vision.
 
 The Project remains the semantic boundary even when implementation spans several repositories or external systems.
+
+---
+
+# System Projects
+
+A System Project is a normal Project Object with the additional `System` System Tag.
+
+System Projects extend Cosmos itself. They use the same Project lifecycle, Context, Prepared Structures, Workspaces, Tools, permissions and persistence contracts as user Projects.
+
+Version 1 experience provides the Knowledge Workspace, Creation Workspace and Graphics Workspace System Projects. Their purpose differs; their Project architecture does not.
+
+---
+
+# Prepared Structure
+
+Project creation physically creates the complete prepared foundation used by the Experience:
+
+- Knowledge
+- Files
+- Themes
+- Workspaces
+- Templates
+- Extensions
+
+These Project-managed areas may remain empty. They mirror the real Cosmos structure and do not reorganize or claim ownership of native repository Resources.
+
+Prepared Structures expand with validated structural Objects and active System Tag schemas. They are never virtual placeholders or lazily invented Ghost Structures.
 
 # Runtime
 
@@ -214,7 +243,7 @@ Projects are designed to grow.
 
 Future extensions may introduce:
 
-- additional Object types
+- additional System Tag and Property Schema combinations
 - new Runtime integrations
 - specialized Workspaces
 - custom Blueprints
@@ -243,3 +272,5 @@ It continuously collects ideas, knowledge, implementation and history until the 
 - Themes never change Project logic.
 - Projects evolve continuously.
 - Projects remain independent from technical implementation.
+- System Projects are normal Projects with the `System` System Tag.
+- Prepared Structures exist physically and may remain unused.

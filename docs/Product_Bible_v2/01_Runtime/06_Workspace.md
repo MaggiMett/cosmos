@@ -4,6 +4,8 @@
 
 A Workspace definition is a persistent, configurable working environment inside Cosmos.
 
+A persistent Workspace definition is an Object with the `Workspace` System Tag. Its active Environment Window, Tool Windows and Tool Instances remain Objects with their own identities and lifetimes.
+
 Workspace Runtime opens temporary active Workspace sessions from those definitions. Workspace sessions provide the multi-window places where users perform work using Tools.
 
 Unlike Projects, Workspaces do not define meaning.
@@ -245,7 +247,7 @@ Reopening the persistent Workspace definition creates a new active session and r
 
 ---
 
-# Theme Behaviour
+# Theme Representation
 
 Themes determine appearance.
 

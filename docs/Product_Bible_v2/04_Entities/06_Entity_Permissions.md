@@ -245,6 +245,7 @@ Business Validation and Execution
 ↓
 
 Result
+```
 
 Preflight may reject an unavailable capability early for feedback. It never authorizes execution.
 

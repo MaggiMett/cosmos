@@ -4,6 +4,8 @@
 
 An Entity is a living Runtime presence inside Cosmos.
 
+Every Entity is an Object with the `Entity` System Tag. Companion, Pet and other Entity roles are composed through additional System Tags and Property Schemas rather than separate identity classes.
+
 Entities provide interaction, personality and visual presence throughout the system.
 
 They transform Cosmos from a collection of software tools into an interactive world.
@@ -14,7 +16,7 @@ Entities exist independently from AI Providers.
 
 # Architectural Position
 
-Entity is a registered Runtime component category.
+Entity is a registered Runtime component category and a role in the universal Object Model.
 
 Entity definitions are discovered through the shared Registry System.
 
@@ -64,17 +66,17 @@ They interact with the Runtime through Runtime Services.
 
 Every Entity possesses:
 
-- immutable ID
+- immutable Object ID, also used as the Entity ID
 - display name
 - Entity Role
 - Runtime Scope
 - Avatar
-- Behavior Profile
+- Behaviour Profile
 - Runtime State
 
 The display name may be customized.
 
-The immutable ID never changes.
+The immutable Object ID never changes. Avatar, Theme, Behaviour, Properties and Runtime State never replace Entity identity.
 
 ---
 
@@ -192,7 +194,7 @@ Interaction associations define social and contextual familiarity.
 
 They do not define ownership.
 
-They are not Version 1 Relationship records. Version 1 Relationships connect exactly two Objects and use only the `Related` type.
+They are not automatically Version 1 Relationship records. Because Entities are Objects, a user may explicitly accept a `Related` Relationship involving an Entity Object. Interaction history and familiarity never create that record silently.
 
 ---
 
@@ -234,7 +236,7 @@ Examples include:
 - ThemeChanged
 - UserReturned
 
-Behavior is event-driven.
+Behaviour is event-driven.
 
 Entities do not constantly poll the Runtime.
 
@@ -368,5 +370,5 @@ Users should experience Cosmos as a living environment where helpful beings natu
 - Entities never own Knowledge.
 - Runtime Services mediate all actions.
 - Themes define appearance.
-- Behavior reacts to Events.
+- Behaviour reacts to Events.
 - Every Entity follows the same Runtime contract.

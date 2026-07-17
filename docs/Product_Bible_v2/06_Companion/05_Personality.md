@@ -276,7 +276,7 @@ If a Personality Profile cannot be loaded:
 
 - a safe default profile is used
 - the Companion remains available
-- Runtime Behavior continues
+- Runtime Behaviour continues
 - user customization is preserved where possible
 
 ---

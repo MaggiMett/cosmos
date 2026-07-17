@@ -155,3 +155,15 @@ Cosmos grows together with its user.
 Projects, Knowledge, Tags and Relationships become more precise over time.
 
 Starting is always more important than being perfect.
+
+---
+
+# 15. One Universal Object Model
+
+Every independently addressable visible or interactive element inside Cosmos is represented by an Object.
+
+System Tags compose Object roles and activate complete Property Schemas. Properties describe state. User Tags describe user-defined meaning and allow collections to emerge without a separate grouping system.
+
+Themes represent Objects and define appearance only. They never define identity, capabilities or behavior.
+
+Future growth should extend Objects, System Tags, Property Schemas, Prepared Structures and Extension Points before introducing another architectural system.

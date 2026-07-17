@@ -280,7 +280,7 @@ Review may offer actions such as:
 - create Object
 - create Relationship
 - add Tag
-- create Blueprint
+- create an explicitly categorized Object Blueprint, Capture Template or Workspace Blueprint
 - request more evidence
 - postpone
 - dismiss

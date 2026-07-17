@@ -51,7 +51,7 @@ A Bundle Definition describes one reusable capability package.
 
 A Bundle Instance represents one active assignment of that definition to one Entity.
 
-No System Tool or Runtime Worker receives a Bundle Instance.
+No System Tool receives a Bundle Instance.
 
 Example:
 
@@ -61,15 +61,17 @@ Conversation Bundle Definition
 ↓
 
 Companion Conversation Bundle Instance
+```
 
 Multiple Entities may use the same Bundle Definition.
 
 Every Entity receives its own Bundle Instance and independent Runtime State.
 
-Bundle Instance Lifecycle
+# Bundle Instance Lifecycle
 
 After its Bundle Definition completes the shared Extension lifecycle, every assigned Bundle Instance follows this lifecycle.
 
+```text
 Assigned
 
 ↓
@@ -99,6 +101,7 @@ Disabled
 ↓
 
 Unloaded
+```
 
 The Runtime controls every transition.
 

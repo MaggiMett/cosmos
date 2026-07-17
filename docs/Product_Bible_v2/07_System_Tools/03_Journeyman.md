@@ -2,37 +2,21 @@
 
 ## Purpose
 
-Journeyman is the primary autonomous Runtime Worker of Cosmos.
+Journeyman is the provider-neutral Cosmos experience for planning, observing, reviewing and completing development work from inside Cosmos.
 
-Its purpose is to execute user-approved work by understanding projects, coordinating Runtime systems and performing structured tasks.
+The registered Journeyman System Tool supplies the orchestration contract behind that experience. Journeyman is not identical to an AI model, coding agent or concrete Provider.
 
-Journeyman transforms plans into completed work.
+Version 1 uses Codex as the first development Provider. Replacing Codex must not change the Journeyman Workspace, task lifecycle, Context model, event presentation, review flow or result storage.
 
 ---
 
 # Architectural Position
 
-Journeyman is a registered System Tool Extension.
+Journeyman is a registered System Tool Extension hosted by the Version 1 Creation Workspace System Project.
 
-Runtime Worker describes Journeyman's execution role; it is not a separate Runtime component category.
+It uses the same Project, Workspace, Tool, Window, Context, Job, Review, Permission, Provider and Runtime Service contracts as every other capability. It introduces no special Project class, provider path, persistence system or task state outside those contracts.
 
-Journeyman performs task-oriented work through Core Runtime contracts and never replaces Runtime Services.
-
-Its skills are capabilities declared through the existing System Tool Extension manifest and dependency contract. Journeyman is not an Entity and never receives an Entity-owned Capability Bundle Instance.
-
----
-
-# Philosophy
-
-Journeyman is not an AI.
-
-Journeyman is not a Provider.
-
-Journeyman is a Runtime Worker.
-
-Artificial Intelligence extends Journeyman's ability to reason and generate work.
-
-The Runtime defines how Journeyman operates.
+The Journeyman experience owns user interaction and orchestration. Provider Runtime independently owns concrete Provider discovery, matching, selection, invocation, monitoring and failover. The selected Provider performs provider-specific execution through its adapter.
 
 ---
 
@@ -40,293 +24,217 @@ The Runtime defines how Journeyman operates.
 
 Journeyman is responsible for:
 
-- understanding assigned work
-- planning execution
-- coordinating Runtime systems
-- requesting reasoning
-- executing approved tasks
-- performing Runtime Translation during approved affected tasks
-- validating results
-- reporting progress
+- receiving the desired outcome and user constraints
+- inheriting the active additive Runtime Context
+- presenting and allowing adjustment of task Context before execution
+- creating a transparent execution plan
+- requesting an authorized development Provider through Provider Runtime
+- exposing progress, questions, errors and results
+- coordinating validation and Review
+- integrating approved physical results through existing Runtime contracts
+- preserving task state independently of any conversation Window
 
-Journeyman never owns project knowledge.
+Journeyman never owns Project Knowledge, concrete Provider policy or Runtime business logic.
 
-Repository Analyzer owns read-only repository analysis. Journeyman consumes its results and owns approved implementation and Runtime Translation; it does not become a second repository analyzer.
-
----
-
-# Runtime Foundation
-
-Journeyman operates on:
-
-- Project Runtime
-- Knowledge Runtime
-- Extension System and System Tool Registry
-- Job Runtime
-- Review Service
-- Provider Runtime
-- Context Builder
-
-Journeyman introduces no special Runtime architecture.
+Repository Analyzer owns triggered read-only repository analysis. Runtime Services own durable Cosmos mutations. Provider Runtime owns Provider execution. Journeyman coordinates these owners into one user experience.
 
 ---
 
-# Worker Model
+# Context
 
-Journeyman behaves as a Runtime Worker.
+Journeyman receives the Job's immutable Context Snapshot and requests a task-specific Context Package from Context Builder.
 
-Every task follows the same lifecycle.
+The Package may include:
+
+- zero, one or multiple assigned Project scopes
+- optional focused or primary Project
+- active Workspace session when applicable
+- relevant Objects and System Tags
+- Knowledge and documentation
+- explicitly categorized Blueprints and Templates
+- Resource and repository references
+- previous Reviews
+- authorized Runtime configuration
+
+Journeyman does not introduce a separate Project selector. Project scope and focus use the normal Cosmos Context mechanics.
+
+Context Builder remains the sole assembler of the authorized Context Package. Later navigation does not mutate the Snapshot of a running task.
+
+---
+
+# Task Lifecycle
+
+Every long-running Journeyman task is a Runtime Job created by the Runtime Service that accepts the user's task Command.
 
 ```text
-Assigned
-
+Requested
 ↓
-
+Context Snapshot
+↓
 Planning
-
 ↓
-
-Context Package Request
-
+Provider Selection
 ↓
-
 Execution
-
 ↓
-
 Validation
-
 ↓
-
 Review
-
 ↓
+Completed or Failed
+```
 
-Completed
+Journeyman never creates or schedules Jobs directly. It requests work through the appropriate Runtime Service and presents Job state from Job Runtime.
 
-Journeyman never skips validation.
+Closing the Journeyman Workspace or a conversation Window never deletes the Job, event history, pending questions, Context reference or Review state.
 
-Context Package Request
+---
 
-Before beginning work Journeyman receives a Context Snapshot and requests a task-specific Context Package from Context Builder.
+# Planning
 
-Context may include:
-
-zero, one or multiple assigned Project scopes
-optional focused or primary Project
-Workspace session when applicable
-Objects
-Knowledge
-Object Blueprints, Capture Templates and Workspace Blueprints relevant to the task
-Resources
-previous Reviews
-Runtime configuration
-
-Journeyman never scans the repository blindly.
-
-Context Builder assembles the Package through existing Runtime Services and Runtime contracts. Journeyman never assembles Context independently.
-
-Planning
-
-Journeyman always creates an execution plan before performing work.
+Journeyman presents a plan before provider execution.
 
 The plan defines:
 
-objective
-required Context
-required System Tool Extension capabilities
-required Providers
-expected outputs
-validation strategy
+- objective
+- authorized Context
+- expected physical outputs
+- required capabilities
+- validation strategy
+- approval boundaries
 
-Plans remain transparent.
+The Provider may refine its own execution plan within these constraints. It may not silently redesign Product Bible or Experience contracts.
 
-System Tool Skills
+---
 
-Journeyman gains abilities through capabilities declared by its System Tool Extension and its declared System Tool Extension dependencies.
+# Provider Sequence
 
-Examples include:
+Journeyman supplies abstract development requirements, preferences and constraints to Provider Runtime.
 
-Repository Assistance
-Code Generation
-Documentation
-Review Assistance
-Refactoring
-Testing
-Migration
-Object Blueprint Generation
+Provider Runtime then:
 
-The shared Extension Validation pipeline validates code-bearing skill implementations, and the System Tool Registry resolves their definitions. Journeyman requests all Runtime work through Runtime Services and never imports another Extension's internals.
+1. selects a compatible concrete Provider;
+2. supplies its selected Provider Profile and authorized Context Package to Prompt Builder;
+3. receives the compiled Provider Request;
+4. invokes and monitors the Provider through its adapter;
+5. performs failover when allowed;
+6. returns a standardized Runtime Result.
 
-Provider Usage
+Journeyman never selects or invokes Codex directly. Codex is one Version 1 Provider implementation behind the stable Provider Runtime interface.
 
-Journeyman may request reasoning from Provider Runtime using abstract capability and reasoning requirements.
+The Provider architecture remains usable by other consumers and does not depend on Journeyman experience state.
 
-Providers may assist with:
+---
 
-planning
-reasoning
-code generation
-summarization
-implementation reasoning
+# Physical Execution and Results
 
-Provider Runtime alone selects, invokes, routes, monitors and fails over concrete Providers. Journeyman coordinates only the reasoning results within its task.
+Development results must exist physically. Conversation text alone is not completion.
 
-Providers never execute Runtime work.
+Authorized results may include:
 
-Repository Work
+- source files
+- documentation
+- tests
+- configuration
+- Theme Components
+- Templates
+- Tools
+- Resource mapping candidates
 
-Repository Runtime supplies repository references, current mapping state and lightweight change signals. When an approved task requires fresh understanding, Repository Analyzer performs the triggered read-only analysis first.
+The Provider adapter performs authorized provider-specific repository operations. Durable Cosmos data, Project metadata, Resource mappings, Object changes and Review Items still pass through their owning Runtime Services.
 
-Journeyman then performs only the approved affected implementation and Runtime Translation. It requests any Resource mapping or Project metadata mutation through the appropriate Runtime Service and never writes mapping Persistence directly.
+Journeyman uses existing Prepared Structures and Extension Points. It does not invent parallel folders when an applicable physical prepared location already exists.
 
-Runtime Translation is a declared Journeyman capability. It is not a separate System Tool identity and never runs continuously.
+No Ghost Results are valid. A task reaches `Completed` only after required physical outputs exist and validation succeeds.
 
-Job Execution
+---
 
-Every assignment becomes a Runtime Job.
+# Runtime Translation
 
-Examples include:
+Runtime Translation is the Journeyman orchestration capability that connects accepted user structure to implementation work during an approved affected task.
 
-implement feature
-implement approved repository changes
-generate documentation
-refactor module
-execute migration
-create Object Blueprint through Object Service
+It is not a separate System Tool or Provider category. Repository Analyzer supplies read-only analysis, the selected development Provider performs authorized implementation, and Runtime Services commit Cosmos-owned mutations.
 
-Jobs remain observable throughout execution.
+Runtime Translation never runs continuously.
 
-Validation
+---
 
-Journeyman validates every completed task.
+# Visibility and Questions
+
+The Journeyman experience presents:
+
+- current state
+- completed and active plan steps
+- provider activity at an appropriate abstraction level
+- pending questions
+- errors
+- validation and test results
+- changed files and Objects
+- final outcome
+
+When work can continue safely, it continues. A material user decision becomes a focused question or Review Item through Review Service. Non-critical attention uses Companion Notifications.
+
+---
+
+# Validation and Review
 
 Validation may include:
 
-tests
-static analysis
-repository consistency
-Extension validation
-architecture validation
-review generation
+- tests
+- static analysis
+- repository consistency
+- Extension Validation
+- architecture checks
+- confirmation that physical outputs exist
 
-Invalid work never becomes completed automatically.
+Journeyman submits a structured Review candidate to Review Service. Review Service alone creates and owns the Review Item, decision history and state transitions.
 
-Review
+Invalid or incomplete work never becomes completed automatically.
 
-After execution Journeyman prepares a structured Review candidate and submits it to Review Service. Review Service creates and owns any resulting Review Item.
+---
 
-Review may include:
+# User Control
 
-summary
-modified Objects
-generated files
-warnings
-recommendations
-follow-up opportunities
+Users may start, pause, continue, cancel, review, reject or revise a Journeyman task through existing Job and Review contracts.
 
-Users always understand what changed.
+Destructive operations, permission expansion, architecture changes and other material scope changes require explicit approval.
 
-User Approval
+Autonomy reduces repetitive work without removing user ownership.
 
-Journeyman never performs destructive work without explicit user approval.
+---
 
-Examples include:
+# AI and Provider Independence
 
-deleting files
-migrations
-repository restructuring
-data removal
+Without an available development Provider, Journeyman may still restore tasks, present Context, run deterministic orchestration already supported by Runtime Services and prepare Reviews. Provider-dependent execution remains unavailable and is reported clearly.
 
-Approval remains mandatory.
+Future Providers may be local or remote. All use the same Provider Runtime contract and do not change the Journeyman experience architecture.
 
-Collaboration
+---
 
-Multiple Journeyman Workers may operate simultaneously.
-
-Examples include:
-
-Journeyman A
-
-↓
-
-Implementation
-
-Journeyman B
-
-↓
-
-Documentation
-
-Journeyman C
-
-↓
-
-Testing
-
-Workers coordinate through the Job Runtime.
-
-AI Independence
-
-Without AI Providers Journeyman may still:
-
-execute deterministic workflows
-coordinate Jobs
-validate work
-request processing through Runtime Services
-prepare Reviews
-
-Advanced reasoning becomes unavailable.
-
-Journeyman remains operational.
-
-Failure Handling
+# Failure Handling
 
 If execution fails:
 
-Runtime remains stable
-partial work is isolated
-Jobs report failure
-Review explains the problem
-retry remains possible
+- the Job reports failure
+- partial work remains isolated or recoverable
+- existing Cosmos state remains valid
+- the error and affected outputs are visible
+- retry or revision remains possible
+- Review records any user decision required
 
-Failure never corrupts the Project.
+Failure never silently publishes partial work as a completed result.
 
-Extensibility
+---
 
-Future System Tool Extensions may provide Journeyman with new declared skill capabilities.
+# Principles
 
-Examples include:
-
-Unreal Development
-Unity Development
-Blender
-Electronics
-PCB Design
-Documentation
-Localization
-Security Analysis
-Infrastructure
-DevOps
-
-Journeyman gains them through the existing System Tool Extension contract.
-
-Never through Core changes.
-
-Design Goal
-
-Journeyman should become the user's trusted implementation partner.
-
-Rather than acting as a coding assistant, Journeyman should understand goals, prepare structured execution, perform approved work and improve projects over time while remaining fully transparent and controllable.
-
-Principles
-Journeyman is a Runtime Worker.
-Journeyman is not an AI.
-System Tool Extension capabilities define skills.
-Journeyman is the sole owner of Runtime Translation.
-Providers extend reasoning.
-Runtime Services execute work.
-Planning precedes execution.
-Validation precedes completion.
-Review communicates results.
-Users remain in control.
+- Journeyman is the user experience and orchestration layer.
+- Codex is one Version 1 development Provider.
+- Provider Runtime remains independent and authoritative for Provider execution.
+- Context uses the normal additive Snapshot and Package contracts.
+- Runtime Services create Jobs and own durable mutations.
+- Results must exist physically.
+- Prepared Structures and Extension Points are reused.
+- Validation precedes completion.
+- Review Service owns Review Items.
+- Users remain in control.

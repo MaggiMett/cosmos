@@ -4,6 +4,8 @@
 
 A Room represents a physical area inside the Base.
 
+A Room is an Object with the `Room` System Tag. Doors and Workspace Objects are separate Objects; Themes only represent their appearance.
+
 Rooms organize the user's home into meaningful spaces while providing places for one or more Workspaces.
 
 Rooms exist for organization, immersion and future expansion.

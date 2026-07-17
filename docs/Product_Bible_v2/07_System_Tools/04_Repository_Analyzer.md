@@ -32,7 +32,7 @@ Analysis should be repeatable.
 
 The Repository Analyzer observes.
 
-Journeyman performs work.
+Journeyman orchestrates approved work through the selected development Provider.
 
 ---
 
@@ -137,7 +137,7 @@ The repository itself remains unchanged.
 The Analyzer first determines:
 
 - project root
-- project type
+- Project System Tag and Property Schema candidates
 - workspace layout
 - build system
 - package managers
@@ -263,7 +263,7 @@ Examples include:
 - zero, one or multiple assigned Project scopes
 - optional focused or primary Project
 - Workspace session at Job creation when applicable
-- active Blueprint
+- active explicitly categorized Object Blueprint, Capture Template or Workspace Blueprint
 - current Review
 
 Context helps prioritize analysis.

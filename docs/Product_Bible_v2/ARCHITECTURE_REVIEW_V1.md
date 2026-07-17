@@ -1,5 +1,7 @@
 # Architecture Review V1
 
+> **Historical record:** Superseded by [`Architecture_Review_V3.md`](../Architecture_Review_V3.md). Findings below describe the earlier corpus and are not current normative requirements or freeze status.
+
 ## Review mandate
 
 This report audits the documented Cosmos architecture for internal consistency and Architecture Freeze V1.0 readiness. The Product Bible was treated as the canonical source. Historical brainstorming and implementation code were not used as architectural authority. The review is conservative: findings identify contract, ownership, dependency, terminology, or traceability problems rather than preferences or redesign opportunities.

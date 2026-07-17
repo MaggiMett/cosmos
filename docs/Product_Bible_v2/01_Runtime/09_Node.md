@@ -2,220 +2,151 @@
 
 ## Purpose
 
-Nodes are the visual representation of Objects inside Cosmos.
+A Node is an Object with the `Node` System Tag that provides the universal map representation inside Cosmos.
 
-They provide a spatial interface for exploring Projects and navigating relationships.
-
-Nodes never contain business logic.
-
-They exist purely to visualize the underlying domain.
+Node is a role in the universal Object Model, not a separate wrapper class or identity system.
 
 ---
 
 # Philosophy
 
-Objects represent meaning.
+Objects retain one identity while representation changes.
 
-Nodes represent Objects.
+The same Object may combine `Node` with other System Tags such as:
 
-Changing the appearance of a Node never changes the underlying Object.
+```text
+Node + ProjectRoot
+Node + Domain
+Node + Cluster
+Node + Object
+Node + Detail
+```
 
-Multiple Node styles may represent the same Object without affecting its identity.
+These combinations activate the required Node and role-specific Property Schemas. They do not select mutually exclusive Node classes.
 
 ---
 
 # Responsibilities
 
-Nodes are responsible for:
+The Node role is responsible for:
 
-- visualizing Objects
-- supporting navigation
-- displaying relationships
-- providing interaction points
-- preserving spatial orientation
+- spatial position and hierarchy presentation
+- map interaction
+- navigation
+- connection presentation
+- level-of-detail state
+- Theme representation references
 
-Nodes never own Knowledge, Resources or Runtime data.
+Knowledge, Resources and accepted Relationships remain separate domain records referenced by the Object. Node Properties never become a second source of semantic truth.
 
 ---
 
-# Representation
+# Identity and Representation
 
-Every Node represents exactly one Object.
+The Node seen on the Cosmos Map resolves to the immutable ID of the Object carrying the Node role.
 
-An Object may appear as different Node styles depending on:
+Changing Theme, Skin, zoom level, Context or View never creates a new semantic identity.
 
-- Theme
-- Zoom level
-- Context
-- View Mode
-
-The underlying Object always remains identical.
+A Detail Node is still an independent Object. Its structural placement describes how it enriches a parent; it does not make the Detail a property blob or non-Object.
 
 ---
 
 # Interaction
 
-Nodes provide direct interaction with Objects.
+All Node System Tag combinations share one interaction contract:
 
-Examples include:
+- hover
+- selection
+- focus
+- context menu
+- drag and drop
+- opening the represented content
 
-- selecting
-- focusing
-- opening
-- inspecting
-- creating relationships
-- quick actions
+Role-specific actions are resolved from active System Tags and capabilities. Themes do not add or remove actions.
 
-Actions are executed by Tools.
-
-Nodes simply provide access.
+Tools and Runtime Services execute actions. The Node is the interaction origin, not a business-logic owner.
 
 ---
 
 # Hierarchy
 
-Nodes organize Projects visually.
+Node hierarchy is expressed through structural Properties and validated parent-child references.
 
 Examples include:
 
-Project
-
+```text
+ProjectRoot
 ↓
-
-Branch
-
+Domain
 ↓
-
+Cluster
+↓
 Object
-
 ↓
+Detail
+```
 
-Sub Object
-
-Hierarchy is visual.
-
-Meaning belongs to the underlying Objects.
+Structural placement supports orientation. It is not a new Version 1 Relationship type.
 
 ---
 
-# Relationships
+# Connections
 
-Relationships are visualized through Connectors.
+A visible Connection is an Object representation.
 
-Nodes never store relationships themselves.
+Structural Connections visualize validated Node placement. Semantic Connections visualize an accepted `Related` Relationship or a non-persistent discovery candidate.
 
-Relationships are Project-owned domain records whose endpoints are Objects.
+Version 1 still defines only one persistent Relationship type: `Related`. `Structural` and `Semantic` describe Connection provenance and presentation, not additional Relationship types.
 
-Nodes simply display them.
-
----
-
-# Themes
-
-Themes completely control Node appearance.
-
-Examples include:
-
-Galaxy Theme
-
-- glowing stars
-
-Fantasy Theme
-
-- cities
-- castles
-- villages
-
-Modern Theme
-
-- minimalist circles
-
-Cyber Theme
-
-- holographic hubs
-
-Themes never affect functionality.
+Deleting a Connection representation never deletes either endpoint Object. Persisting or deleting an accepted Relationship continues through Relationship Service.
 
 ---
 
-# Skins
+# Themes and Skins
 
-Every Node may use an individual Skin.
+Themes provide Node and Connection appearance only.
 
-Examples include:
+They may change shape, materials, colors, animations, icons and effects. They never change Node identity, hierarchy, interaction, capabilities, Property Schemas or Relationships.
 
-- Project Node
-- Branch Node
-- Object Node
-- System Node
-
-Users may override individual Node Skins independently from the active Theme.
+Skin and Theme selections are explicit Properties or references defined by the active schemas. Missing animation or audio uses complete default values.
 
 ---
 
 # Level of Detail
 
-Nodes adapt to zoom level.
+Level of Detail changes which representations are visible at each zoom level.
 
-Zooming out emphasizes:
+It never changes Object identity or System Tags.
 
-- Projects
-- Branches
-
-Zooming in gradually reveals:
-
-- Objects
-- Relationships
-- Labels
-- Details
-
-The user should never lose orientation.
+Zooming out emphasizes Projects and Domains. Zooming in may reveal Clusters, Objects, Details, accepted Relationships and discovery candidates.
 
 ---
 
-# Runtime
+# Runtime and Persistence
 
-Nodes possess no domain or business state.
+Persistent Node Properties include validated spatial and hierarchy state when required by the active schema.
 
-Spatial presentation state such as position, pinned layout, collapsed detail and individual Skin override may be persisted separately as Project view state.
+Transient render data remains Runtime state. The Runtime may reconstruct it from Object identity, Properties, Context and Theme configuration.
 
-The Runtime generates Node representations from Objects and applies the stored view state.
-
-Objects remain the single source of truth for meaning.
+Object Service owns durable Node Object mutations. Relationship Service owns durable accepted Relationships. Themes remain presentation-only.
 
 ---
 
 # Extensibility
 
-Future Extensions may introduce:
+Future Node capabilities should use additional System Tag combinations, composed Property Schemas, complete Properties, Extension Points and Theme Components for appearance.
 
-- new Node styles
-- additional interaction methods
-- alternative visualizations
-- custom animations
-- specialized layouts
-
-Every extension should continue visualizing existing Objects instead of replacing them.
-
----
-
-# Design Goal
-
-Nodes should help users understand complex Projects through spatial organization.
-
-They should make relationships visible without exposing technical implementation.
-
-Users should feel like they are exploring a living universe rather than browsing folders.
+They must not create another Node class hierarchy or duplicate Object identity.
 
 ---
 
 # Principles
 
-- Nodes visualize Objects.
-- Objects own meaning.
-- Nodes never own data.
-- Themes define appearance.
-- Skins customize Nodes.
-- Relationships are Project-owned records between Object endpoints.
-- Navigation always preserves orientation.
-- Every Node remains replaceable.
+- Every Node is an Object.
+- Node roles are composed through System Tags.
+- Identity remains stable across representations.
+- Structural placement is not a Relationship type.
+- Version 1 persistent Relationships use only `Related`.
+- Themes define appearance only.
+- Node Properties are complete and schema-valid.
+- Business changes pass through Runtime Services.

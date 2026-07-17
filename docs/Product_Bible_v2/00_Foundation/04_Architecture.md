@@ -24,6 +24,8 @@ Lower layers never define higher layers.
 
 This creates a stable architecture that remains extensible over time.
 
+Every independently addressable visible or interactive component in these layers uses one universal Object contract. The named components below are System-Tag-activated roles and responsibility boundaries, not competing identity classes.
+
 ---
 
 # Architecture Hierarchy
@@ -71,6 +73,8 @@ Projects organize Objects, Project-owned Relationships and Resource mappings, an
 
 They never duplicate Knowledge.
 
+Projects are Objects with the `Project` System Tag. Projects that extend Cosmos also carry `System`; System Projects remain normal Projects.
+
 ---
 
 # Base
@@ -115,6 +119,8 @@ It never defines what the user works on.
 
 Workspace Runtime opens a temporary active Workspace session from a definition. The session provides the multi-window environment and contains its active Tool Instances.
 
+The persistent Workspace definition, its Runtime Window and its Tool Windows are Objects with distinct identities and appropriate System Tags.
+
 ---
 
 # Tools
@@ -129,13 +135,15 @@ Tools remain independent from Projects and Themes and operate through Runtime Se
 
 Core Runtime infrastructure coordinates Tools but is not itself a Tool.
 
+Tool definitions and addressable Tool Instances use the universal Object model. Tool capabilities are activated by System Tags and schemas, not by a separate Tool identity system.
+
 ---
 
 # Objects
 
-Objects represent meaningful entities.
+Objects provide the universal identity and state model.
 
-Everything with independent meaning inside a Project may become an Object.
+Every independently addressable visible or interactive element is represented by an Object. Reusable Themes, Skins and Templates are Objects even when not currently visible.
 
 Objects connect:
 
@@ -146,6 +154,8 @@ Objects connect:
 - Versions
 
 Objects are the central semantic entity of Cosmos.
+
+Every Object follows `Identity → System Tags → Property Schemas → Properties → User Tags`. System Tags compose roles; required Properties are always complete; User Tags provide user-defined meaning and emergent collections.
 
 ---
 
@@ -182,6 +192,8 @@ System Tags describe structure.
 User Tags describe the user's language and organization.
 
 Together they build contextual understanding without imposing a rigid hierarchy.
+
+System Tags also activate Object capabilities and Property Schemas. User Tags support grouping and discovery without a separate collection architecture.
 
 ---
 
@@ -244,10 +256,14 @@ Examples include:
 - Providers
 - Integrations
 - Entities
+- Structure Templates
+- Prepared Structures and Extension Points
 
 The Core defines contracts.
 
 Extensions provide capabilities.
+
+Future growth should extend Objects, System Tags, Property Schemas, Prepared Structures and Extension Points before creating a parallel system.
 
 ---
 
@@ -255,7 +271,7 @@ Extensions provide capabilities.
 
 Projects organize visions.
 
-Objects organize meaning.
+Objects provide universal identity and state.
 
 Knowledge organizes understanding.
 
@@ -274,6 +290,8 @@ Rooms organize the Base.
 The Base provides a home.
 
 Cosmos connects everything together.
+
+Themes represent these Objects and define appearance only.
 
 ---
 

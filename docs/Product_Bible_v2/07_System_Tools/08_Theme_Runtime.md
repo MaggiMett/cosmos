@@ -38,7 +38,7 @@ The underlying Runtime remains identical.
 
 The Theme Runtime is responsible for:
 
-- Theme registration
+- loading validated Theme definitions from the Theme Registry
 - Theme loading
 - Theme activation
 - resource resolution
@@ -69,6 +69,10 @@ The Theme Runtime provides presentation resources to the entire Cosmos Runtime.
 
 Every Theme follows the same structure.
 
+Themes and user-addressable Theme Components are Objects. `Theme`, `ThemeAddon`, `Skin`, `Animation`, `Audio`, `Node`, `Window`, `Room` and similar System Tag combinations activate their complete presentation Property Schemas.
+
+The Theme Runtime resolves those Objects as representations. It never uses Theme metadata to add behavior, capabilities or business rules to the represented Object.
+
 ```text
 Theme
 
@@ -93,9 +97,9 @@ The Runtime remains independent from Theme implementation.
 
 ---
 
-# Theme Registration
+# Theme Registration Boundary
 
-Every Theme registers through the Extension System.
+Every Theme registers through the Extension System and Theme Registry before Theme Runtime can load it. Theme Runtime does not register or persist Theme definitions.
 
 Registration includes:
 

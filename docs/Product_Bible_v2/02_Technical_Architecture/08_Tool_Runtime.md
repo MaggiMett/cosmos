@@ -96,13 +96,15 @@ Destroyed Tool Instances leave no Runtime state except persistent Tool State.
 During initialization the Runtime:
 
 - resolves the Tool definition
-- validates permissions
+- performs non-authoritative permission grant and availability preflight for activation feedback
 - injects Runtime Services
 - injects Runtime Context
 - restores Tool State
 - subscribes to Events
 
 Only after successful initialization does the Tool become active.
+
+Runtime Services remain the only authoritative permission enforcement boundary for every Command. Tool Runtime preflight never authorizes a business operation.
 
 ---
 

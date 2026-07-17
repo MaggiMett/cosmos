@@ -16,6 +16,8 @@ The Core defines contracts.
 
 Extensions provide capabilities.
 
+New capability should first reuse the universal Object Model through System Tags, composed Property Schemas, complete Properties, Prepared Structures and Extension Points. An Extension category is required only when executable or distributable capability remains after those universal mechanisms are applied.
+
 The Core should never contain project-specific features.
 
 Instead, every new capability should become an Extension whenever possible.
@@ -60,7 +62,7 @@ Runtime Translation is a declared Journeyman capability used for approved affect
 
 ## Entities
 
-Registered Runtime presences with identity, Scope, Role, Avatar and Behavior configuration.
+Registered Runtime presences with identity, Scope, Role, Avatar and Behaviour configuration.
 
 Entity definitions participate in the shared Extension lifecycle and Registry System.
 
@@ -78,7 +80,7 @@ Capability Bundle definitions follow the shared Extension lifecycle. Bundle Runt
 
 ## Themes
 
-Visual replacements for Runtime components.
+Appearance definitions and reusable visual components represented as Objects.
 
 Examples include:
 
@@ -105,7 +107,7 @@ Users may freely customize the resulting Workspaces.
 
 ## Object Blueprints
 
-Reusable definitions for Object structure.
+Reusable definitions for Object System Tag combinations, composed Property Schemas and complete default Properties.
 
 Examples include:
 
@@ -122,6 +124,22 @@ Reusable definitions for structured Capture input.
 Examples include:
 
 - Meeting Notes
+
+---
+
+## Structure Templates Are Objects
+
+Structure Templates are independent `Template + Structure` Objects managed through Object Service and normal Object persistence. They capture Node names, relevant System Tags, complete default Properties and parent-child template references only.
+
+They contain no Project content, Theme customization, assets or external connections. Tag-based queries produce Template collections.
+
+Structure Template is not an Extension category, Blueprint category or Registry category.
+
+---
+
+## System Projects Are Projects
+
+System Projects are normal `Project + System` Objects. They are not Extension packages or a separate Project category. Their Tools and other executable components still follow the applicable Extension contracts.
 
 ---
 

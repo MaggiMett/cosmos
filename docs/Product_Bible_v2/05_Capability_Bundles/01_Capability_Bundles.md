@@ -86,11 +86,12 @@ Capability Bundles:
 - Review Assistance
 - Suggestions
 - Journeyman Coordination
+```
 The Entity remains one Runtime Entity.
 
 Bundles only extend what it may do.
 
-System Tools and Runtime Worker roles do not receive Bundle Instances. Their capabilities use the existing System Tool Extension contract.
+System Tools do not receive Bundle Instances. Their capabilities use the existing System Tool Extension contract.
 
 Role Compatibility
 

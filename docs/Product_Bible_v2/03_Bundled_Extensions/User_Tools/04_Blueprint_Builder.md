@@ -79,7 +79,7 @@ Blueprint Builder keeps drafts and presents validation feedback. It never persis
 
 # Object Blueprint
 
-An Object Blueprint defines the structure of an Object Type.
+An Object Blueprint defines a reusable System Tag combination, composed Property Schema and complete default Properties for one Object.
 
 Examples include:
 
@@ -93,23 +93,33 @@ Examples include:
 
 Object Blueprints define expectations.
 
+An Object Blueprint is itself an independent Object with `Blueprint + Object` System Tags. Its identity is distinct from every Object instantiated from it. Registry indexing does not create a separate Blueprint identity system.
+
+Object Blueprints do not capture parent-child Node hierarchies. Reusable hierarchy belongs to independent `Template + Structure` Objects.
+
 Global Object Blueprints never contain project-specific information. Project-scoped Object Blueprints may define Project-specific structure, but Object content remains outside the definition.
 
 ---
 
 # Object Blueprint Components
 
-An Object Blueprint may define:
+An Object Blueprint always defines:
 
 - title
 - description
-- default Tags
-- fields
+- required System Tags
+- Property Schema fields and constraints
+- complete default Properties
+- validation rules
+
+It may additionally define:
+
+- suggested User Tags
 - sections
 - expected `Related` Relationship suggestions
 - Resource references
-- child Objects
-- validation rules
+
+Parent-child Node hierarchies never belong to an Object Blueprint. Structure Template Objects own reusable hierarchy.
 
 Projects may extend these definitions.
 
@@ -117,7 +127,7 @@ Projects may extend these definitions.
 
 # Object Blueprint Fields
 
-Fields describe information expected for an Object.
+Fields define Properties required by the composed Object schema.
 
 Examples include:
 
@@ -140,6 +150,8 @@ Fields may be:
 
 Future field types may be introduced through Extensions.
 
+Every active field must contain a valid value when the Object is created. A capability that is not used is represented by an explicit schema default rather than an omitted or optional Property.
+
 ---
 
 # Object Blueprint Tags
@@ -148,7 +160,7 @@ Object Blueprints automatically assign default System Tags.
 
 They may also suggest User Tags.
 
-Users remain free to modify User Tags after Object creation.
+User Tags are applied only through an explicit user choice or an explicitly tagged creation action. Users remain free to modify them after Object creation.
 
 ---
 

@@ -8,6 +8,8 @@ It is responsible for loading, activating, reflecting committed Project changes 
 
 The Project Runtime is the bridge between persistent Project data and the active Runtime.
 
+Every loaded Project is an Object with the `Project` System Tag. The additional `System` tag changes purpose and activated schemas, not Project lifecycle or identity.
+
 ---
 
 # Philosophy
@@ -83,8 +85,11 @@ Loading a Project includes:
 - restoring Relationships
 - restoring Workspace references
 - restoring Context
+- verifying that committed Prepared Structure records resolve to physically existing Project-managed locations
 
 Loading never modifies Project content.
+
+Missing physical Prepared Structures are a recovery condition, not permission to expose virtual folders. Recovery must restore or explicitly fail the Project before activation.
 
 ---
 
@@ -97,6 +102,7 @@ During initialization the Runtime:
 - restores Context
 - prepares Runtime Services
 - registers active Objects
+- validates complete Properties for every active Project System Tag schema
 
 The Project becomes available only after successful initialization.
 
@@ -172,7 +178,7 @@ Repository Runtime coordinates:
 - lightweight availability, file-change, branch-change and health signals
 - current mapping and repository state views
 
-Repository Analyzer performs triggered read-only analysis. Journeyman performs Runtime Translation and approved implementation during affected tasks. Project Service persists repository references and Project metadata, while Resource Service persists Project-owned Resource mapping changes through the canonical Service pipeline.
+Repository Analyzer performs triggered read-only analysis. Journeyman orchestrates Runtime Translation and approved implementation through the selected development Provider during affected tasks. Project Service persists repository references and Project metadata, while Resource Service persists Project-owned Resource mapping changes through the canonical Service pipeline.
 
 ---
 

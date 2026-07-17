@@ -170,7 +170,7 @@ Repository Analyzer performs the triggered, read-only analysis of:
 - naming conventions
 - dependencies
 
-Accepted Project-owned mappings then connect Resources to existing or newly created Objects through Resource Service and Persistence. Journeyman performs only approved affected implementation or Runtime Translation work. The native assets remain owned by their repository or external source.
+Accepted Project-owned mappings then connect Resources to existing or newly created Objects through Resource Service and Persistence. Journeyman orchestrates only approved affected implementation or Runtime Translation work; the selected development Provider performs provider-specific execution. The native assets remain owned by their repository or external source.
 
 ---
 

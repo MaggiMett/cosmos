@@ -40,7 +40,7 @@ The Analysis Engine is responsible for:
 - detecting duplicate information
 - identifying emerging Objects
 - recognizing repeated patterns
-- suggesting Blueprint opportunities
+- suggesting Object Blueprint or Structure Template opportunities
 - clustering related Knowledge
 - improving Tag organization
 - preparing mature Review candidates
@@ -77,7 +77,8 @@ It may observe:
 - Relationships
 - Tags
 - Resources
-- Blueprints
+- explicitly categorized Object Blueprints, Capture Templates and Workspace Blueprints
+- Structure Template Objects
 - Projects
 
 Analysis is continuous.
@@ -145,7 +146,7 @@ Examples include:
 - repeated Tags
 - repeated wording
 - repeated structures
-- recurring Object types
+- recurring Object System Tag and Property Schema combinations
 - similar Blueprints
 - recurring workflows
 
@@ -193,9 +194,9 @@ They are never forced.
 
 ---
 
-# Blueprint Discovery
+# Object Blueprint and Structure Template Discovery
 
-Repeated Object structures may justify a Blueprint.
+Repeated Property structures may justify an Object Blueprint. Repeated parent-child Node hierarchies may justify independent Structure Template Objects.
 
 Example:
 
@@ -207,13 +208,13 @@ same field structure
 
 ↓
 
-Blueprint suggestion
+Categorized Object Blueprint or Structure Template suggestion
 
 ↓
 
 Review
 
-Blueprints emerge from experience.
+Object Blueprints and Structure Templates emerge from experience without sharing an identity or storage model.
 
 ---
 
@@ -292,7 +293,7 @@ Examples include:
 - zero, one or multiple assigned Project scopes
 - optional focused or primary Project
 - Workspace session at Job creation when applicable
-- Blueprint scope
+- explicit Object Blueprint, Capture Template, Workspace Blueprint or Structure Template scope
 - inherited System Tags
 
 Context improves interpretation.

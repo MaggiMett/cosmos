@@ -83,6 +83,7 @@ Suspended
 ↓
 
 Unloaded
+```
 The Runtime controls every transition.
 
 Entities never activate themselves.
@@ -93,10 +94,10 @@ Before an Entity may enter the Runtime, it must be registered.
 
 Registration resolves:
 
-immutable Entity ID
+immutable Object ID used as the Entity ID
 Entity Role
 Runtime Scope
-Behavior Profile
+Behaviour Profile
 Avatar definition
 Permissions
 dependencies
@@ -113,7 +114,7 @@ resolves Avatar and Skin
 restores Runtime State
 resolves Scope
 subscribes to permitted Events
-loads Behavior Rules
+loads Behaviour Rules
 preflights declared Permissions for activation feedback
 
 Only successfully initialized Entities become active.
@@ -209,9 +210,9 @@ Invalid transitions are rejected.
 
 One Entity should never exist in conflicting primary States simultaneously.
 
-Behavior Rules
+Behaviour Rules
 
-Behavior Rules define how an Entity reacts without AI.
+Behaviour Rules define how an Entity reacts without AI.
 
 A Rule contains:
 
@@ -267,11 +268,11 @@ Initial priorities include:
 Ambient
 Normal
 Important
-Blocking
+Critical
 
 Ambient Behaviour may be interrupted.
 
-Blocking Runtime actions may not be interrupted without explicit cancellation.
+Critical Runtime actions may not be interrupted without explicit cancellation.
 
 Cooldowns
 
@@ -505,7 +506,7 @@ position
 Runtime Scope
 selected Avatar
 Personality Profile
-Behavior configuration
+Behaviour configuration
 authorized interaction familiarity data
 last active State
 
@@ -558,7 +559,7 @@ Future extensions may introduce:
 
 new Entity Roles
 new States
-new Behavior Rules
+new Behaviour Rules
 new movement systems
 collaborative Entities
 advanced Entity interactions

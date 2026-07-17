@@ -222,7 +222,7 @@ Examples include:
 - assigned Project scopes
 - optional default focused or primary Project
 - preferred Tags
-- active Object types
+- active Object System Tag combinations
 - default filters
 
 Context remains inherited from the Runtime.

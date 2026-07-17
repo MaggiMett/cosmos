@@ -204,7 +204,7 @@ Examples include:
 - active Workspace
 - active Object
 - inherited System Tags
-- inherited User Tags
+- inherited User Tags as non-persistent suggestions
 
 Users should rarely assign Context manually.
 
@@ -214,7 +214,7 @@ Users should rarely assign Context manually.
 
 Capture automatically receives inherited System Tags.
 
-Suggested User Tags may also be generated.
+Suggested User Tags may also be generated, but Capture never persists them without explicit user choice or an explicitly tagged Template action.
 
 Users remain free to modify or remove suggested User Tags.
 

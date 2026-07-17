@@ -340,7 +340,7 @@ first meeting
 
 introduction
 
-This familiarity is not a Version 1 Relationship record. Version 1 Relationship endpoints are Objects, not Entities. Interaction history remains separate from Behavior Rules.
+This familiarity is not automatically a Version 1 Relationship record. Entities are Objects and may therefore participate in an explicitly accepted `Related` Relationship, but interaction history never creates one silently. Interaction history remains separate from Behaviour Rules.
 
 ---
 
