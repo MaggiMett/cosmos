@@ -1,8 +1,6 @@
 # Cosmos
 
-Cosmos is a new implementation of the personal operating system defined by `Product_Bible_V2`, `Experience_V1`, and `Architecture_Review_V3`.
-
-Sprint 5 adds the five Version 1 core Tools on the universal Workspace, Tool Runtime, Runtime Service, Job, Provider, Object, and Persistence foundations.
+Cosmos is the Version 1 implementation of the personal operating system defined by `Product_Bible_V2`, `Experience_V1`, and `Architecture_Review_V3`.
 
 ## Repository map
 
@@ -44,9 +42,9 @@ pnpm --dir frontend dev
 
 The development server is available at `http://127.0.0.1:5173` and proxies `/api` to the backend at `http://127.0.0.1:8000`. The Docker Compose configuration provides the same application and backend pairing.
 
-The backend exposes `/health`, `/ready`, and the Runtime Service-backed Cosmos Map API. The frontend waits for readiness before activating the spatial application routes.
+The backend exposes `/health`, `/ready`, and the Runtime Service-backed API. The frontend waits for readiness before activating the spatial application routes.
 
-## Sprint 5 runtime
+## Version 1 runtime
 
 The runnable implementation provides:
 
@@ -76,8 +74,22 @@ The runnable implementation provides:
 - Capture modes, attachments, recoverable Workspace drafts, immutable original source, and asynchronous Knowledge processing
 - Review queues with evidence, confidence, explicit available actions, and durable decision history
 - Journeyman as an independent planning and development-assistance Tool Window, routed through Provider Runtime when an eligible Provider is active
+- universal Object selection, Context Menus, Object Windows, inline Object editing and schema-owned User Tags
+- Companion-owned Notifications for completed and failed background Jobs, including destination Object opening and read state
+- Runtime-injected Cosmos, Room, Workspace, Tool and selected Object Context with Project-scope enforcement
+- reusable Dialog, Context Menu, Notification and Object Window presentations following the Cosmos visual language
 
 Journeyman and Companion remain separate Objects and experience concepts. Companion is the global Entity; Journeyman is an independent Tool inside the Creation Workspace.
+
+## Local container runtime
+
+Build and run the release containers from the repository root:
+
+```text
+docker compose -f docker/compose.yaml up --build
+```
+
+The frontend is available at `http://127.0.0.1:5173`. Compose waits for backend readiness before starting the frontend, and durable Runtime data is stored in the `cosmos-runtime` volume.
 
 ## Architectural authority
 
