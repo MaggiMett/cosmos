@@ -1,5 +1,6 @@
 <template>
   <span class="companion-avatar" :class="`companion-avatar--${mode}`" aria-hidden="true">
+    <span v-if="notificationAvailable" class="companion-avatar__notification">!</span>
     <span v-if="mode === 'seated'" class="companion-avatar__body">
       <i class="companion-avatar__arm companion-avatar__arm--left" />
       <i class="companion-avatar__arm companion-avatar__arm--right" />
@@ -21,7 +22,10 @@
 </template>
 
 <script setup lang="ts">
-withDefaults(defineProps<{ mode?: "compact" | "seated" }>(), { mode: "compact" });
+withDefaults(
+  defineProps<{ mode?: "compact" | "seated"; notificationAvailable?: boolean }>(),
+  { mode: "compact", notificationAvailable: false },
+);
 </script>
 
 <style scoped>
@@ -30,6 +34,25 @@ withDefaults(defineProps<{ mode?: "compact" | "seated" }>(), { mode: "compact" }
   display: block;
   width: 100%;
   height: 100%;
+}
+
+.companion-avatar__notification {
+  position: absolute;
+  z-index: 8;
+  top: -2%;
+  right: 2%;
+  display: grid;
+  width: 22%;
+  min-width: 16px;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid rgba(224, 242, 254, 0.66);
+  border-radius: 50%;
+  background: #172033;
+  box-shadow: 0 0 12px rgba(125, 211, 252, 0.62);
+  color: #7dd3fc;
+  font-size: clamp(0.58rem, 42%, 0.8rem);
+  font-weight: 800;
 }
 
 .companion-avatar__helmet {

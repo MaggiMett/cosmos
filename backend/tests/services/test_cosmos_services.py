@@ -5,7 +5,13 @@ from cosmos.bootstrap import CosmosRuntime
 from cosmos.config import RuntimeSettings
 from cosmos.domain import ObjectIdentity
 from cosmos.runtime import RuntimeContext
-from cosmos.services import PREPARED_AREAS, CreateObjectCommand, CreateProjectCommand
+from cosmos.services import (
+    PREPARED_AREAS,
+    CreateNotificationCommand,
+    CreateObjectCommand,
+    CreateProjectCommand,
+    RuntimeServiceError,
+)
 
 
 def owner_context() -> RuntimeContext:
@@ -24,6 +30,10 @@ def owner_context() -> RuntimeContext:
                 "tools.write",
                 "workspaces.read",
                 "workspaces.write",
+                "tags.read",
+                "tags.write",
+                "notifications.read",
+                "notifications.write",
             }
         )
     )
@@ -200,3 +210,85 @@ def test_workspace_sessions_restore_contained_tool_instances_and_layout(tmp_path
     assert restored["environmentWindow"]["role"] == "workspace_environment"
     assert restored_tool["instanceId"] == record["instanceId"]
     assert restored_tool["bounds"] == {"x": 180.0, "y": 110.0, "width": 560.0, "height": 440.0}
+
+
+def test_object_interaction_tags_selection_collisions_and_notifications_use_runtime_services(
+    tmp_path: Path,
+) -> None:
+    runtime = CosmosRuntime.build(RuntimeSettings(runtime_path=tmp_path / "Runtime", port=0))
+    runtime.initialize()
+    context = owner_context()
+    projects = runtime.objects.list(context, system_tag="Project")
+    selected = projects[0]
+
+    updated = runtime.object_interactions.update(
+        selected.identity.object_id,
+        {
+            "displayName": "Knowledge Constellation",
+            "description": "An edited Project Object.",
+            "userTags": ["Reference", "Long term"],
+            "properties": {
+                "vision": "Keep verified knowledge connected.",
+                "project_color": "#38bdf8",
+                "skin": "Star",
+            },
+        },
+        context,
+    )
+    runtime.cosmos_map.select(selected.identity.object_id, context)
+    notification = runtime.notifications.create(
+        CreateNotificationCommand(
+            title="Project updated",
+            message="The Project Object was saved.",
+            category="Projects",
+            source_object_id=selected.identity.object_id,
+            destination_object_id=selected.identity.object_id,
+            primary_project_id=selected.identity.object_id,
+        ),
+        context,
+    )
+
+    assert updated["displayName"] == "Knowledge Constellation"
+    assert updated["userTags"] == ["Long term", "Reference"]
+    assert {action["id"] for action in updated["actions"]} == {
+        "open",
+        "appearance",
+        "connections",
+        "configuration",
+    }
+    assert runtime.cosmos_map.snapshot(context)["selectedObjectId"] == selected.identity.object_id
+    assert runtime.companion.get_default(context).properties["notification_available"] is True
+    assert runtime.notifications.list(context)[0]["destinationObjectId"] == selected.identity.object_id
+
+    runtime.notifications.mark_read(notification.identity.object_id, True, context)
+    assert runtime.companion.get_default(context).properties["notification_available"] is False
+
+    try:
+        runtime.object_interactions.update(
+            selected.identity.object_id,
+            {
+                "displayName": "Must Not Persist",
+                "properties": {"vision": 42},
+            },
+            context,
+        )
+    except RuntimeServiceError as error:
+        assert error.code == "validation_failed"
+    else:
+        raise AssertionError("Invalid Object Property values must be rejected.")
+    assert (
+        runtime.objects.get(selected.identity.object_id, context).identity.display_name
+        == "Knowledge Constellation"
+    )
+
+    try:
+        runtime.cosmos_map.move_node(
+            selected.identity.object_id,
+            float(projects[1].properties["position_x"]),
+            float(projects[1].properties["position_y"]),
+            context,
+        )
+    except RuntimeServiceError as error:
+        assert error.code == "node_position_conflict"
+    else:
+        raise AssertionError("Overlapping Nodes must be rejected by CosmosMapService.")

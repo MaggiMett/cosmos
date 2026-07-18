@@ -234,6 +234,10 @@ Version 1 boundaries:
 
 Object Interaction
 
+Status:
+
+Completed
+
 Goals:
 
 - object windows

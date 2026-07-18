@@ -57,6 +57,21 @@ async def update_camera(request: Request) -> JSONResponse:
         return _service_error(error)
 
 
+async def update_selection(request: Request) -> JSONResponse:
+    try:
+        payload = await _json_object(request)
+        object_id = payload.get("objectId")
+        if object_id is not None and not isinstance(object_id, str):
+            raise RuntimeServiceError("validation_failed", "objectId must be a string or null.")
+        selected = request.app.state.runtime.cosmos_map.select(
+            object_id,
+            _local_owner_context(),
+        )
+        return JSONResponse({"objectId": selected})
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
 async def move_node(request: Request) -> JSONResponse:
     try:
         payload = await _json_object(request)
@@ -91,6 +106,53 @@ async def companion_message(request: Request) -> JSONResponse:
             context = _local_owner_context((focused,), focused)
         reply = request.app.state.runtime.companion.reply(message, context)
         return JSONResponse({"message": reply.message, "mode": reply.mode})
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
+async def object_details(request: Request) -> JSONResponse:
+    try:
+        service = request.app.state.runtime.object_interactions
+        object_id = request.path_params["object_id"]
+        context = _local_owner_context()
+        if request.method == "GET":
+            return JSONResponse(service.inspect(object_id, context))
+        return JSONResponse(service.update(object_id, await _json_object(request), context))
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
+async def object_actions(request: Request) -> JSONResponse:
+    try:
+        return JSONResponse(
+            request.app.state.runtime.object_interactions.actions(
+                request.path_params["object_id"], _local_owner_context()
+            )
+        )
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
+async def notifications(request: Request) -> JSONResponse:
+    try:
+        return JSONResponse(request.app.state.runtime.notifications.list(_local_owner_context()))
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
+async def notification(request: Request) -> JSONResponse:
+    try:
+        payload = await _json_object(request)
+        read = payload.get("read")
+        if not isinstance(read, bool):
+            raise RuntimeServiceError("validation_failed", "read must be a boolean.")
+        return JSONResponse(
+            request.app.state.runtime.notifications.mark_read(
+                request.path_params["notification_id"],
+                read,
+                _local_owner_context(),
+            )
+        )
     except RuntimeServiceError as error:
         return _service_error(error)
 
@@ -403,8 +465,13 @@ def create_app(
             Route("/cosmos/map", cosmos_map),
             Route("/base", base_snapshot),
             Route("/cosmos/camera", update_camera, methods=["PUT"]),
+            Route("/cosmos/selection", update_selection, methods=["PUT"]),
             Route("/objects/{object_id:str}/position", move_node, methods=["PUT"]),
+            Route("/objects/{object_id:str}", object_details, methods=["GET", "PUT"]),
+            Route("/objects/{object_id:str}/actions", object_actions),
             Route("/companion/messages", companion_message, methods=["POST"]),
+            Route("/notifications", notifications),
+            Route("/notifications/{notification_id:str}", notification, methods=["PUT"]),
             Route("/tools", tool_definitions),
             Route("/workspaces/{workspace_id:str}", workspace_definition),
             Route("/workspaces/{workspace_id:str}/sessions", open_workspace, methods=["POST"]),
@@ -503,6 +570,8 @@ def _local_owner_context(
             {
                 "objects.read",
                 "objects.write",
+                "tags.read",
+                "tags.write",
                 "projects.read",
                 "projects.write",
                 "relationships.read",
@@ -525,6 +594,8 @@ def _local_owner_context(
                 "jobs.write",
                 "journeyman.read",
                 "journeyman.write",
+                "notifications.read",
+                "notifications.write",
             }
         ),
     )

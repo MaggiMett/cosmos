@@ -34,7 +34,7 @@ export interface BaseSnapshot {
   rooms: BaseRoom[];
   door: BaseObjectSummary & { roomAId: string; roomBId: string };
   cockpit: BaseObjectSummary & { roomId: string };
-  companion: BaseObjectSummary;
+  companion: BaseObjectSummary & { notificationAvailable: boolean };
   pet: BaseObjectSummary;
   unassignedWorkspaces: BaseWorkspace[];
 }
@@ -87,5 +87,11 @@ export class BaseRuntime {
 
   select(objectId: string | null): void {
     this.mutableState.selectedObjectId = objectId;
+  }
+
+  setNotificationAvailable(available: boolean): void {
+    if (this.mutableState.snapshot) {
+      this.mutableState.snapshot.companion.notificationAvailable = available;
+    }
   }
 }

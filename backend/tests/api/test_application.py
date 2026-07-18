@@ -121,3 +121,36 @@ def test_core_tool_api_is_session_scoped_and_journeyman_is_its_own_tool(tmp_path
     assert journey.status_code == 201
     assert journey.json()["task_state"] == "awaiting_provider"
     assert "Companion" not in journey.json()["systemTags"]
+
+
+def test_object_interaction_api_persists_selection_metadata_tags_and_properties(tmp_path: Path) -> None:
+    settings = RuntimeSettings(runtime_path=tmp_path / "Runtime", port=0)
+
+    with TestClient(create_app(settings)) as client:
+        selected = client.put(
+            "/cosmos/selection",
+            json={"objectId": "cosmos.project.system.knowledge"},
+        )
+        details = client.get("/objects/cosmos.project.system.knowledge")
+        updated = client.put(
+            "/objects/cosmos.project.system.knowledge",
+            json={
+                "displayName": "Knowledge Constellation",
+                "description": "Edited through the Object Window contract.",
+                "userTags": ["Reference"],
+                "properties": {
+                    "vision": "A connected source of truth.",
+                    "project_color": "#38bdf8",
+                    "skin": "Star",
+                },
+            },
+        )
+        snapshot = client.get("/cosmos/map")
+        notifications = client.get("/notifications")
+
+    assert selected.json() == {"objectId": "cosmos.project.system.knowledge"}
+    assert details.status_code == 200
+    assert updated.json()["userTags"] == ["Reference"]
+    assert updated.json()["properties"]["vision"] == "A connected source of truth."
+    assert snapshot.json()["selectedObjectId"] == "cosmos.project.system.knowledge"
+    assert notifications.json() == []

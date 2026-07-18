@@ -35,7 +35,10 @@ const snapshot: BaseSnapshot = {
     ...summary("cosmos.base.cockpit", "Cockpit", ["Cockpit"]),
     roomId: "cosmos.room.main",
   },
-  companion: summary("cosmos.entity.companion", "Companion", ["Companion"]),
+  companion: {
+    ...summary("cosmos.entity.companion", "Companion", ["Companion"]),
+    notificationAvailable: false,
+  },
   pet: summary("cosmos.entity.pet", "Base Pet", ["Pet"]),
   unassignedWorkspaces: [],
 };

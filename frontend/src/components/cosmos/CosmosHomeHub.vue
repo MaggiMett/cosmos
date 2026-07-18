@@ -1,7 +1,7 @@
 <template>
   <div class="home-hub" aria-label="Cosmos home">
     <button class="companion-object" type="button" aria-label="Talk to Companion" @click="$emit('companion')">
-      <CompanionAvatar />
+      <CompanionAvatar :notification-available="notificationAvailable" />
       <span class="home-hub__label">Companion</span>
     </button>
 
@@ -22,6 +22,7 @@
 <script setup lang="ts">
 import CompanionAvatar from "../entities/CompanionAvatar.vue";
 
+withDefaults(defineProps<{ notificationAvailable?: boolean }>(), { notificationAvailable: false });
 defineEmits<{ companion: []; ship: [] }>();
 </script>
 

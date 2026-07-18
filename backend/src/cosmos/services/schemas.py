@@ -275,4 +275,19 @@ def create_version_one_object_contract() -> ObjectContract:
             ),
         ),
     )
+    contract.register_system_tag(
+        "Notification",
+        PropertySchema(
+            "cosmos.schema.notification",
+            1,
+            (
+                PropertyDefinition("message", PropertyKind.STRING, ""),
+                PropertyDefinition("category", PropertyKind.STRING, "System"),
+                PropertyDefinition("source_object_id", PropertyKind.STRING, ""),
+                PropertyDefinition("destination_object_id", PropertyKind.STRING, ""),
+                PropertyDefinition("read", PropertyKind.BOOLEAN, False),
+                PropertyDefinition("created_at", PropertyKind.STRING, ""),
+            ),
+        ),
+    )
     return contract

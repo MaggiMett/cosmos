@@ -77,6 +77,8 @@
             :aria-pressed="state.selectedObjectId === node.objectId"
             @pointerdown.stop="startNodeDrag($event, node)"
             @click="activateNode($event, node)"
+            @dblclick.stop="openNode(node.objectId)"
+            @contextmenu.prevent.stop="openNodeContextMenu($event, node.objectId)"
           >
             <span class="cosmos-node__hitbox">
               <span class="cosmos-node__star" aria-hidden="true" />
@@ -117,9 +119,19 @@
         </button>
         </aside>
 
-        <CosmosHomeHub @companion="openCompanion" @ship="openBase" />
+        <CosmosHomeHub
+          :notification-available="snapshot.companion.notificationAvailable"
+          @companion="openCompanion"
+          @ship="openBase"
+        />
 
-        <CompanionWindowHost ref="companionWindowHost" :current-location="currentLocation" />
+        <CompanionWindowHost
+          ref="companionWindowHost"
+          :current-location="currentLocation"
+          @destination="openNode"
+        />
+
+        <ObjectInteractionHost ref="objectInteractionHost" />
 
         <p class="navigation-help" :class="{ 'navigation-help--visible': spaceHeld }">
           Hold Space and drag to move · Scroll to zoom
@@ -136,6 +148,7 @@ import { useRouter } from "vue-router";
 import CosmosHomeHub from "../components/cosmos/CosmosHomeHub.vue";
 import CosmosNavigation from "../components/cosmos/CosmosNavigation.vue";
 import CompanionWindowHost from "../components/cosmos/CompanionWindowHost.vue";
+import ObjectInteractionHost from "../components/windows/ObjectInteractionHost.vue";
 import type { CosmosMapSnapshot, MapNode, MapProject } from "../runtime/cosmosMapRuntime";
 import { useCosmosRuntime } from "../runtime/plugin";
 
@@ -151,6 +164,7 @@ const quickTravelOpen = ref(false);
 const cameraDrag = ref<PointerDrag | null>(null);
 const nodeDrag = ref<NodeDrag | null>(null);
 const companionWindowHost = ref<InstanceType<typeof CompanionWindowHost> | null>(null);
+const objectInteractionHost = ref<InstanceType<typeof ObjectInteractionHost> | null>(null);
 let resizeObserver: ResizeObserver | null = null;
 let cameraSaveTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -250,7 +264,14 @@ function visibleNodes(project: MapProject): MapNode[] {
 }
 
 function startCameraPan(event: PointerEvent) {
-  if (event.button !== 0 || !spaceHeld.value || !snapshot.value) return;
+  if (event.button !== 0 || !snapshot.value) return;
+  if (!spaceHeld.value) {
+    if (event.target === viewportElement.value) {
+      runtime.cosmosMap.select(null);
+      void runtime.cosmosMap.persistSelection().catch(() => undefined);
+    }
+    return;
+  }
   event.preventDefault();
   viewportElement.value?.setPointerCapture(event.pointerId);
   cameraDrag.value = {
@@ -266,6 +287,7 @@ function startNodeDrag(event: PointerEvent, node: MapNode) {
   if (event.button !== 0 || spaceHeld.value || !snapshot.value) return;
   event.preventDefault();
   runtime.cosmosMap.select(node.objectId);
+  void runtime.cosmosMap.persistSelection().catch(() => undefined);
   viewportElement.value?.setPointerCapture(event.pointerId);
   nodeDrag.value = {
     pointerId: event.pointerId,
@@ -282,7 +304,9 @@ function startNodeDrag(event: PointerEvent, node: MapNode) {
 function activateNode(event: MouseEvent, node: MapNode) {
   if (event.detail !== 0) return;
   runtime.cosmosMap.select(node.objectId);
+  void runtime.cosmosMap.persistSelection().catch(() => undefined);
   if (node.hierarchyLevel === "ProjectRoot") travelToProject(node.objectId);
+  else openNode(node.objectId);
 }
 
 function continuePointerInteraction(event: PointerEvent) {
@@ -352,6 +376,7 @@ function travelToProject(projectId: string) {
   quickTravelOpen.value = false;
   runtime.cosmosMap.focusProject(projectId, viewport);
   runtime.cosmosMap.select(projectId);
+  void runtime.cosmosMap.persistSelection().catch(() => undefined);
   scheduleCameraSave();
 }
 
@@ -359,6 +384,7 @@ function travelToCosmos() {
   quickTravelOpen.value = false;
   runtime.cosmosMap.focusCosmos(viewport);
   runtime.cosmosMap.select(null);
+  void runtime.cosmosMap.persistSelection().catch(() => undefined);
   scheduleCameraSave();
 }
 
@@ -372,6 +398,18 @@ function scheduleCameraSave() {
 
 function openCompanion() {
   companionWindowHost.value?.open();
+}
+
+function openNode(objectId: string) {
+  void objectInteractionHost.value?.openObject(objectId, "details").catch(() => undefined);
+}
+
+function openNodeContextMenu(event: MouseEvent, objectId: string) {
+  runtime.cosmosMap.select(objectId);
+  void runtime.cosmosMap.persistSelection().catch(() => undefined);
+  void objectInteractionHost.value
+    ?.openContextMenu(objectId, { x: event.clientX, y: event.clientY })
+    .catch(() => undefined);
 }
 
 function openBase() {

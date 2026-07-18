@@ -6,6 +6,8 @@ import { ApplicationRuntime } from "./applicationRuntime";
 import { BaseRuntime } from "./baseRuntime";
 import { CosmosMapRuntime } from "./cosmosMapRuntime";
 import { CoreToolsRuntime } from "./coreToolsRuntime";
+import { NotificationRuntime } from "./notificationRuntime";
+import { ObjectInteractionRuntime } from "./objectInteractionRuntime";
 import { ThemeRegistry } from "./themeRegistry";
 import { ThemeRuntime } from "./themeRuntime";
 import { ToolRuntime } from "./toolRuntime";
@@ -19,6 +21,8 @@ export interface CosmosFrontendRuntime {
   base: BaseRuntime;
   cosmosMap: CosmosMapRuntime;
   coreTools: CoreToolsRuntime;
+  notifications: NotificationRuntime;
+  objectInteractions: ObjectInteractionRuntime;
   themes: ThemeRuntime;
   tools: ToolRuntime;
   transitions: TransitionRuntime;
@@ -43,6 +47,7 @@ export function createCosmosFrontendRuntime(apiBaseUrl?: string): CosmosFrontend
   const tools = new ToolRuntime(windows, api);
   const cosmosMap = new CosmosMapRuntime(api);
   const base = new BaseRuntime(api);
+  const notifications = new NotificationRuntime(api, cosmosMap, base);
 
   return {
     api,
@@ -50,6 +55,8 @@ export function createCosmosFrontendRuntime(apiBaseUrl?: string): CosmosFrontend
     base,
     cosmosMap,
     coreTools: new CoreToolsRuntime(api),
+    notifications,
+    objectInteractions: new ObjectInteractionRuntime(api, windows, cosmosMap),
     themes,
     tools,
     transitions,

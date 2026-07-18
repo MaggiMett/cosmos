@@ -13,13 +13,23 @@
         <span>Current context</span>
         <strong>{{ currentLocation }}</strong>
       </div>
-      <ol class="conversation__messages" aria-live="polite">
+      <nav class="conversation__tabs" aria-label="Companion sections">
+        <button type="button" :aria-current="section === 'conversation'" @click="section = 'conversation'">Conversation</button>
+        <button type="button" :aria-current="section === 'notifications'" @click="section = 'notifications'">
+          Notifications
+        </button>
+      </nav>
+      <NotificationCenter
+        v-if="section === 'notifications'"
+        @destination="$emit('destination', $event)"
+      />
+      <ol v-else class="conversation__messages" aria-live="polite">
         <li v-for="entry in messages" :key="entry.id" :class="`conversation__message--${entry.author}`">
           <span>{{ entry.author === "companion" ? "Companion" : "You" }}</span>
           <p>{{ entry.message }}</p>
         </li>
       </ol>
-      <form class="conversation__form" @submit.prevent="send">
+      <form v-if="section === 'conversation'" class="conversation__form" @submit.prevent="send">
         <label class="sr-only" for="companion-message">Talk to the Companion</label>
         <input
           id="companion-message"
@@ -41,6 +51,7 @@ import { ref } from "vue";
 import type { WindowBounds } from "../../runtime/windowRuntime";
 import { useCosmosRuntime } from "../../runtime/plugin";
 import ToolWindow from "../windows/ToolWindow.vue";
+import NotificationCenter from "./NotificationCenter.vue";
 
 defineProps<{ bounds: WindowBounds; currentLocation: string }>();
 defineEmits<{
@@ -48,11 +59,13 @@ defineEmits<{
   focus: [];
   move: [position: { x: number; y: number }];
   resize: [size: { width: number; height: number }];
+  destination: [objectId: string];
 }>();
 
 const runtime = useCosmosRuntime();
 const draft = ref("");
 const sending = ref(false);
+const section = ref<"conversation" | "notifications">("conversation");
 const messages = ref<Array<{ id: string; author: "companion" | "user"; message: string }>>([
   {
     id: "welcome",
@@ -86,8 +99,12 @@ async function send() {
 .conversation {
   display: grid;
   height: 100%;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto auto 1fr auto;
 }
+
+.conversation__tabs { display: flex; padding: 5px 12px; border-bottom: 1px solid rgba(226, 232, 240, 0.08); gap: 4px; }
+.conversation__tabs button { min-height: 30px; padding: 0 9px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: #718096; font-size: 0.62rem; cursor: pointer; }
+.conversation__tabs button:hover, .conversation__tabs button:focus-visible, .conversation__tabs button[aria-current="true"] { border-color: rgba(125, 211, 252, 0.18); outline: none; background: rgba(125, 211, 252, 0.07); color: #bfe8fb; }
 
 .conversation__context {
   display: flex;

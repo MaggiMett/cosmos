@@ -7,6 +7,7 @@
     @focus="focus"
     @move="move"
     @resize="resize"
+    @destination="$emit('destination', $event)"
   />
 </template>
 
@@ -18,11 +19,13 @@ import type { WindowInstance } from "../../runtime/windowRuntime";
 import CompanionConversation from "./CompanionConversation.vue";
 
 defineProps<{ currentLocation: string }>();
+defineEmits<{ destination: [objectId: string] }>();
 
 const runtime = useCosmosRuntime();
 const windowInstance = ref<Readonly<WindowInstance> | null>(null);
 
 function open() {
+  void runtime.notifications.load().catch(() => undefined);
   if (windowInstance.value) {
     focus();
     return;

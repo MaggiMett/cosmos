@@ -23,11 +23,14 @@ from cosmos.services import (
     JobService,
     JourneymanService,
     KnowledgeService,
+    NotificationService,
+    ObjectInteractionService,
     ObjectService,
     ProjectService,
     RelationshipService,
     ResourceService,
     ReviewService,
+    TagService,
     ToolService,
     WorkspaceService,
     create_version_one_object_contract,
@@ -59,6 +62,9 @@ class CosmosRuntime:
     events: EventDispatcher
     providers: ProviderRuntime
     objects: ObjectService
+    tags: TagService
+    object_interactions: ObjectInteractionService
+    notifications: NotificationService
     projects: ProjectService
     relationships: RelationshipService
     companion: CompanionService
@@ -87,6 +93,9 @@ class CosmosRuntime:
         )
         projects = ProjectService(settings.runtime_path, persistence, objects, events)
         relationships = RelationshipService(RelationshipRepository(persistence), objects, events)
+        tags = TagService(objects, events)
+        object_interactions = ObjectInteractionService(objects, tags, relationships)
+        notifications = NotificationService(objects)
         companion = CompanionService(objects)
         base = BaseService(objects, companion)
         runtime_state = RuntimeStateRepository(persistence)
@@ -107,6 +116,9 @@ class CosmosRuntime:
             events=events,
             providers=providers,
             objects=objects,
+            tags=tags,
+            object_interactions=object_interactions,
+            notifications=notifications,
             projects=projects,
             relationships=relationships,
             companion=companion,
@@ -152,6 +164,8 @@ class CosmosRuntime:
                     {
                         "objects.read",
                         "objects.write",
+                        "tags.read",
+                        "tags.write",
                         "projects.read",
                         "projects.write",
                         "relationships.read",
@@ -174,6 +188,8 @@ class CosmosRuntime:
                         "jobs.write",
                         "journeyman.read",
                         "journeyman.write",
+                        "notifications.read",
+                        "notifications.write",
                     }
                 )
             )

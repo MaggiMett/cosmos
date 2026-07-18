@@ -6,6 +6,7 @@ import { CosmosMapRuntime, type CosmosMapSnapshot } from "./cosmosMapRuntime";
 const snapshot: CosmosMapSnapshot = {
   camera: { x: 0, y: -380, zoom: 0.58 },
   focusedProjectId: null,
+  selectedObjectId: null,
   projects: [
     {
       objectId: "project.left",
@@ -65,6 +66,7 @@ const snapshot: CosmosMapSnapshot = {
     description: "",
     systemTags: ["Companion", "Entity"],
     userTags: [],
+    notificationAvailable: false,
   },
 };
 

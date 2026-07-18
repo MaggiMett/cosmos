@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from types import MappingProxyType
 
-from cosmos.domain import CosmosObject, ObjectContract, ObjectIdentity
+from cosmos.domain import CosmosObject, ObjectContract, ObjectContractError, ObjectIdentity
 from cosmos.domain.objects import JSONValue
 from cosmos.persistence import ObjectRepository
 from cosmos.runtime import ContextSnapshot, EventDispatcher, RuntimeContext, RuntimeEvent
@@ -79,13 +79,16 @@ class ObjectService:
             )
         properties = dict(existing.properties)
         properties.update(changes)
-        updated = self.contract.build(
-            existing.identity,
-            existing.system_tags,
-            properties,
-            user_tags=existing.user_tags,
-            primary_project_id=existing.primary_project_id,
-        )
+        try:
+            updated = self.contract.build(
+                existing.identity,
+                existing.system_tags,
+                properties,
+                user_tags=existing.user_tags,
+                primary_project_id=existing.primary_project_id,
+            )
+        except ObjectContractError as error:
+            raise RuntimeServiceError("validation_failed", str(error)) from error
         self.repository.replace_properties(updated)
         self._publish("ObjectPropertiesChanged", updated, context)
         return updated

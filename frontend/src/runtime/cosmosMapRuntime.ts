@@ -49,11 +49,13 @@ export interface MapCompanion {
   description: string;
   systemTags: string[];
   userTags: string[];
+  notificationAvailable: boolean;
 }
 
 export interface CosmosMapSnapshot {
   camera: MapCamera;
   focusedProjectId: string | null;
+  selectedObjectId: string | null;
   projects: MapProject[];
   connections: MapConnection[];
   companion: MapCompanion;
@@ -96,6 +98,7 @@ export class CosmosMapRuntime {
       .then((result) => {
         if (!result.ok) throw new Error(result.error.message);
         this.mutableState.snapshot = result.data;
+        this.mutableState.selectedObjectId = result.data.selectedObjectId;
         this.mutableState.phase = "ready";
       })
       .catch((error: unknown) => {
@@ -127,6 +130,40 @@ export class CosmosMapRuntime {
 
   select(objectId: string | null): void {
     this.mutableState.selectedObjectId = objectId;
+  }
+
+  async persistSelection(): Promise<void> {
+    const result = await this.api.put<{ objectId: string | null }>("/cosmos/selection", {
+      objectId: this.mutableState.selectedObjectId,
+    });
+    if (!result.ok) throw new Error(result.error.message);
+  }
+
+  applyObjectUpdate(value: Pick<MapNode, "objectId" | "displayName" | "description" | "userTags"> & {
+    properties: Record<string, unknown>;
+  }): void {
+    const snapshot = this.mutableState.snapshot;
+    if (!snapshot) return;
+    const node = allNodes(snapshot.projects).find((candidate) => candidate.objectId === value.objectId);
+    if (!node) return;
+    node.displayName = value.displayName;
+    node.description = value.description;
+    node.userTags = [...value.userTags];
+    if (typeof value.properties.skin === "string") node.skin = value.properties.skin;
+    const project = snapshot.projects.find((candidate) => candidate.objectId === value.objectId);
+    if (project) {
+      project.displayName = value.displayName;
+      project.description = value.description;
+      project.userTags = [...value.userTags];
+      if (typeof value.properties.vision === "string") project.vision = value.properties.vision;
+      if (typeof value.properties.project_color === "string") project.color = value.properties.project_color;
+    }
+  }
+
+  setNotificationAvailable(available: boolean): void {
+    if (this.mutableState.snapshot) {
+      this.mutableState.snapshot.companion.notificationAvailable = available;
+    }
   }
 
   moveNodeLocally(objectId: string, x: number, y: number): boolean {
@@ -215,10 +252,14 @@ function canPlace(
   y: number,
   hierarchyLevel: MapNode["hierarchyLevel"],
 ): boolean {
-  const minimumDistance = hierarchyLevel === "ProjectRoot" ? 440 : 78;
   return allNodes(projects).every((node) => {
     if (node.objectId === objectId) return true;
-    if (hierarchyLevel !== "ProjectRoot" && node.hierarchyLevel === "ProjectRoot") return true;
+    const minimumDistance =
+      hierarchyLevel === "ProjectRoot" && node.hierarchyLevel === "ProjectRoot"
+        ? 440
+        : hierarchyLevel === "ProjectRoot" || node.hierarchyLevel === "ProjectRoot"
+          ? 140
+          : 78;
     return Math.hypot(node.x - x, node.y - y) >= minimumDistance;
   });
 }

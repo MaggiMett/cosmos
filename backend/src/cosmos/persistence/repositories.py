@@ -116,6 +116,17 @@ class ObjectRepository:
                 ),
             )
 
+    def replace_user_tags(self, value: CosmosObject) -> None:
+        with self._persistence.connect() as connection:
+            connection.execute(
+                "DELETE FROM object_user_tags WHERE object_id = ?",
+                (value.identity.object_id,),
+            )
+            connection.executemany(
+                "INSERT INTO object_user_tags (object_id, user_tag) VALUES (?, ?)",
+                ((value.identity.object_id, tag) for tag in sorted(value.user_tags)),
+            )
+
     def delete(self, object_id: str) -> None:
         with self._persistence.connect() as connection:
             connection.execute("DELETE FROM objects WHERE object_id = ?", (object_id,))

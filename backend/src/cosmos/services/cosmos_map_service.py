@@ -15,6 +15,7 @@ from cosmos.services.serialization import object_payload
 
 CAMERA_SCOPE = "cosmos.map"
 CAMERA_KEY = "camera"
+SELECTION_KEY = "selection"
 DEFAULT_CAMERA: dict[str, JSONValue] = {"x": 0.0, "y": -180.0, "zoom": 0.5}
 
 
@@ -79,9 +80,13 @@ class CosmosMapService:
         return {
             "camera": camera,
             "focusedProjectId": focused.identity.object_id if focused else None,
+            "selectedObjectId": self.selection(context),
             "projects": project_payloads,
             "connections": connections,
-            "companion": object_payload(companion),
+            "companion": {
+                **object_payload(companion),
+                "notificationAvailable": companion.properties["notification_available"],
+            },
         }
 
     def camera(self, context: RuntimeContext) -> dict[str, JSONValue]:
@@ -99,12 +104,38 @@ class CosmosMapService:
         self._state.set(CAMERA_SCOPE, CAMERA_KEY, value, datetime.now(UTC))
         return value
 
+    def selection(self, context: RuntimeContext) -> str | None:
+        require_permission(context.permissions, "runtime_state.read")
+        value = self._state.get(CAMERA_SCOPE, SELECTION_KEY, None)
+        return value if isinstance(value, str) else None
+
+    def select(self, object_id: str | None, context: RuntimeContext) -> str | None:
+        require_permission(context.permissions, "runtime_state.write")
+        if object_id is not None:
+            value = self._objects.get(object_id, context)
+            if "Node" not in value.system_tags:
+                raise RuntimeServiceError("validation_failed", "Only map Node Objects may be selected.")
+        self._state.set(CAMERA_SCOPE, SELECTION_KEY, object_id, datetime.now(UTC))
+        return object_id
+
     def move_node(self, object_id: str, x: float, y: float, context: RuntimeContext) -> CosmosObject:
         if not math.isfinite(x) or not math.isfinite(y):
             raise RuntimeServiceError("validation_failed", "Node positions must be finite numbers.")
         node = self._objects.get(object_id, context)
         if "Node" not in node.system_tags:
             raise RuntimeServiceError("validation_failed", "Only Node Objects have map positions.")
+        for candidate in self._objects.list(context, system_tag="Node"):
+            if candidate.identity.object_id == object_id:
+                continue
+            distance = math.hypot(
+                float(candidate.properties["position_x"]) - x,
+                float(candidate.properties["position_y"]) - y,
+            )
+            minimum = _minimum_node_distance(node, candidate)
+            if distance < minimum:
+                raise RuntimeServiceError(
+                    "node_position_conflict", "Node position would overlap another Node."
+                )
         return self._objects.update_properties(object_id, {"position_x": x, "position_y": y}, context)
 
 
@@ -148,3 +179,13 @@ def _node_payload(node: CosmosObject) -> dict[str, JSONValue]:
         "hierarchyLevel": node.properties["hierarchy_level"],
         "skin": node.properties["skin"],
     }
+
+
+def _minimum_node_distance(left: CosmosObject, right: CosmosObject) -> float:
+    left_root = "ProjectRoot" in left.system_tags
+    right_root = "ProjectRoot" in right.system_tags
+    if left_root and right_root:
+        return 440.0
+    if left_root or right_root:
+        return 140.0
+    return 78.0

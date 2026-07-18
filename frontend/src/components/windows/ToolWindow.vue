@@ -15,11 +15,14 @@
     </header>
     <div class="tool-window__content"><slot /></div>
     <button
+      v-for="direction in resizeDirections"
+      :key="direction"
       class="tool-window__resize"
+      :class="`tool-window__resize--${direction}`"
       type="button"
-      aria-label="Resize window"
-      title="Resize window"
-      @pointerdown.stop="startResize"
+      :aria-label="`Resize window ${direction}`"
+      :title="`Resize ${direction}`"
+      @pointerdown.stop="startResize($event, direction)"
     />
   </section>
 </template>
@@ -45,6 +48,8 @@ const emit = defineEmits<{
 }>();
 
 let stopActivePointer: (() => void) | null = null;
+type ResizeDirection = "n" | "ne" | "e" | "se" | "s" | "sw" | "w" | "nw";
+const resizeDirections: ResizeDirection[] = ["n", "ne", "e", "se", "s", "sw", "w", "nw"];
 
 const windowStyle = computed(() => ({
   left: `${props.bounds.x}px`,
@@ -66,7 +71,7 @@ function startMove(event: PointerEvent) {
   });
 }
 
-function startResize(event: PointerEvent) {
+function startResize(event: PointerEvent, direction: ResizeDirection) {
   if (event.button !== 0) return;
   event.preventDefault();
   const minimum = props.minimumSize ?? { width: 320, height: 240 };
@@ -75,11 +80,35 @@ function startResize(event: PointerEvent) {
     y: event.clientY,
     width: props.bounds.width,
     height: props.bounds.height,
+    left: props.bounds.x,
+    top: props.bounds.y,
   };
   trackPointer((moveEvent) => {
+    const deltaX = moveEvent.clientX - origin.x;
+    const deltaY = moveEvent.clientY - origin.y;
+    const west = direction.includes("w");
+    const east = direction.includes("e");
+    const north = direction.includes("n");
+    const south = direction.includes("s");
+    const width = west
+      ? clamp(origin.width - deltaX, minimum.width, origin.left + origin.width)
+      : east
+        ? clamp(origin.width + deltaX, minimum.width, window.innerWidth - origin.left)
+        : origin.width;
+    const height = north
+      ? clamp(origin.height - deltaY, minimum.height, origin.top + origin.height)
+      : south
+        ? clamp(origin.height + deltaY, minimum.height, window.innerHeight - origin.top)
+        : origin.height;
+    if (west || north) {
+      emit("move", {
+        x: west ? origin.left + origin.width - width : origin.left,
+        y: north ? origin.top + origin.height - height : origin.top,
+      });
+    }
     emit("resize", {
-      width: clamp(origin.width + moveEvent.clientX - origin.x, minimum.width, window.innerWidth - props.bounds.x),
-      height: clamp(origin.height + moveEvent.clientY - origin.y, minimum.height, window.innerHeight - props.bounds.y),
+      width,
+      height,
     });
   });
 }
@@ -167,13 +196,20 @@ onBeforeUnmount(() => stopActivePointer?.());
 
 .tool-window__resize {
   position: absolute;
-  right: 4px;
-  bottom: 4px;
-  width: 20px;
-  height: 20px;
   padding: 0;
   border: 0;
-  background: linear-gradient(135deg, transparent 45%, rgba(196, 181, 253, 0.72) 46% 53%, transparent 54% 64%, rgba(196, 181, 253, 0.52) 65% 72%, transparent 73%);
-  cursor: nwse-resize;
+  background: transparent;
 }
+
+.tool-window__resize--n, .tool-window__resize--s { right: 18px; left: 18px; height: 8px; }
+.tool-window__resize--n { top: 0; cursor: ns-resize; }
+.tool-window__resize--s { bottom: 0; cursor: ns-resize; }
+.tool-window__resize--e, .tool-window__resize--w { top: 18px; bottom: 18px; width: 8px; }
+.tool-window__resize--e { right: 0; cursor: ew-resize; }
+.tool-window__resize--w { left: 0; cursor: ew-resize; }
+.tool-window__resize--ne, .tool-window__resize--se, .tool-window__resize--sw, .tool-window__resize--nw { width: 18px; height: 18px; }
+.tool-window__resize--ne { top: 0; right: 0; cursor: nesw-resize; }
+.tool-window__resize--se { right: 0; bottom: 0; cursor: nwse-resize; background: linear-gradient(135deg, transparent 45%, rgba(196, 181, 253, 0.72) 46% 53%, transparent 54% 64%, rgba(196, 181, 253, 0.52) 65% 72%, transparent 73%); }
+.tool-window__resize--sw { bottom: 0; left: 0; cursor: nesw-resize; }
+.tool-window__resize--nw { top: 0; left: 0; cursor: nwse-resize; }
 </style>

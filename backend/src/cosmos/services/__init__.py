@@ -8,12 +8,15 @@ from cosmos.services.errors import RuntimeServiceError
 from cosmos.services.job_service import JobService
 from cosmos.services.journeyman_service import JourneymanService
 from cosmos.services.knowledge_service import KnowledgeService
+from cosmos.services.notification_service import CreateNotificationCommand, NotificationService
+from cosmos.services.object_interaction_service import ObjectInteractionService
 from cosmos.services.object_service import CreateObjectCommand, ObjectService
 from cosmos.services.project_service import PREPARED_AREAS, CreateProjectCommand, ProjectService
 from cosmos.services.relationship_service import RelationshipService
 from cosmos.services.resource_service import ResourceService
 from cosmos.services.review_service import ReviewService
 from cosmos.services.schemas import create_version_one_object_contract
+from cosmos.services.tag_service import TagService
 from cosmos.services.tool_service import ToolService
 from cosmos.services.workspace_service import WorkspaceService
 
@@ -28,17 +31,21 @@ __all__ = [
     "CompanionService",
     "CoreToolCatalog",
     "CosmosMapService",
+    "CreateNotificationCommand",
     "CreateObjectCommand",
     "CreateProjectCommand",
     "JobService",
     "JourneymanService",
     "KnowledgeService",
+    "NotificationService",
+    "ObjectInteractionService",
     "ObjectService",
     "ProjectService",
     "RelationshipService",
     "ResourceService",
     "ReviewService",
     "RuntimeServiceError",
+    "TagService",
     "ToolService",
     "WorkspaceService",
     "create_version_one_object_contract",

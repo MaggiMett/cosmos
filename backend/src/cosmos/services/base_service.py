@@ -271,7 +271,10 @@ class BaseService:
                 "roomBId": door.properties["room_b_id"],
             },
             "cockpit": {**object_payload(cockpit), "roomId": cockpit.properties["room_id"]},
-            "companion": object_payload(companion),
+            "companion": {
+                **object_payload(companion),
+                "notificationAvailable": companion.properties["notification_available"],
+            },
             "pet": object_payload(pet),
             "unassignedWorkspaces": [
                 _workspace_payload(workspace)

@@ -13,7 +13,12 @@
       <button type="button" @click="load">Try again</button>
     </div>
 
-    <article v-if="snapshot && room" class="base-environment" :aria-label="`${room.displayName} environment`">
+    <article
+      v-if="snapshot && room"
+      class="base-environment"
+      :aria-label="`${room.displayName} environment`"
+      @contextmenu.self.prevent="openObjectContextMenu($event, snapshot.base.objectId)"
+    >
       <button
         v-if="!backgroundOnly"
         class="base-environment__close"
@@ -51,6 +56,7 @@
           :slot="slot"
           :selected="state.selectedObjectId === slot.objectId"
           @select="select"
+          @contextmenu.prevent.stop="openObjectContextMenu($event, slot.workspace?.objectId ?? slot.objectId)"
         />
 
         <button
@@ -59,7 +65,10 @@
           :aria-label="`Talk with ${snapshot.companion.displayName}`"
           @click="openCompanion"
         >
-          <CompanionAvatar mode="seated" />
+          <CompanionAvatar
+            mode="seated"
+            :notification-available="snapshot.companion.notificationAvailable"
+          />
           <span>{{ snapshot.companion.displayName }}</span>
         </button>
 
@@ -88,6 +97,7 @@
           :slot="slot"
           :selected="state.selectedObjectId === slot.objectId"
           @select="select"
+          @contextmenu.prevent.stop="openObjectContextMenu($event, slot.workspace?.objectId ?? slot.objectId)"
         />
       </template>
 
@@ -106,7 +116,9 @@
         v-if="!backgroundOnly"
         ref="companionWindowHost"
         :current-location="room.displayName"
+        @destination="openObject"
       />
+      <ObjectInteractionHost v-if="!backgroundOnly" ref="objectInteractionHost" />
     </article>
   </section>
 </template>
@@ -118,6 +130,7 @@ import { useRoute, useRouter } from "vue-router";
 import WorkspaceFurniture from "../components/base/WorkspaceFurniture.vue";
 import CompanionWindowHost from "../components/cosmos/CompanionWindowHost.vue";
 import CompanionAvatar from "../components/entities/CompanionAvatar.vue";
+import ObjectInteractionHost from "../components/windows/ObjectInteractionHost.vue";
 import type { BaseSnapshot, WorkspaceSlot } from "../runtime/baseRuntime";
 import { useCosmosRuntime } from "../runtime/plugin";
 
@@ -129,6 +142,7 @@ const state = runtime.base.state;
 const snapshot = computed(() => state.snapshot as BaseSnapshot | null);
 const petGreeting = ref(false);
 const companionWindowHost = ref<InstanceType<typeof CompanionWindowHost> | null>(null);
+const objectInteractionHost = ref<InstanceType<typeof ObjectInteractionHost> | null>(null);
 let petTimer: ReturnType<typeof setTimeout> | null = null;
 
 const requestedRoom = computed(() =>
@@ -168,6 +182,16 @@ function travelThroughDoor() {
 
 function openCompanion() {
   companionWindowHost.value?.open();
+}
+
+function openObject(objectId: string) {
+  void objectInteractionHost.value?.openObject(objectId, "details").catch(() => undefined);
+}
+
+function openObjectContextMenu(event: MouseEvent, objectId: string) {
+  void objectInteractionHost.value
+    ?.openContextMenu(objectId, { x: event.clientX, y: event.clientY })
+    .catch(() => undefined);
 }
 
 function greetPet() {

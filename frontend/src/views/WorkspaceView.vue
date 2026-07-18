@@ -16,7 +16,10 @@
       :style="environmentStyle"
       :aria-label="session.definition.displayName"
     >
-      <header class="workspace-environment__header">
+      <header
+        class="workspace-environment__header"
+        @contextmenu.prevent="openWorkspaceContextMenu"
+      >
         <span class="workspace-environment__identity">
           <i aria-hidden="true" />
           <span>
@@ -69,6 +72,12 @@
             :tool-instance-id="instance.instanceId"
           />
         </ToolWindow>
+
+        <ObjectInteractionHost
+          ref="objectInteractionHost"
+          :parent-window-id="session.environmentWindow.objectId"
+          :parent-bounds="environmentBounds"
+        />
       </div>
     </article>
   </section>
@@ -79,6 +88,7 @@ import { computed, onBeforeUnmount, onMounted, ref, type Component } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import ToolWindow from "../components/windows/ToolWindow.vue";
+import ObjectInteractionHost from "../components/windows/ObjectInteractionHost.vue";
 import ArchiveTool from "../components/tools/ArchiveTool.vue";
 import CaptureTool from "../components/tools/CaptureTool.vue";
 import FilesTool from "../components/tools/FilesTool.vue";
@@ -94,6 +104,7 @@ const session = ref<Readonly<WorkspaceSession> | null>(null);
 const phase = ref<"idle" | "opening" | "ready" | "closing">("idle");
 const error = ref<string | null>(null);
 const environmentBounds = ref(workspaceBounds());
+const objectInteractionHost = ref<InstanceType<typeof ObjectInteractionHost> | null>(null);
 const toolComponents: Record<string, Component> = {
   archive: ArchiveTool,
   capture: CaptureTool,
@@ -206,6 +217,13 @@ function closeTool(instanceId: string) {
   void runtime.tools.close(instanceId).catch((cause: unknown) => {
     error.value = cause instanceof Error ? cause.message : "Tool could not close.";
   });
+}
+
+function openWorkspaceContextMenu(event: MouseEvent) {
+  if (!session.value) return;
+  void objectInteractionHost.value
+    ?.openContextMenu(session.value.definition.objectId, { x: event.clientX, y: event.clientY })
+    .catch(() => undefined);
 }
 
 function onKeyDown(event: KeyboardEvent) {
