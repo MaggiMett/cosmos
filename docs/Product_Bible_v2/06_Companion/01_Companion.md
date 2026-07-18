@@ -12,6 +12,8 @@ Artificial Intelligence extends the Companion.
 
 It does not define it.
 
+The Companion is not Journeyman. Journeyman is an independent Tool with its own Tool Window inside a Workspace. The Companion has its own Entity identity, visual representation and progression; it may request or surface Journeyman work without representing the Tool.
+
 ---
 
 # Philosophy
@@ -116,6 +118,8 @@ Examples include:
 Installing or removing Bundles changes the Companion's abilities without changing its identity.
 
 Journeyman Coordination allows the Companion to request Journeyman work through Runtime Services. The Bundle remains assigned to the Companion; Journeyman does not consume that Bundle Instance.
+
+Accepted Journeyman work opens or focuses the independent Journeyman Tool Window. It never turns the Companion into Journeyman or uses the Companion as Journeyman's avatar.
 
 ---
 
@@ -277,6 +281,7 @@ Rather than acting as a separate AI application, it should naturally inhabit the
 # Principles
 
 - The Companion is a Support Entity.
+- The Companion and Journeyman are independent Runtime Objects with distinct roles and presentation.
 - The Companion is not an AI.
 - AI extends the Companion.
 - Capability Bundles define abilities.

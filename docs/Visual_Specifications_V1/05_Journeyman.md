@@ -8,21 +8,23 @@
 
 # Purpose
 
-Journeyman is the primary AI companion inside Cosmos.
+Journeyman is the independent Cosmos Tool for planning, orchestration and development assistance.
 
-Unlike traditional chat assistants, Journeyman operates with awareness of the current Cosmos context and assists users throughout the entire system.
+It operates with awareness of the current Cosmos Context while remaining distinct from the Companion Entity.
 
-Journeyman should feel like an experienced collaborator rather than an external chatbot.
+Journeyman should feel like an experienced development collaborator rather than an external chatbot.
 
 ---
 
 # Overview
 
-Journeyman is an independent Tool Window.
+Journeyman uses its own movable, resizable and closable Tool Window inside a Workspace.
 
 It provides a familiar chat interface while remaining deeply integrated into the Cosmos environment.
 
 The conversation should always feel contextual, focused and collaborative.
+
+Journeyman is never represented by the Companion. The Companion retains its own visual identity and may only surface notifications that focus this separate Tool Window.
 
 ---
 
@@ -31,6 +33,7 @@ The conversation should always feel contextual, focused and collaborative.
 Every Journeyman Window consists of:
 
 - Context Bar
+- Plan and Activity Area
 - Conversation Area
 - Input Area
 
@@ -60,6 +63,21 @@ The conversation should prioritize readability and long-term discussions.
 
 ---
 
+## Plan and Activity Area
+
+The Plan and Activity Area displays:
+
+- task state
+- completed and active plan steps
+- provider activity
+- questions and errors
+- validation results
+- changed files and final outcomes
+
+It should remain legible without turning the Tool into a terminal or notification center.
+
+---
+
 ## Input Area
 
 The Input Area provides:
@@ -84,6 +102,7 @@ Journeyman is recognized by:
 
 - familiar conversation layout
 - visible contextual awareness
+- transparent planning and execution state
 - collaborative atmosphere
 - clean reading experience
 
@@ -122,6 +141,12 @@ Long conversations should never feel visually overwhelming.
 Journeyman supports:
 
 - idle
+- planning
+- executing
+- validating
+- awaiting review
+- completed
+- failed
 - user typing
 - responding
 - thinking
@@ -153,6 +178,5 @@ Possible future additions include:
 - voice conversations
 - collaborative planning boards
 - live repository exploration
-- autonomous task execution
 - multi-agent conversations
 - shared conversations with Entities

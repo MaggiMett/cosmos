@@ -10,7 +10,7 @@
 
 This document defines how the Journeyman helps the user extend Cosmos from inside Cosmos.
 
-The Journeyman is the primary development interface for Version 1.
+The Journeyman is an independent Cosmos Tool and the primary development interface for Version 1.
 
 Its purpose is to let the user plan, build and modify Cosmos without leaving the environment or relying on a separate external chat application.
 
@@ -26,7 +26,7 @@ The Journeyman receives the relevant Project context, documentation and files, t
 
 Version 1 uses Codex as the first provider.
 
-The Journeyman experience must remain provider-neutral so additional providers may be introduced later without changing the interaction model.
+The Journeyman Tool must remain provider-neutral so additional providers may be introduced later without changing the interaction model.
 
 ---
 
@@ -85,22 +85,24 @@ The Journeyman does not introduce a separate project model.
 
 It uses the same Project architecture as every other Cosmos capability.
 
-# Journeyman Workspace
+# Journeyman Tool Window
 
-The Journeyman Workspace is the primary working environment for development tasks.
+Journeyman runs in its own movable, resizable and closable Tool Window inside a Workspace. The Workspace supplies the working environment; Journeyman supplies planning, orchestration and development assistance.
 
-It may contain Tool Windows such as:
+The Journeyman Tool Window may present:
 
 - conversation
 - task overview
+- plan steps
 - execution events
-- file browser
-- diff review
-- terminal output
-- documentation
+- questions and errors
+- changed-file and diff summaries
+- validation results
 - implementation status
 
-The Workspace remembers its complete layout and restores the previous working state when reopened.
+Full file browsing, Archive navigation and other independent capabilities remain separate Tool Windows that may be arranged beside Journeyman in the same Workspace.
+
+The containing Workspace remembers the Journeyman Tool Window's placement and state and restores it when reopened. Closing the Window does not delete a persistent task.
 
 # Context Inheritance
 
@@ -187,7 +189,7 @@ Codex must not redesign established Product Bible or Experience concepts unless 
 
 The Journeyman is not identical to Codex.
 
-The Journeyman is the Cosmos experience and orchestration layer.
+The Journeyman is the independent Cosmos Tool and development-task orchestration layer.
 
 Codex is one provider behind it.
 
@@ -201,7 +203,7 @@ Future providers may include:
 
 Changing the provider must not change:
 
-the Journeyman Workspace
+the Journeyman Tool Window
 task interaction
 Project context
 event presentation
@@ -263,7 +265,7 @@ test results
 unresolved decisions
 follow-up recommendations
 
-The user should be able to understand what changed without leaving the Journeyman Workspace.
+The user should be able to understand what changed without leaving the Journeyman Tool Window.
 
 # Physical Results
 
@@ -330,11 +332,11 @@ relevant Project context
 
 The user should be able to continue exactly where the work stopped.
 
-# Companion Integration
+# Companion Boundary
 
-The Companion represents the Journeyman socially inside the Cosmos.
+The Companion and Journeyman are independent concepts. Journeyman is a Tool; the Companion is a Cosmos Entity with its own visual representation, identity and future progression. The Companion is not Journeyman and never acts as its avatar.
 
-The Companion may indicate:
+Through normal Companion Notifications, the Companion may indicate:
 
 pending questions
 completed tasks
@@ -343,7 +345,7 @@ available reviews
 
 Version 1 uses the existing subtle notification indicator.
 
-The Companion does not need advanced animation or voice behavior for the Journeyman to function.
+Selecting such a notification opens or focuses the independent Journeyman Tool Window. Journeyman remains fully usable without presenting itself through the Companion.
 
 # Extending Cosmos
 
@@ -378,7 +380,9 @@ The user should feel that Cosmos can help build its own future from within the e
 
 Cosmos should be extendable from within Cosmos.
 
-The Journeyman is the experience.
+The Journeyman is an independent Tool.
+
+The Companion is an independent Entity.
 
 Codex is a provider.
 

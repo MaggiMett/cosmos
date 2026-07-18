@@ -12,7 +12,7 @@ The goal is to allow users to organize projects in the way that best supports un
 
 # Philosophy
 
-Cosmos never organizes files.
+Cosmos never reorganizes arbitrary user files or substitutes file layout for semantic structure. The project-scoped Files Tool may explicitly create, edit, rename, move and delete files only inside the active Project's authorized physical roots.
 
 Cosmos organizes meaning.
 
@@ -40,7 +40,7 @@ Runtime Translation
 Runtime Structure
 ```
 
-The user only works directly with the User Structure.
+The user normally works with the User Structure. When direct physical file management is required, the Files Tool exposes only the active Project's authorized roots without turning them into semantic Branches or Objects.
 
 Journeyman orchestrates Runtime Translation between both worlds only during an approved affected implementation, synchronization or validation task.
 
@@ -175,7 +175,7 @@ Users continue working with one Object regardless of implementation complexity.
 
 Runtime Resources always remain inside the original repository.
 
-Cosmos never requires moving project files.
+Cosmos never requires moving project files to adopt a proprietary layout. User-requested moves inside the active Project remain available through the project-scoped Files Tool.
 
 Resources may include:
 

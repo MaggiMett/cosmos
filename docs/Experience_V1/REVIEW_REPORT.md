@@ -26,6 +26,8 @@ Reviewed every Markdown file in the supplied Experience archive for:
 - Added Runtime Object treatment for Companion Notifications.
 - Expanded the previously incomplete Cosmos Transitions document around the universal Shell transition mechanism.
 - Repaired broken Markdown structure in `02_System_Projects.md` and `06_Journeyman_Extensibility.md`.
+- Clarified that Journeyman is an independent Tool Window inside a Workspace while the Companion remains an independent Entity and visual character.
+- Clarified that Files mutations are restricted to the active Project and Archive edits inline in the same Object View.
 - Fully cleaned and normalized `03_Prepared_Structures.md`, whose earlier chat formatting had produced heavily indented malformed Markdown.
 - Updated Structure Templates so each Node becomes an individual Template Object while grouped structures emerge through Tags and preserved parent-child template relationships.
 - Removed stale references to deleted `Creator Projects` and `Project Templates` documents.

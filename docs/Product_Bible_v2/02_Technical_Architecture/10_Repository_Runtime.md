@@ -8,7 +8,7 @@ It allows users to organize Projects semantically while preserving complete comp
 
 The Repository Runtime never owns repositories.
 
-It coordinates references, lightweight signals, mappings and repository state without analyzing or modifying repository contents.
+It coordinates references, lightweight signals, mappings and repository state without analyzing or modifying repository contents. Explicit project-file mutations initiated by the Files Tool are authorized by Resource Service and performed by the project-file adapter, not by Repository Runtime.
 
 ---
 
@@ -40,6 +40,8 @@ The Repository Runtime is responsible for:
 - exposing repository information through Runtime Services
 
 The Repository Runtime never analyzes repositories, performs Runtime Translation, applies semantic changes or performs implementation work. Repository and mapping mutations occur only through authorized Runtime Services during approved Journeyman tasks or accepted analysis results.
+
+User-requested Files operations are a separate project-scoped path: Resource Service authorizes create, edit, rename, move, delete and upload Commands inside the active Project's registered roots. These operations never grant Repository Runtime mutation authority and never reach arbitrary user files outside the Project.
 
 ---
 

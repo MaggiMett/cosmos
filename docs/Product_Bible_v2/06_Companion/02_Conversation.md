@@ -284,6 +284,8 @@ Examples include:
 - Blueprint opportunities
 - Journeyman assistance
 
+Journeyman assistance means proposing or focusing a separate Journeyman Tool task. Conversation never embeds Journeyman inside the Companion and never makes the Companion its avatar.
+
 Suggestions always remain optional.
 
 ---

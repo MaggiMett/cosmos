@@ -69,6 +69,8 @@ Objects should be editable directly.
 
 Reading and editing should feel natural without switching modes.
 
+Version 1 keeps both states in the same Object View. Archive does not open a separate edit Window.
+
 ---
 
 ## Related Objects Area

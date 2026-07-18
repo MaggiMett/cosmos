@@ -62,7 +62,7 @@ Every Cosmos becomes unique.
 
 # Core Philosophy
 
-Cosmos organizes meaning, not files.
+Cosmos organizes meaning rather than deriving meaning from file layout. The project-scoped Files Tool may manage physical files inside the active Project without reorganizing arbitrary user files or replacing semantic structure.
 
 Projects represent visions.
 

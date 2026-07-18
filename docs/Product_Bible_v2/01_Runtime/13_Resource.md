@@ -146,6 +146,8 @@ Cosmos should preserve the relationship between historical Resources and histori
 
 Resources are expected to be edited by external software.
 
+They may also be managed through the project-scoped Files Tool when the user explicitly creates, edits, renames, moves or deletes a file inside the active Project's authorized roots.
+
 Examples include:
 
 - Visual Studio Code
@@ -156,6 +158,8 @@ Examples include:
 - Unreal Engine
 
 Repository Runtime may record lightweight file-change notifications without requiring users to work exclusively inside Cosmos. Interpreting those changes remains demand-driven.
+
+Files operations pass through Resource Service authorization and a project-file adapter. Neither the Files Tool nor Repository Runtime accesses Persistence or performs unvalidated filesystem mutations directly.
 
 ---
 

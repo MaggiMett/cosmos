@@ -131,6 +131,8 @@ Resources remain compatible with their native technologies.
 
 Native repositories or external sources own the Resource files. A Project owns only its mappings, references and metadata.
 
+The Files Tool may perform explicit user-requested file operations only inside the active Project's registered physical roots. This authorized access does not transfer file ownership to Cosmos and never extends to arbitrary user files outside the Project.
+
 Cosmos never replaces existing project structures.
 
 ---

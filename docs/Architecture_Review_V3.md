@@ -125,8 +125,8 @@ Every finding in this report has been applied. No finding introduces a new Versi
 - **Affected documents:** `Product_Bible_V2/01_Runtime/03_Project_Structure.md`; `Product_Bible_V2/01_Runtime/13_Resource.md`; `Product_Bible_V2/02_Technical_Architecture/06_Project_Runtime.md`; `Product_Bible_V2/02_Technical_Architecture/10_Repository_Runtime.md`; `Product_Bible_V2/02_Technical_Architecture/15_Codex_Execution_Rules.md`; `Product_Bible_V2/07_System_Tools/03_Journeyman.md`; `Product_Bible_V2/07_System_Tools/04_Repository_Analyzer.md`; `Experience_V1/experience/07_Extensibility/06_Journeyman_Extensibility.md`
 - **Problem:** Experience made Journeyman provider-neutral with Codex behind it, while Product Bible called Journeyman the autonomous worker that directly implemented changes.
 - **Reason:** Provider selection, execution, task ownership and mutation authority would be coupled to one UI experience.
-- **Required change:** Make Journeyman the user experience and orchestration layer, Provider Runtime the concrete Provider owner, Codex the first Version 1 development Provider, and Runtime Services the durable Cosmos mutation owners.
-- **Expected result:** Providers can change without changing the Journeyman experience or bypassing Runtime contracts.
+- **Required change:** Make Journeyman an independent Cosmos Tool and the development-task interaction and orchestration layer, Provider Runtime the concrete Provider owner, Codex the first Version 1 development Provider, and Runtime Services the durable Cosmos mutation owners. Keep the Companion an independent Entity rather than a Journeyman identity or avatar.
+- **Expected result:** Providers can change without changing the Journeyman Tool, the Companion remains independently evolvable, and neither concept bypasses Runtime contracts.
 
 ### AV3-M08 — Entity identity and Relationship eligibility conflicted with universal Objects
 
@@ -236,8 +236,22 @@ Every finding in this report has been applied. No finding introduces a new Versi
 
 ## Architecture freeze decision
 
+### Approved Version 1 product clarifications
+
+The following product decisions are part of the Version 1 freeze:
+
+- Workspace Environment Windows have fixed placement and fixed size. Tool Windows are movable, resizable and closable. Version 1 provides no minimize, maximize / restore, docking or snapping.
+- Journeyman is an independent Cosmos Tool for planning, orchestration and development assistance. Each instance uses its own Tool Window inside a Workspace.
+- The Companion is an independent Cosmos Entity with its own visual identity and progression. It is not Journeyman and never represents Journeyman visually.
+- Archive supports direct inline editing in the same Object View. Separate edit windows are outside Version 1.
+- Files may create, edit, rename, move and delete files only inside the active Cosmos Project's authorized physical roots. It never manages arbitrary user files outside that Project.
+
+These clarifications preserve the existing Runtime ownership model: Tools use Runtime Services, the Companion uses Entity Runtime, Resource Service authorizes project-file mutations, and Provider Runtime remains the concrete development Provider owner.
+
+---
+
 **READY FOR VERSION 1 IMPLEMENTATION**
 
-Product Bible and Experience now describe one architecture: universal Object identity, System-Tag-composed roles, complete Property Schemas, user-owned Tags, presentation-only Themes, physical Prepared Structures, independent Structure Template Objects, normal tagged System Projects, and a provider-neutral Journeyman experience with Codex as the first development Provider.
+Product Bible and Experience now describe one architecture: universal Object identity, System-Tag-composed roles, complete Property Schemas, user-owned Tags, presentation-only Themes, physical Prepared Structures, independent Structure Template Objects, normal tagged System Projects, an independent provider-neutral Journeyman Tool with Codex as the first development Provider, and a separate Companion Entity.
 
 No remaining contradiction found in this review requires architectural reinterpretation before Version 1 implementation.

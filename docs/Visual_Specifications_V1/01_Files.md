@@ -14,6 +14,8 @@ It allows users to browse, organize, preview and manage project resources within
 
 Files should remain familiar, efficient and unobtrusive.
 
+Files is always scoped to the active Cosmos Project. It never exposes or modifies arbitrary user files outside that Project's registered physical roots.
+
 ---
 
 # Overview
@@ -44,6 +46,10 @@ Version 1 includes:
 
 - New
 - Upload
+- Edit
+- Rename
+- Move
+- Delete
 - Search
 - View Mode
 
@@ -60,6 +66,8 @@ It uses a traditional expandable tree.
 Users should always understand where they are within the project.
 
 Navigation uses project-relative locations rather than operating system paths.
+
+The navigation root cannot escape the active Project. Connected repositories appear only when they are registered to that Project.
 
 ---
 
@@ -134,6 +142,10 @@ Files supports:
 - multiple files selected
 - drag operation
 - search active
+- create or upload in progress
+- rename or move in progress
+- delete confirmation
+- external-change conflict
 
 State changes should remain subtle.
 

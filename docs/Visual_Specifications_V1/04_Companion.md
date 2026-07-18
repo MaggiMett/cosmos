@@ -14,6 +14,8 @@ Unlike traditional application interfaces, the Companion is presented as a livin
 
 The Companion should always feel approachable, expressive and alive.
 
+The Companion is an independent Cosmos Entity. It is not Journeyman, does not visually represent Journeyman and is not a substitute for the separate Journeyman Tool Window. It may surface ordinary notifications that open or focus that Tool.
+
 ---
 
 # Overview

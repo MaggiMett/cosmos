@@ -20,6 +20,8 @@ The Brain is an internal Companion coordination component.
 
 It is not a Tool, Runtime Service or independent Runtime system.
 
+It is not Journeyman. Journeyman is an independent Tool whose planning and development orchestration may be requested through the normal Journeyman Coordination Capability and Runtime Services.
+
 It coordinates existing Entity Runtime, Bundle Runtime, Knowledge Runtime and Provider Runtime contracts without replacing their ownership.
 
 ---
@@ -324,6 +326,8 @@ Journeyman Bundle
 ↓
 
 Conversation
+
+This flow requests or focuses independent Journeyman work. The Brain does not become Journeyman and does not host Journeyman execution.
 
 The Brain coordinates the workflow.
 

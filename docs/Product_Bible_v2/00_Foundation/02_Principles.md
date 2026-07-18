@@ -22,13 +22,15 @@ The user owns their Cosmos.
 
 # 2. Organize Meaning, Not Files
 
-Cosmos does not organize folders.
+Cosmos does not use folders as semantic organization.
 
-Cosmos does not organize source code.
+Cosmos does not infer meaning from source-code layout.
 
 Cosmos organizes meaning.
 
 Objects, Knowledge and Relationships are always more important than technical file structures.
+
+The Files Tool may still perform explicit physical file operations inside the active Cosmos Project. That project-scoped capability never extends to arbitrary user files and never makes folder layout the semantic model.
 
 ---
 

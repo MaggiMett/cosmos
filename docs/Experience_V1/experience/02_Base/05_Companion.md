@@ -14,6 +14,8 @@ The Companion is the user's permanent partner throughout the Cosmos.
 
 Unlike traditional assistants, the Companion is experienced as a living resident of the user's environment rather than a floating interface element.
 
+The Companion is an independent Entity. Journeyman is a separate Tool with its own Tool Window inside a Workspace. Neither concept represents, contains or replaces the other.
+
 ---
 
 # Overview

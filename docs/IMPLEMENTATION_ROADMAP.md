@@ -212,11 +212,17 @@ Core Tools
 
 Goals:
 
-- Files
-- Archive
+- Files with create, edit, rename, move and delete operations scoped to the active Cosmos Project
+- Archive with direct inline editing in the same Object View
 - Capture
 - Review
-- Journeyman
+- Journeyman as an independent Tool Window inside a Workspace
+
+Version 1 boundaries:
+
+- Journeyman and the Companion remain separate Runtime Objects and presentation concepts.
+- Files never accesses arbitrary user files outside the active Project.
+- Workspace Environment Windows remain fixed; every core Tool uses a movable, resizable and closable Tool Window with no minimize, maximize, docking or snapping.
 
 ---
 

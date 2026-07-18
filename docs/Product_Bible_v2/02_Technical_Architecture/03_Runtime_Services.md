@@ -90,6 +90,8 @@ Tag Service owns User Tag mutations and preserves user ownership. Collections an
 
 Project Service creates `Project` and `Project + System` Objects through the same Object contract and coordinates durable Prepared Structure records with physical creation. A Project is not reported as created until both the authoritative commit and required physical structures exist.
 
+Resource Service is the authoritative boundary for project-file Commands used by Files. Before delegating physical I/O it validates the active Project Context, permission, registered physical root, canonical resolved path and operation constraints. Create, edit, rename, move, delete and upload Commands can target only authorized roots of the active Project. Repository Runtime supplies availability and change signals but never performs these mutations.
+
 ---
 
 # Single Source of Truth
@@ -113,6 +115,12 @@ Workspace Service
 Importing Resources
 
 ↓
+
+Resource Service
+
+Managing active Project files
+
+â†“
 
 Resource Service
 

@@ -2,21 +2,23 @@
 
 ## Purpose
 
-Journeyman is the provider-neutral Cosmos experience for planning, observing, reviewing and completing development work from inside Cosmos.
+Journeyman is the independent provider-neutral Cosmos Tool for planning, orchestrating, reviewing and completing development work from inside Cosmos.
 
 The registered Journeyman System Tool supplies the orchestration contract behind that experience. Journeyman is not identical to an AI model, coding agent or concrete Provider.
 
-Version 1 uses Codex as the first development Provider. Replacing Codex must not change the Journeyman Workspace, task lifecycle, Context model, event presentation, review flow or result storage.
+Version 1 uses Codex as the first development Provider. Replacing Codex must not change the Journeyman Tool Window, task lifecycle, Context model, event presentation, review flow or result storage.
 
 ---
 
 # Architectural Position
 
-Journeyman is a registered System Tool Extension hosted by the Version 1 Creation Workspace System Project.
+Journeyman is a registered System Tool Extension hosted by the Version 1 Creation Workspace System Project. Each active Journeyman instance is presented through its own movable, resizable and closable Tool Window inside a Workspace.
+
+Journeyman is not a Workspace, Companion, Entity or visual avatar. The Companion remains an independent Cosmos Entity. Companion Notifications may point to Journeyman task state, but the Companion never represents or contains Journeyman.
 
 It uses the same Project, Workspace, Tool, Window, Context, Job, Review, Permission, Provider and Runtime Service contracts as every other capability. It introduces no special Project class, provider path, persistence system or task state outside those contracts.
 
-The Journeyman experience owns user interaction and orchestration. Provider Runtime independently owns concrete Provider discovery, matching, selection, invocation, monitoring and failover. The selected Provider performs provider-specific execution through its adapter.
+The Journeyman Tool owns task interaction, planning and orchestration. Provider Runtime independently owns concrete Provider discovery, matching, selection, invocation, monitoring and failover. The selected Provider performs provider-specific execution through its adapter.
 
 ---
 
@@ -32,7 +34,7 @@ Journeyman is responsible for:
 - exposing progress, questions, errors and results
 - coordinating validation and Review
 - integrating approved physical results through existing Runtime contracts
-- preserving task state independently of any conversation Window
+- preserving task state independently of the Journeyman Tool Window
 
 Journeyman never owns Project Knowledge, concrete Provider policy or Runtime business logic.
 
@@ -86,7 +88,7 @@ Completed or Failed
 
 Journeyman never creates or schedules Jobs directly. It requests work through the appropriate Runtime Service and presents Job state from Job Runtime.
 
-Closing the Journeyman Workspace or a conversation Window never deletes the Job, event history, pending questions, Context reference or Review state.
+Closing the Journeyman Tool Window or its containing Workspace never deletes the Job, event history, pending questions, Context reference or Review state.
 
 ---
 
@@ -161,7 +163,7 @@ Runtime Translation never runs continuously.
 
 # Visibility and Questions
 
-The Journeyman experience presents:
+The Journeyman Tool Window presents:
 
 - current state
 - completed and active plan steps
@@ -207,7 +209,7 @@ Autonomy reduces repetitive work without removing user ownership.
 
 Without an available development Provider, Journeyman may still restore tasks, present Context, run deterministic orchestration already supported by Runtime Services and prepare Reviews. Provider-dependent execution remains unavailable and is reported clearly.
 
-Future Providers may be local or remote. All use the same Provider Runtime contract and do not change the Journeyman experience architecture.
+Future Providers may be local or remote. All use the same Provider Runtime contract and do not change the Journeyman Tool architecture.
 
 ---
 
@@ -228,7 +230,8 @@ Failure never silently publishes partial work as a completed result.
 
 # Principles
 
-- Journeyman is the user experience and orchestration layer.
+- Journeyman is an independent Tool and the development-task interaction and orchestration layer.
+- Journeyman runs in its own Tool Window inside a Workspace and is never the Companion.
 - Codex is one Version 1 development Provider.
 - Provider Runtime remains independent and authoritative for Provider execution.
 - Context uses the normal additive Snapshot and Package contracts.

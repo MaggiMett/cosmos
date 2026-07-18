@@ -302,13 +302,13 @@ Companion never changes Archive content directly.
 
 # Editing
 
-Archive is primarily a browsing experience.
+Archive supports reading and direct inline editing in the same Object View.
 
-Edits occur through appropriate Runtime Services.
+Inline edits send Commands through the appropriate Runtime Services. Archive never writes Persistence or mutates domain data directly.
 
-Archive may open editing Tools when modification is requested.
+Separate edit windows are not part of Version 1.
 
-Browsing and editing remain separate concerns.
+The selected Object remains readable while its editable fields are changed in place. Saving, validation, permissions, versioning and completed-fact Events remain owned by the corresponding Runtime Service.
 
 ---
 
