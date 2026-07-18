@@ -66,6 +66,12 @@ export interface CompanionReply {
   mode: "deterministic" | "provider";
 }
 
+export interface CompanionContext {
+  roomId?: string;
+  workspaceSessionId?: string;
+  objectId?: string | null;
+}
+
 interface CosmosMapState {
   phase: "idle" | "loading" | "ready" | "failed";
   snapshot: CosmosMapSnapshot | null;
@@ -222,8 +228,14 @@ export class CosmosMapRuntime {
     });
   }
 
-  async sendCompanionMessage(message: string): Promise<CompanionReply> {
-    const result = await this.api.post<CompanionReply>("/companion/messages", { message });
+  async sendCompanionMessage(
+    message: string,
+    context: CompanionContext = {},
+  ): Promise<CompanionReply> {
+    const result = await this.api.post<CompanionReply>("/companion/messages", {
+      message,
+      ...context,
+    });
     if (!result.ok) throw new Error(result.error.message);
     return result.data;
   }

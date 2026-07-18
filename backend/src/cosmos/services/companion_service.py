@@ -61,6 +61,16 @@ class CompanionService:
         if normalized in {"hello", "hi", "hey"}:
             return CompanionReply("Hello. I'm here with you in Cosmos.", "deterministic")
         if normalized in {"where am i", "where am i?"}:
+            if context.workspace_session_id:
+                return CompanionReply(
+                    "You are in the active Workspace with its current Object context.",
+                    "deterministic",
+                )
+            if context.room_id:
+                return CompanionReply(
+                    "You are in the current Base Room.",
+                    "deterministic",
+                )
             if context.focused_project_id:
                 return CompanionReply(
                     "You are focused on the current Project while the surrounding Cosmos remains available.",

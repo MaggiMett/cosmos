@@ -3,6 +3,7 @@
     v-if="windowInstance"
     :bounds="windowInstance.bounds"
     :current-location="currentLocation"
+    :context="context"
     @close="close"
     @focus="focus"
     @move="move"
@@ -15,10 +16,11 @@
 import { onBeforeUnmount, ref } from "vue";
 
 import { useCosmosRuntime } from "../../runtime/plugin";
+import type { CompanionContext } from "../../runtime/cosmosMapRuntime";
 import type { WindowInstance } from "../../runtime/windowRuntime";
 import CompanionConversation from "./CompanionConversation.vue";
 
-defineProps<{ currentLocation: string }>();
+defineProps<{ currentLocation: string; context?: CompanionContext }>();
 defineEmits<{ destination: [objectId: string] }>();
 
 const runtime = useCosmosRuntime();

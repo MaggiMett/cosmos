@@ -116,6 +116,7 @@
         v-if="!backgroundOnly"
         ref="companionWindowHost"
         :current-location="room.displayName"
+        :context="{ roomId: room.objectId, objectId: state.selectedObjectId }"
         @destination="openObject"
       />
       <ObjectInteractionHost v-if="!backgroundOnly" ref="objectInteractionHost" />

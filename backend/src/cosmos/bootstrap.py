@@ -96,6 +96,7 @@ class CosmosRuntime:
         tags = TagService(objects, events)
         object_interactions = ObjectInteractionService(objects, tags, relationships)
         notifications = NotificationService(objects)
+        notifications.connect(events)
         companion = CompanionService(objects)
         base = BaseService(objects, companion)
         runtime_state = RuntimeStateRepository(persistence)

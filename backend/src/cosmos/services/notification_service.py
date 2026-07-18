@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+from collections import deque
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from threading import Lock
 
 from cosmos.domain import CosmosObject, ObjectIdentity
 from cosmos.domain.objects import JSONValue
-from cosmos.runtime import RuntimeContext
+from cosmos.runtime import EventDispatcher, RuntimeContext, RuntimeEvent
 from cosmos.services.companion_service import COMPANION_ID
 from cosmos.services.errors import RuntimeServiceError, require_permission
 from cosmos.services.object_service import CreateObjectCommand, ObjectService
@@ -29,6 +32,15 @@ class NotificationService:
 
     def __init__(self, objects: ObjectService) -> None:
         self._objects = objects
+        self._handled_event_ids: deque[str] = deque(maxlen=2048)
+        self._event_lock = Lock()
+
+    def connect(self, events: EventDispatcher) -> None:
+        events.subscribe(
+            "notification-service.job-attention",
+            frozenset({"JobCompleted", "JobFailed"}),
+            self._on_job_attention,
+        )
 
     def create(
         self,
@@ -105,6 +117,37 @@ class NotificationService:
                 {"notification_available": available},
                 context,
             )
+
+    def _on_job_attention(self, event: RuntimeEvent) -> None:
+        with self._event_lock:
+            if event.event_id in self._handled_event_ids:
+                return
+            self._handled_event_ids.append(event.event_id)
+        try:
+            category = str(event.metadata.get("category", "Background work"))
+            failed = event.event_type == "JobFailed"
+            destination = event.context.context.object_id or ""
+            if destination and self._objects.repository.get(destination) is None:
+                destination = ""
+            self.create(
+                CreateNotificationCommand(
+                    title=f"{category} {'needs attention' if failed else 'complete'}",
+                    message=(
+                        "Background work could not complete. Its state was preserved for review."
+                        if failed
+                        else "Background work completed and its result is ready to review."
+                    ),
+                    source_object_id=destination,
+                    destination_object_id=destination,
+                    category="System" if failed else "Tasks",
+                    primary_project_id=event.context.context.focused_project_id,
+                ),
+                event.context.context,
+            )
+        except Exception:
+            with self._event_lock, suppress(ValueError):
+                self._handled_event_ids.remove(event.event_id)
+            raise
 
     @staticmethod
     def _payload(value: CosmosObject) -> dict[str, JSONValue]:

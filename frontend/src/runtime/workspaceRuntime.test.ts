@@ -85,6 +85,33 @@ describe("WorkspaceRuntime", () => {
     expect(runtime.list()).toEqual([]);
   });
 
+  it("persists selected Object identity as Workspace Runtime state", async () => {
+    const selected = {
+      ...session,
+      restorableState: { ...session.restorableState, selectedObjectId: "object.alpha" },
+    };
+    const responses = [session, selected];
+    const fetchMock = vi
+      .fn()
+      .mockImplementation(() => Promise.resolve(json(responses.shift())));
+    vi.stubGlobal("fetch", fetchMock);
+    const windows = new WindowRuntime();
+    const api = new CosmosApiClient("http://cosmos.test");
+    const runtime = new WorkspaceRuntime(windows, api, new ToolRuntime(windows, api));
+    const opened = await runtime.open({
+      definitionObjectId: session.definition.objectId,
+      roomId: "cosmos.room.main",
+      environmentBounds: { x: 60, y: 50, width: 1200, height: 800 },
+    });
+
+    const updated = await runtime.selectObject(opened.objectId, "object.alpha");
+
+    expect(updated.restorableState.selectedObjectId).toBe("object.alpha");
+    expect(JSON.parse(fetchMock.mock.calls[1]?.[1]?.body as string)).toMatchObject({
+      restorableState: { selectedObjectId: "object.alpha" },
+    });
+  });
+
   it("compensates the backend session when local Window initialization fails", async () => {
     const fetchMock = vi.fn().mockResolvedValue(json(session, 201));
     vi.stubGlobal("fetch", fetchMock);

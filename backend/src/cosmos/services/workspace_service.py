@@ -112,7 +112,7 @@ class WorkspaceService:
         try:
             self._restore_tools(session)
         except Exception:
-            self._tools.close_workspace(session_id, workspace_context)
+            self._tools.close_workspace(session_id, self._active_context(session))
             del self._sessions[session_id]
             raise
         self._publish("WorkspaceOpened", session, context)
@@ -124,7 +124,7 @@ class WorkspaceService:
 
     def context(self, session_id: str, context: RuntimeContext) -> RuntimeContext:
         require_permission(context.permissions, "workspaces.read")
-        return self._session(session_id).context
+        return self._active_context(self._session(session_id))
 
     def focus(self, session_id: str, context: RuntimeContext) -> dict[str, JSONValue]:
         require_permission(context.permissions, "workspaces.write")
@@ -142,6 +142,9 @@ class WorkspaceService:
         require_permission(context.permissions, "workspaces.write")
         session = self._session(session_id)
         validated = _validate_restorable_state(state)
+        selected_object_id = validated["selectedObjectId"]
+        if isinstance(selected_object_id, str):
+            self._validate_selected_object(selected_object_id, session.context)
         session.restorable_state = validated
         self._set_session_state(session, session.state)
         self._state.set(
@@ -166,7 +169,7 @@ class WorkspaceService:
         instance = self._tools.open_workspace_tool(
             tool_definition_id,
             session_id,
-            session.context,
+            self._active_context(session),
         )
         tools = _state_tools(session.restorable_state)
         for item in tools:
@@ -209,14 +212,14 @@ class WorkspaceService:
             record["focusOrder"] = order
             for item in _state_tools(session.restorable_state):
                 item["state"] = "active" if item["instanceId"] == instance_id else "background"
-            self._tools.focus(instance_id, session.context)
+            self._tools.focus(instance_id, self._active_context(session))
         if "runtimeState" in changes:
             value = changes["runtimeState"]
             if not isinstance(value, Mapping):
                 raise RuntimeServiceError("validation_failed", "Tool Runtime State must be an object.")
             runtime_state = {str(key): item for key, item in value.items()}
             record["runtimeState"] = runtime_state
-            self._tools.update_state(instance_id, runtime_state, session.context)
+            self._tools.update_state(instance_id, runtime_state, self._active_context(session))
         for item in _state_tools(session.restorable_state):
             session.tool_windows[str(item["instanceId"])] = self._build_tool_window(session, item)
         return record
@@ -225,7 +228,7 @@ class WorkspaceService:
         require_permission(context.permissions, "workspaces.write")
         session = self._session(session_id)
         record = _tool_record(session, instance_id)
-        self._tools.close(instance_id, session.context)
+        self._tools.close(instance_id, self._active_context(session))
         session.tool_windows.pop(instance_id, None)
         session.restorable_state["tools"] = [
             item for item in _state_tools(session.restorable_state) if item["instanceId"] != instance_id
@@ -236,7 +239,7 @@ class WorkspaceService:
         require_permission(context.permissions, "workspaces.write")
         session = self._session(session_id)
         self.save_state(session_id, session.restorable_state, context)
-        self._tools.close_workspace(session_id, session.context)
+        self._tools.close_workspace(session_id, self._active_context(session))
         self._set_session_state(session, "closed")
         payload = self._session_payload(session)
         del self._sessions[session_id]
@@ -250,12 +253,12 @@ class WorkspaceService:
             instance = self._tools.open_workspace_tool(
                 str(record["definitionObjectId"]),
                 session.object_id,
-                session.context,
+                self._active_context(session),
                 instance_id=str(record["instanceId"]),
                 runtime_state=record["runtimeState"] if isinstance(record["runtimeState"], Mapping) else {},
             )
             if record["state"] == "active":
-                self._tools.focus(instance.object_id, session.context)
+                self._tools.focus(instance.object_id, self._active_context(session))
             session.tool_windows[instance.object_id] = self._build_tool_window(session, record)
 
     def _load_state(self, definition_id: str, context: RuntimeContext) -> dict[str, JSONValue]:
@@ -277,6 +280,39 @@ class WorkspaceService:
         room = self._objects.get(room_id, context)
         if "Room" not in room.system_tags:
             raise RuntimeServiceError("validation_failed", "Workspace sessions require a Room context.")
+
+    def _active_context(self, session: ActiveWorkspaceSession) -> RuntimeContext:
+        selected_object_id = session.restorable_state.get("selectedObjectId")
+        if not isinstance(selected_object_id, str):
+            return session.context
+        try:
+            selected = self._validate_selected_object(selected_object_id, session.context)
+        except RuntimeServiceError:
+            session.restorable_state["selectedObjectId"] = None
+            return session.context
+        return replace(
+            session.context,
+            object_id=selected_object_id,
+            system_tags=session.context.system_tags | selected.system_tags,
+            user_tags=session.context.user_tags | selected.user_tags,
+        )
+
+    def _validate_selected_object(
+        self,
+        object_id: str,
+        context: RuntimeContext,
+    ) -> CosmosObject:
+        selected = self._objects.get(object_id, context)
+        if (
+            selected.primary_project_id
+            and context.project_scope_ids
+            and selected.primary_project_id not in context.project_scope_ids
+        ):
+            raise RuntimeServiceError(
+                "validation_failed",
+                "Selected Object is outside the Workspace Project scope.",
+            )
+        return selected
 
     def _session(self, session_id: str) -> ActiveWorkspaceSession:
         try:

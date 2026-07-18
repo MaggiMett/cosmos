@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from cosmos.domain import ObjectContractError
+from cosmos.domain import CosmosObject, ObjectContractError
 from cosmos.domain.objects import JSONValue
 from cosmos.runtime import RuntimeContext
 from cosmos.services.errors import RuntimeServiceError
@@ -33,17 +33,18 @@ class ObjectInteractionService:
 
     def inspect(self, object_id: str, context: RuntimeContext) -> dict[str, JSONValue]:
         value = self._objects.get(object_id, context)
+        _require_visible(value, context)
         editable = _editable_properties(value.system_tags)
         relationships: list[dict[str, JSONValue]] = []
-        for relationship in self._relationships.list(context):
-            if object_id not in {relationship.endpoint_a_id, relationship.endpoint_b_id}:
-                continue
+        for relationship in self._relationships.list_for_object(object_id, context):
             related_id = (
                 relationship.endpoint_b_id
                 if relationship.endpoint_a_id == object_id
                 else relationship.endpoint_a_id
             )
             related = self._objects.get(related_id, context)
+            if not _visible(related, context):
+                continue
             relationships.append(
                 {
                     "relationshipId": relationship.relationship_id,
@@ -64,6 +65,7 @@ class ObjectInteractionService:
 
     def actions(self, object_id: str, context: RuntimeContext) -> list[dict[str, JSONValue]]:
         value = self._objects.get(object_id, context)
+        _require_visible(value, context)
         tags = value.system_tags
         if "Workspace" in tags:
             return _actions(
@@ -98,6 +100,7 @@ class ObjectInteractionService:
         context: RuntimeContext,
     ) -> dict[str, JSONValue]:
         existing = self._objects.get(object_id, context)
+        _require_visible(existing, context)
         display_name = payload.get("displayName", existing.identity.display_name)
         description = payload.get("description", existing.identity.description)
         if not isinstance(display_name, str) or not isinstance(description, str):
@@ -154,6 +157,19 @@ def _editable_properties(system_tags: Iterable[str]) -> frozenset[str]:
     for tag in system_tags:
         editable.update(EDITABLE_PROPERTIES_BY_TAG.get(tag, ()))
     return frozenset(editable)
+
+
+def _require_visible(value: CosmosObject, context: RuntimeContext) -> None:
+    if not _visible(value, context):
+        raise RuntimeServiceError("object_not_found", "Object is outside the active Project scope.")
+
+
+def _visible(value: CosmosObject, context: RuntimeContext) -> bool:
+    return not (
+        value.primary_project_id
+        and context.project_scope_ids
+        and value.primary_project_id not in context.project_scope_ids
+    )
 
 
 def _actions(*values: tuple[str, str, str]) -> list[dict[str, JSONValue]]:

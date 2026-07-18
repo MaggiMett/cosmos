@@ -48,12 +48,17 @@
 <script setup lang="ts">
 import { ref } from "vue";
 
+import type { CompanionContext } from "../../runtime/cosmosMapRuntime";
 import type { WindowBounds } from "../../runtime/windowRuntime";
 import { useCosmosRuntime } from "../../runtime/plugin";
 import ToolWindow from "../windows/ToolWindow.vue";
 import NotificationCenter from "./NotificationCenter.vue";
 
-defineProps<{ bounds: WindowBounds; currentLocation: string }>();
+const props = defineProps<{
+  bounds: WindowBounds;
+  currentLocation: string;
+  context?: CompanionContext;
+}>();
 defineEmits<{
   close: [];
   focus: [];
@@ -81,7 +86,7 @@ async function send() {
   draft.value = "";
   sending.value = true;
   try {
-    const reply = await runtime.cosmosMap.sendCompanionMessage(message);
+    const reply = await runtime.cosmosMap.sendCompanionMessage(message, props.context);
     messages.value.push({ id: crypto.randomUUID(), author: "companion", message: reply.message });
   } catch (error) {
     messages.value.push({

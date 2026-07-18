@@ -34,6 +34,7 @@ describe("ObjectInteractionRuntime", () => {
   afterEach(() => vi.unstubAllGlobals());
 
   it("opens capability-driven menus and editable Object Windows through one contract", async () => {
+    const workspaceSessionId = "cosmos.workspace-session.test";
     const updated = {
       ...details,
       displayName: "Edited Object",
@@ -54,11 +55,13 @@ describe("ObjectInteractionRuntime", () => {
     const windows = new WindowRuntime();
     const runtime = new ObjectInteractionRuntime(api, windows, new CosmosMapRuntime(api));
 
-    await runtime.showContextMenu(details.objectId, { x: 120, y: 90 });
+    await runtime.showContextMenu(details.objectId, { x: 120, y: 90 }, workspaceSessionId);
     const record = await runtime.openObject(
       details.objectId,
       "edit",
       { x: 40, y: 50, width: 620, height: 480 },
+      undefined,
+      workspaceSessionId,
     );
     const saved = await runtime.save(record.windowId, {
       displayName: "Edited Object",
@@ -72,9 +75,42 @@ describe("ObjectInteractionRuntime", () => {
     expect(saved.displayName).toBe("Edited Object");
     expect(runtime.state.windows[0]?.details.userTags).toEqual(["Reference"]);
     expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
-      "http://cosmos.test/objects/cosmos.object.test",
-      "http://cosmos.test/objects/cosmos.object.test",
-      "http://cosmos.test/objects/cosmos.object.test",
+      "http://cosmos.test/objects/cosmos.object.test?workspaceSessionId=cosmos.workspace-session.test",
+      "http://cosmos.test/objects/cosmos.object.test?workspaceSessionId=cosmos.workspace-session.test",
+      "http://cosmos.test/objects/cosmos.object.test?workspaceSessionId=cosmos.workspace-session.test",
     ]);
+  });
+
+  it("removes scoped records after a parent Workspace recursively closes its Windows", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify(details), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      ),
+    );
+    const api = new CosmosApiClient("http://cosmos.test");
+    const windows = new WindowRuntime();
+    const parent = windows.open({
+      objectId: "cosmos.window.workspace.test",
+      role: "workspace_environment",
+      title: "Test Workspace",
+      bounds: { x: 20, y: 20, width: 1000, height: 700 },
+    });
+    const runtime = new ObjectInteractionRuntime(api, windows, new CosmosMapRuntime(api));
+
+    await runtime.openObject(
+      details.objectId,
+      "details",
+      { x: 60, y: 70, width: 620, height: 480 },
+      parent.objectId,
+      "cosmos.workspace-session.test",
+    );
+    windows.close(parent.objectId);
+
+    expect(() => runtime.closeAll("cosmos.workspace-session.test")).not.toThrow();
+    expect(runtime.state.windows).toEqual([]);
   });
 });

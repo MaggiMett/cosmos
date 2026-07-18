@@ -48,7 +48,11 @@ import CosmosDialog from "./CosmosDialog.vue";
 import ContextMenu from "./ContextMenu.vue";
 import ObjectWindow from "./ObjectWindow.vue";
 
-const props = defineProps<{ parentWindowId?: string; parentBounds?: WindowBounds }>();
+const props = defineProps<{
+  parentWindowId?: string;
+  parentBounds?: WindowBounds;
+  workspaceSessionId?: string;
+}>();
 const runtime = useCosmosRuntime();
 const router = useRouter();
 const state = runtime.objectInteractions.state;
@@ -57,15 +61,18 @@ const contextMenu = computed(() => state.contextMenu as ContextMenuState | null)
 const pendingCloseWindowId = ref<string | null>(null);
 
 async function openContextMenu(objectId: string, point: { x: number; y: number }) {
-  await runtime.objectInteractions.showContextMenu(objectId, point);
+  await selectWorkspaceObject(objectId);
+  await runtime.objectInteractions.showContextMenu(objectId, point, props.workspaceSessionId);
 }
 
 async function openObject(objectId: string, section: ObjectWindowSection = "details") {
+  await selectWorkspaceObject(objectId);
   await runtime.objectInteractions.openObject(
     objectId,
     section,
     nextBounds(),
     props.parentWindowId,
+    props.workspaceSessionId,
   );
 }
 
@@ -144,8 +151,14 @@ function nextBounds(): WindowBounds {
   };
 }
 
+async function selectWorkspaceObject(objectId: string) {
+  if (props.workspaceSessionId) {
+    await runtime.workspaces.selectObject(props.workspaceSessionId, objectId);
+  }
+}
+
 defineExpose({ openContextMenu, openObject });
-onBeforeUnmount(() => runtime.objectInteractions.closeAll());
+onBeforeUnmount(() => runtime.objectInteractions.closeAll(props.workspaceSessionId));
 </script>
 
 <style scoped>

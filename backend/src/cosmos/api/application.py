@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from dataclasses import replace
 
 from starlette.applications import Starlette
 from starlette.middleware.cors import CORSMiddleware
@@ -98,12 +99,7 @@ async def companion_message(request: Request) -> JSONResponse:
         message = payload.get("message")
         if not isinstance(message, str):
             raise RuntimeServiceError("validation_failed", "Conversation message must be a string.")
-        owner = _local_owner_context()
-        snapshot = request.app.state.runtime.cosmos_map.snapshot(owner)
-        focused = snapshot["focusedProjectId"]
-        context = owner
-        if isinstance(focused, str):
-            context = _local_owner_context((focused,), focused)
+        context = _companion_context(request, payload)
         reply = request.app.state.runtime.companion.reply(message, context)
         return JSONResponse({"message": reply.message, "mode": reply.mode})
     except RuntimeServiceError as error:
@@ -114,7 +110,7 @@ async def object_details(request: Request) -> JSONResponse:
     try:
         service = request.app.state.runtime.object_interactions
         object_id = request.path_params["object_id"]
-        context = _local_owner_context()
+        context = _object_context(request, object_id)
         if request.method == "GET":
             return JSONResponse(service.inspect(object_id, context))
         return JSONResponse(service.update(object_id, await _json_object(request), context))
@@ -126,7 +122,8 @@ async def object_actions(request: Request) -> JSONResponse:
     try:
         return JSONResponse(
             request.app.state.runtime.object_interactions.actions(
-                request.path_params["object_id"], _local_owner_context()
+                request.path_params["object_id"],
+                _object_context(request, request.path_params["object_id"]),
             )
         )
     except RuntimeServiceError as error:
@@ -642,6 +639,85 @@ def _array(payload: dict[str, object], key: str) -> list:
 def _workspace_context(request: Request) -> RuntimeContext:
     return request.app.state.runtime.workspaces.context(
         request.path_params["session_id"], _local_owner_context()
+    )
+
+
+def _object_context(request: Request, object_id: str) -> RuntimeContext:
+    session_id = request.query_params.get("workspaceSessionId")
+    context = (
+        request.app.state.runtime.workspaces.context(session_id, _local_owner_context())
+        if session_id
+        else _cosmos_context(request.app.state.runtime)
+    )
+    return _with_object_context(request.app.state.runtime, context, object_id)
+
+
+def _companion_context(request: Request, payload: dict[str, object]) -> RuntimeContext:
+    runtime: CosmosRuntime = request.app.state.runtime
+    session_id = payload.get("workspaceSessionId")
+    room_id = payload.get("roomId")
+    object_id = payload.get("objectId")
+    if session_id is not None and not isinstance(session_id, str):
+        raise RuntimeServiceError("validation_failed", "workspaceSessionId must be a string.")
+    if room_id is not None and not isinstance(room_id, str):
+        raise RuntimeServiceError("validation_failed", "roomId must be a string.")
+    if object_id is not None and not isinstance(object_id, str):
+        raise RuntimeServiceError("validation_failed", "objectId must be a string.")
+    if session_id and room_id:
+        raise RuntimeServiceError(
+            "validation_failed",
+            "Conversation Context cannot combine independent Room and Workspace paths.",
+        )
+
+    owner = _local_owner_context()
+    if session_id:
+        context = runtime.workspaces.context(session_id, owner)
+    elif room_id:
+        room = runtime.objects.get(room_id, owner)
+        if "Room" not in room.system_tags:
+            raise RuntimeServiceError("validation_failed", "Conversation roomId must reference a Room.")
+        context = replace(
+            owner,
+            room_id=room_id,
+            system_tags=owner.system_tags | room.system_tags,
+            user_tags=owner.user_tags | room.user_tags,
+        )
+    else:
+        context = _cosmos_context(runtime)
+    return _with_object_context(runtime, context, object_id) if object_id else context
+
+
+def _cosmos_context(runtime: CosmosRuntime) -> RuntimeContext:
+    owner = _local_owner_context()
+    snapshot = runtime.cosmos_map.snapshot(owner)
+    focused = snapshot["focusedProjectId"]
+    scopes = tuple(
+        str(project["objectId"])
+        for project in snapshot["projects"]
+        if isinstance(project, dict) and isinstance(project.get("objectId"), str)
+    )
+    context = _local_owner_context(scopes, focused if isinstance(focused, str) else None)
+    selected = snapshot["selectedObjectId"]
+    return _with_object_context(runtime, context, selected) if isinstance(selected, str) else context
+
+
+def _with_object_context(
+    runtime: CosmosRuntime,
+    context: RuntimeContext,
+    object_id: str,
+) -> RuntimeContext:
+    value = runtime.objects.get(object_id, context)
+    if (
+        value.primary_project_id
+        and context.project_scope_ids
+        and value.primary_project_id not in context.project_scope_ids
+    ):
+        raise RuntimeServiceError("object_not_found", "Object is outside the active Project scope.")
+    return replace(
+        context,
+        object_id=object_id,
+        system_tags=context.system_tags | value.system_tags,
+        user_tags=context.user_tags | value.user_tags,
     )
 
 

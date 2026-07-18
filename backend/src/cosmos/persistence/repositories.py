@@ -225,6 +225,39 @@ class RelationshipRepository:
             for row in rows
         )
 
+    def list_for_object(
+        self,
+        object_id: str,
+        project_ids: Iterable[str] | None = None,
+    ) -> tuple[Relationship, ...]:
+        with self._persistence.connect() as connection:
+            ids = tuple(project_ids or ())
+            parameters: tuple[str, ...] = (object_id, object_id, *ids)
+            project_filter = ""
+            if ids:
+                placeholders = ", ".join("?" for _ in ids)
+                project_filter = f" AND project_id IN ({placeholders})"
+            rows = connection.execute(
+                """
+                SELECT * FROM relationships
+                WHERE (endpoint_a_id = ? OR endpoint_b_id = ?)
+                """
+                + project_filter
+                + " ORDER BY created_at",
+                parameters,
+            ).fetchall()
+        return tuple(
+            Relationship(
+                relationship_id=row["relationship_id"],
+                project_id=row["project_id"],
+                relationship_type=RelationshipType(row["relationship_type"]),
+                endpoint_a_id=row["endpoint_a_id"],
+                endpoint_b_id=row["endpoint_b_id"],
+                created_at=datetime.fromisoformat(row["created_at"]),
+            )
+            for row in rows
+        )
+
 
 class RuntimeStateRepository:
     def __init__(self, persistence: SQLitePersistence) -> None:

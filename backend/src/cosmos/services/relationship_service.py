@@ -47,3 +47,7 @@ class RelationshipService:
     def list(self, context: RuntimeContext, project_ids: tuple[str, ...] = ()) -> tuple[Relationship, ...]:
         require_permission(context.permissions, "relationships.read")
         return self._repository.list(project_ids or None)
+
+    def list_for_object(self, object_id: str, context: RuntimeContext) -> tuple[Relationship, ...]:
+        require_permission(context.permissions, "relationships.read")
+        return self._repository.list_for_object(object_id, context.project_scope_ids or None)

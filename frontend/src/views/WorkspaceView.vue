@@ -77,6 +77,7 @@
           ref="objectInteractionHost"
           :parent-window-id="session.environmentWindow.objectId"
           :parent-bounds="environmentBounds"
+          :workspace-session-id="session.objectId"
         />
       </div>
     </article>
@@ -155,6 +156,7 @@ async function closeWorkspace() {
   const roomId = session.value.context.roomId;
   try {
     await runtime.workspaces.close(session.value.objectId);
+    runtime.objectInteractions.closeAll(session.value.objectId);
     session.value = null;
     await router.push(roomId === "cosmos.room.main" ? "/base" : "/base/rooms/workshop");
   } catch (cause) {

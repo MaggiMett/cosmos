@@ -107,7 +107,10 @@ describe("CosmosMapRuntime", () => {
 
     await runtime.persistCamera();
     await runtime.persistNodePosition("project.left");
-    const reply = await runtime.sendCompanionMessage("Hello");
+    const reply = await runtime.sendCompanionMessage("Hello", {
+      roomId: "cosmos.room.main",
+      objectId: "cosmos.slot.knowledge",
+    });
 
     expect(reply.mode).toBe("deterministic");
     expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
@@ -116,5 +119,10 @@ describe("CosmosMapRuntime", () => {
       "http://cosmos.test/objects/project.left/position",
       "http://cosmos.test/companion/messages",
     ]);
+    expect(JSON.parse(fetchMock.mock.calls[3]?.[1]?.body as string)).toEqual({
+      message: "Hello",
+      roomId: "cosmos.room.main",
+      objectId: "cosmos.slot.knowledge",
+    });
   });
 });

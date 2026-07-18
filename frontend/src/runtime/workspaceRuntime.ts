@@ -163,6 +163,15 @@ export class WorkspaceRuntime {
     return snapshot(session);
   }
 
+  async selectObject(
+    sessionId: string,
+    objectId: string | null,
+  ): Promise<Readonly<WorkspaceSession>> {
+    const session = this.requireSession(sessionId);
+    session.restorableState.selectedObjectId = objectId;
+    return this.save(sessionId);
+  }
+
   async close(sessionId: string): Promise<Readonly<WorkspaceSession>> {
     const session = this.requireSession(sessionId);
     await this.save(sessionId);

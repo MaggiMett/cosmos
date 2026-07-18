@@ -38,6 +38,7 @@ export type ObjectWindowSection = "details" | "appearance" | "relationships" | "
 export interface ObjectWindowRecord {
   windowId: string;
   objectId: string;
+  workspaceSessionId?: string;
   section: ObjectWindowSection;
   details: ObjectDetails;
   window: Readonly<WindowInstance>;
@@ -47,6 +48,7 @@ export interface ObjectWindowRecord {
 
 export interface ContextMenuState {
   objectId: string;
+  workspaceSessionId?: string;
   displayName: string;
   x: number;
   y: number;
@@ -76,13 +78,18 @@ export class ObjectInteractionRuntime {
     private readonly cosmosMap: CosmosMapRuntime,
   ) {}
 
-  async showContextMenu(objectId: string, point: { x: number; y: number }): Promise<void> {
+  async showContextMenu(
+    objectId: string,
+    point: { x: number; y: number },
+    workspaceSessionId?: string,
+  ): Promise<void> {
     this.mutableState.loadingContextMenu = true;
     this.mutableState.error = null;
     try {
-      const details = await this.inspect(objectId);
+      const details = await this.inspect(objectId, workspaceSessionId);
       this.mutableState.contextMenu = {
         objectId,
+        workspaceSessionId,
         displayName: details.displayName,
         x: point.x,
         y: point.y,
@@ -105,16 +112,20 @@ export class ObjectInteractionRuntime {
     section: ObjectWindowSection,
     bounds: WindowBounds,
     parentWindowId?: string,
+    workspaceSessionId?: string,
   ): Promise<Readonly<ObjectWindowRecord>> {
     this.closeContextMenu();
-    const existing = this.mutableState.windows.find((record) => record.objectId === objectId);
+    const existing = this.mutableState.windows.find(
+      (record) =>
+        record.objectId === objectId && record.workspaceSessionId === workspaceSessionId,
+    );
     if (existing) {
       existing.section = section;
       existing.window = this.windows.focus(existing.windowId);
       return snapshotRecord(existing);
     }
-    const details = await this.inspect(objectId);
-    const windowId = `cosmos.window.object.${objectId}`;
+    const details = await this.inspect(objectId, workspaceSessionId);
+    const windowId = `cosmos.window.object.${objectId}${workspaceSessionId ? `.${workspaceSessionId}` : ""}`;
     const window = this.windows.open({
       objectId: windowId,
       role: "tool",
@@ -126,6 +137,7 @@ export class ObjectInteractionRuntime {
     const record: ObjectWindowRecord = {
       windowId,
       objectId,
+      workspaceSessionId,
       section,
       details,
       window,
@@ -152,15 +164,26 @@ export class ObjectInteractionRuntime {
   }
 
   close(windowId: string): void {
-    this.windows.close(windowId);
+    if (this.windows.list().some((window) => window.objectId === windowId)) {
+      this.windows.close(windowId);
+    }
     this.mutableState.windows = this.mutableState.windows.filter(
       (record) => record.windowId !== windowId,
     );
   }
 
-  closeAll(): void {
-    for (const record of [...this.mutableState.windows]) this.close(record.windowId);
-    this.closeContextMenu();
+  closeAll(workspaceSessionId?: string): void {
+    for (const record of [...this.mutableState.windows]) {
+      if (workspaceSessionId === undefined || record.workspaceSessionId === workspaceSessionId) {
+        this.close(record.windowId);
+      }
+    }
+    if (
+      workspaceSessionId === undefined ||
+      this.mutableState.contextMenu?.workspaceSessionId === workspaceSessionId
+    ) {
+      this.closeContextMenu();
+    }
   }
 
   async save(
@@ -176,6 +199,7 @@ export class ObjectInteractionRuntime {
       const result = await this.api.put<ObjectDetails>(
         `/objects/${encodeURIComponent(record.objectId)}`,
         update,
+        { query: { workspaceSessionId: record.workspaceSessionId } },
       );
       if (!result.ok) throw new Error(result.error.message);
       record.details = copyDetails(result.data);
@@ -189,8 +213,10 @@ export class ObjectInteractionRuntime {
     }
   }
 
-  private async inspect(objectId: string): Promise<ObjectDetails> {
-    const result = await this.api.get<ObjectDetails>(`/objects/${encodeURIComponent(objectId)}`);
+  private async inspect(objectId: string, workspaceSessionId?: string): Promise<ObjectDetails> {
+    const result = await this.api.get<ObjectDetails>(`/objects/${encodeURIComponent(objectId)}`, {
+      query: { workspaceSessionId },
+    });
     if (!result.ok) throw new Error(result.error.message);
     return copyDetails(result.data);
   }

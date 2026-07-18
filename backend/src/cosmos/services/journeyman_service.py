@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import replace
 from datetime import UTC, datetime
 from uuid import uuid4
 
@@ -109,7 +110,12 @@ class JourneymanService:
             job = self._jobs.create(
                 JOURNEYMAN_JOB,
                 {"taskId": task_id},
-                context,
+                replace(
+                    context,
+                    object_id=task_id,
+                    system_tags=context.system_tags | value.system_tags,
+                    user_tags=context.user_tags | value.user_tags,
+                ),
                 creating_service="journeyman-service",
                 resumable=False,
             )

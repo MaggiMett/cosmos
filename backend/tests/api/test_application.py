@@ -154,3 +154,88 @@ def test_object_interaction_api_persists_selection_metadata_tags_and_properties(
     assert updated.json()["properties"]["vision"] == "A connected source of truth."
     assert snapshot.json()["selectedObjectId"] == "cosmos.project.system.knowledge"
     assert notifications.json() == []
+
+
+def test_workspace_context_scopes_object_interaction_and_restores_selection(tmp_path: Path) -> None:
+    settings = RuntimeSettings(runtime_path=tmp_path / "Runtime", port=0)
+
+    with TestClient(create_app(settings)) as client:
+        opened = client.post(
+            "/workspaces/cosmos.workspace.knowledge/sessions",
+            json={"roomId": "cosmos.room.main"},
+        )
+        session_id = opened.json()["objectId"]
+        knowledge_object_id = client.post(
+            f"/workspace-sessions/{session_id}/capture/submissions",
+            json={"mode": "quick", "content": "Knowledge scoped Object", "attachments": []},
+        ).json()["knowledge"]["objectId"]
+        creation_session_id = client.post(
+            "/workspaces/cosmos.workspace.creation/sessions",
+            json={"roomId": "cosmos.room.main"},
+        ).json()["objectId"]
+        creation_object_id = client.post(
+            f"/workspace-sessions/{creation_session_id}/capture/submissions",
+            json={"mode": "quick", "content": "Creation scoped Object", "attachments": []},
+        ).json()["knowledge"]["objectId"]
+        selected = client.put(
+            f"/workspace-sessions/{session_id}",
+            json={
+                "restorableState": {
+                    "tools": [],
+                    "selectedObjectId": knowledge_object_id,
+                    "filters": {},
+                    "camera": {},
+                    "panels": {},
+                }
+            },
+        )
+        visible = client.get(
+            f"/objects/{knowledge_object_id}",
+            params={"workspaceSessionId": session_id},
+        )
+        outside_scope = client.get(
+            f"/objects/{creation_object_id}",
+            params={"workspaceSessionId": session_id},
+        )
+
+    assert selected.json()["restorableState"]["selectedObjectId"] == knowledge_object_id
+    assert visible.status_code == 200
+    assert outside_scope.status_code == 404
+
+
+def test_background_job_attention_reaches_companion_notifications(tmp_path: Path) -> None:
+    settings = RuntimeSettings(runtime_path=tmp_path / "Runtime", port=0)
+    app = create_app(settings)
+
+    with TestClient(app) as client:
+        opened = client.post(
+            "/workspaces/cosmos.workspace.knowledge/sessions",
+            json={"roomId": "cosmos.room.main"},
+        )
+        session_id = opened.json()["objectId"]
+        capture = client.post(
+            f"/workspace-sessions/{session_id}/capture/submissions",
+            json={"mode": "quick", "content": "Integrated background work", "attachments": []},
+        )
+        app.state.runtime.jobs.wait(capture.json()["job"]["jobId"])
+        notifications = client.get("/notifications")
+        companion = client.get("/cosmos/map")
+
+    notification = notifications.json()[0]
+    assert notification["displayName"] == "Knowledge Processing complete"
+    assert notification["category"] == "Tasks"
+    assert notification["destinationObjectId"] == capture.json()["knowledge"]["objectId"]
+    assert companion.json()["companion"]["notificationAvailable"] is True
+
+
+def test_companion_uses_room_context_instead_of_stale_cosmos_focus(tmp_path: Path) -> None:
+    settings = RuntimeSettings(runtime_path=tmp_path / "Runtime", port=0)
+
+    with TestClient(create_app(settings)) as client:
+        reply = client.post(
+            "/companion/messages",
+            json={"message": "Where am I?", "roomId": "cosmos.room.main"},
+        )
+
+    assert reply.status_code == 200
+    assert reply.json()["message"] == "You are in the current Base Room."

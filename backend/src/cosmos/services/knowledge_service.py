@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping
+from dataclasses import replace
 from datetime import UTC, datetime
 from uuid import uuid4
 
@@ -153,7 +154,13 @@ class KnowledgeService:
         job = self._jobs.create(
             PROCESSING_JOB,
             {"knowledgeId": knowledge_id},
-            context,
+            replace(
+                context,
+                object_id=knowledge_id,
+                knowledge_id=knowledge_id,
+                system_tags=context.system_tags | value.system_tags,
+                user_tags=context.user_tags | value.user_tags,
+            ),
             creating_service="knowledge-service",
             resumable=True,
         )
