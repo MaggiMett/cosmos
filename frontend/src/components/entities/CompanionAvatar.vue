@@ -46,11 +46,11 @@ withDefaults(
   min-width: 16px;
   aspect-ratio: 1;
   place-items: center;
-  border: 1px solid rgba(224, 242, 254, 0.66);
+  border: 1px solid rgba(182, 222, 238, 0.52);
   border-radius: 50%;
-  background: #172033;
-  box-shadow: 0 0 12px rgba(125, 211, 252, 0.62);
-  color: #7dd3fc;
+  background: #0b1721;
+  box-shadow: 0 0 12px rgba(98, 200, 234, 0.42);
+  color: var(--cosmos-color-accent, #62c8ea);
   font-size: clamp(0.58rem, 42%, 0.8rem);
   font-weight: 800;
 }
@@ -59,50 +59,56 @@ withDefaults(
   position: absolute;
   z-index: 2;
   inset: 4%;
-  border: 2px solid rgba(226, 232, 240, 0.72);
-  border-radius: 50%;
-  background: radial-gradient(circle at 40% 30%, #f8fafc, #cbd5e1 58%, #64748b 100%);
-  box-shadow: 0 0 26px rgba(125, 211, 252, 0.2), inset -8px -10px 14px rgba(30, 41, 59, 0.3);
+  border: 1px solid rgba(190, 210, 219, 0.48);
+  border-radius: 49% 49% 45% 45%;
+  background:
+    radial-gradient(circle at 33% 24%, rgba(255, 255, 255, 0.2), transparent 18%),
+    linear-gradient(145deg, #6f7b83 0 16%, #303d47 44%, #111a22 82%);
+  box-shadow: 0 0 28px rgba(72, 159, 192, 0.13), inset -9px -12px 18px rgba(0, 0, 0, 0.42), inset 2px 2px rgba(255, 255, 255, 0.12);
   transition: filter 160ms ease, transform 160ms ease;
 }
 
 .companion-avatar__visor {
   position: absolute;
-  inset: 14% 10% 18%;
+  inset: 11% 9% 17%;
   overflow: hidden;
-  border: 2px solid rgba(125, 211, 252, 0.46);
-  border-radius: 48% 48% 44% 44%;
-  background: radial-gradient(circle at 48% 56%, #1e293b, #07101f 74%);
-  box-shadow: inset 0 0 16px rgba(125, 211, 252, 0.18);
+  border: 1px solid rgba(122, 186, 210, 0.38);
+  border-radius: 48% 48% 43% 43%;
+  background: radial-gradient(circle at 48% 50%, rgba(35, 62, 75, 0.76), #050b10 76%);
+  box-shadow: inset 0 0 18px rgba(70, 162, 194, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.36);
 }
 
 .companion-avatar__face {
   position: absolute;
-  inset: 24% 20% 18%;
-  border-radius: 46%;
-  background: radial-gradient(circle at 46% 38%, #f7d7bd, #bd8268 86%);
+  inset: 17% 17% 12%;
+  border-radius: 52% 52% 46% 46% / 42% 42% 58% 58%;
+  background:
+    radial-gradient(circle at 48% 28%, rgba(231, 241, 239, 0.3), transparent 21%),
+    linear-gradient(152deg, #aab6b5, #687775 62%, #414d4d);
+  box-shadow: inset -5px -7px 9px rgba(16, 27, 29, 0.28);
 }
 
 .companion-avatar__eye {
   position: absolute;
-  top: 38%;
-  width: 8%;
-  height: 10%;
-  border-radius: 50%;
-  background: #172033;
+  top: 34%;
+  width: 22%;
+  height: 28%;
+  border-radius: 68% 32% 64% 36%;
+  background: radial-gradient(circle at 38% 34%, rgba(165, 222, 238, 0.32) 0 4%, #071015 18%, #010305 78%);
+  box-shadow: inset 0 0 5px #000, 0 0 5px rgba(78, 165, 192, 0.12);
   animation: companion-blink 6.5s infinite;
 }
 
-.companion-avatar__eye--left { left: 29%; }
-.companion-avatar__eye--right { right: 29%; }
+.companion-avatar__eye--left { left: 18%; rotate: 13deg; }
+.companion-avatar__eye--right { right: 18%; rotate: -13deg; }
 
 .companion-avatar__smile {
   position: absolute;
-  bottom: 22%;
-  left: 40%;
-  width: 20%;
-  height: 10%;
-  border-bottom: 2px solid #6e3c35;
+  bottom: 15%;
+  left: 42%;
+  width: 16%;
+  height: 5%;
+  border-top: 1px solid rgba(24, 37, 38, 0.62);
   border-radius: 50%;
 }
 
@@ -114,7 +120,7 @@ withDefaults(
   height: 13%;
   transform: rotate(-15deg);
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.13);
 }
 
 .companion-avatar__collar {
@@ -124,8 +130,9 @@ withDefaults(
   bottom: -10%;
   left: 18%;
   height: 30%;
-  border-radius: 20px 20px 8px 8px;
-  background: linear-gradient(90deg, #64748b, #e2e8f0 45%, #64748b);
+  border: 1px solid rgba(170, 196, 207, 0.22);
+  border-radius: 12px 12px 5px 5px;
+  background: linear-gradient(90deg, #202d37, #71808a 45%, #202d37);
 }
 
 .companion-avatar--seated .companion-avatar__helmet {
@@ -139,16 +146,19 @@ withDefaults(
   bottom: 12%;
   left: 24%;
   height: 48%;
-  border: 2px solid rgba(226, 232, 240, 0.5);
-  border-radius: 42% 42% 28% 28%;
-  background: linear-gradient(155deg, #e2e8f0, #64748b 74%);
-  box-shadow: inset -8px -8px 12px rgba(15, 23, 42, 0.26);
+  border: 1px solid rgba(181, 205, 214, 0.34);
+  border-radius: 38% 38% 22% 22%;
+  background:
+    linear-gradient(90deg, transparent 47%, rgba(126, 179, 196, 0.28) 48% 51%, transparent 52%),
+    linear-gradient(155deg, #596772, #222f39 72%);
+  box-shadow: inset -8px -8px 12px rgba(4, 10, 15, 0.34);
 }
 
 .companion-avatar__arm,
 .companion-avatar__leg {
   position: absolute;
-  background: linear-gradient(155deg, #cbd5e1, #475569);
+  border: 1px solid rgba(174, 201, 211, 0.2);
+  background: linear-gradient(155deg, #53636e, #202d36);
 }
 
 .companion-avatar__arm {

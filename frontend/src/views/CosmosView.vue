@@ -217,14 +217,21 @@ const neighbors = computed(() => {
 
 const renderedConnections = computed(() => {
   if (!snapshot.value) return [];
-  const endpoints = new Map<string, { x: number; y: number; color: string }>();
+  const endpoints = new Map<string, { x: number; y: number; color: string; projectId: string }>();
   for (const project of snapshot.value.projects) {
-    for (const node of project.nodes) endpoints.set(node.objectId, { x: node.x, y: node.y, color: project.color });
+    for (const node of project.nodes) {
+      endpoints.set(node.objectId, {
+        x: node.x,
+        y: node.y,
+        color: project.color,
+        projectId: project.objectId,
+      });
+    }
   }
   return snapshot.value.connections.flatMap((connection) => {
     const start = endpoints.get(connection.endpointAId);
     const end = endpoints.get(connection.endpointBId);
-    if (!start || !end) return [];
+    if (!start || !end || start.projectId !== end.projectId) return [];
     const bend = Math.min(44, Math.hypot(end.x - start.x, end.y - start.y) * 0.09);
     return [
       {
@@ -246,10 +253,23 @@ function load() {
 }
 
 function projectStyle(project: MapProject) {
+  const offsets = project.nodes.map((node) => ({ x: node.x - project.x, y: node.y - project.y }));
+  const minimumX = Math.min(0, ...offsets.map((point) => point.x));
+  const maximumX = Math.max(0, ...offsets.map((point) => point.x));
+  const minimumY = Math.min(0, ...offsets.map((point) => point.y));
+  const maximumY = Math.max(0, ...offsets.map((point) => point.y));
+  const width = Math.min(640, Math.max(420, maximumX - minimumX + 280));
+  const height = Math.min(520, Math.max(340, maximumY - minimumY + 230));
+  const centerX = (minimumX + maximumX) / 2;
+  const centerY = (minimumY + maximumY) / 2;
   return {
     left: `${project.x}px`,
     top: `${project.y}px`,
     "--project-color": project.color,
+    "--nebula-left": `${centerX - width / 2}px`,
+    "--nebula-top": `${centerY - height / 2}px`,
+    "--nebula-width": `${width}px`,
+    "--nebula-height": `${height}px`,
   };
 }
 
@@ -462,11 +482,37 @@ onBeforeUnmount(() => {
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(circle at 12% 18%, rgba(57, 45, 108, 0.12), transparent 28%),
-    radial-gradient(circle at 74% 68%, rgba(10, 83, 112, 0.1), transparent 32%),
-    #03050d;
+    radial-gradient(ellipse at 15% 9%, rgba(37, 83, 135, 0.15), transparent 25%),
+    radial-gradient(ellipse at 79% 21%, rgba(92, 46, 126, 0.12), transparent 28%),
+    radial-gradient(ellipse at 55% 78%, rgba(15, 93, 105, 0.08), transparent 32%),
+    linear-gradient(142deg, #010207 0%, #030711 48%, #010308 100%);
   outline: none;
   touch-action: none;
+}
+
+.cosmos-map::before,
+.cosmos-map::after {
+  position: absolute;
+  inset: -15%;
+  content: "";
+  pointer-events: none;
+}
+
+.cosmos-map::before {
+  background:
+    radial-gradient(ellipse at 18% 31%, transparent 0 6%, rgba(36, 103, 167, 0.09) 13%, transparent 25%),
+    radial-gradient(ellipse at 82% 39%, transparent 0 5%, rgba(141, 65, 170, 0.075) 14%, transparent 27%),
+    radial-gradient(ellipse at 47% 81%, transparent 0 4%, rgba(45, 138, 127, 0.055) 14%, transparent 25%);
+  filter: blur(16px);
+  opacity: 0.82;
+}
+
+.cosmos-map::after {
+  background:
+    radial-gradient(circle at 9% 73%, rgba(240, 174, 126, 0.08), transparent 0.9%),
+    radial-gradient(circle at 92% 68%, rgba(115, 157, 225, 0.08), transparent 0.8%),
+    radial-gradient(circle at 72% 8%, rgba(193, 157, 224, 0.06), transparent 0.7%);
+  filter: blur(1px);
 }
 
 .cosmos-map__stars {
@@ -476,17 +522,18 @@ onBeforeUnmount(() => {
 }
 
 .cosmos-map__stars--distant {
-  opacity: 0.52;
+  opacity: 0.46;
   background-image:
-    radial-gradient(circle, rgba(226, 232, 240, 0.62) 0 1px, transparent 1.4px),
-    radial-gradient(circle, rgba(125, 211, 252, 0.38) 0 1px, transparent 1.5px);
-  background-position: 8px 18px, 58px 72px;
-  background-size: 91px 91px, 137px 137px;
+    radial-gradient(circle, rgba(226, 236, 243, 0.64) 0 0.7px, transparent 1.2px),
+    radial-gradient(circle, rgba(111, 180, 214, 0.36) 0 0.8px, transparent 1.4px),
+    radial-gradient(circle, rgba(215, 169, 228, 0.26) 0 0.65px, transparent 1.2px);
+  background-position: 8px 18px, 58px 72px, 106px 31px;
+  background-size: 83px 83px, 131px 131px, 197px 197px;
 }
 
 .cosmos-map__stars--near {
-  opacity: 0.34;
-  background-image: radial-gradient(circle, rgba(248, 250, 252, 0.85) 0 1.2px, transparent 1.7px);
+  opacity: 0.28;
+  background-image: radial-gradient(circle, rgba(248, 250, 252, 0.9) 0 1px, transparent 1.6px);
   background-position: 31px 12px;
   background-size: 211px 211px;
   animation: stellar-drift 80s linear infinite;
@@ -515,26 +562,50 @@ onBeforeUnmount(() => {
 
 .project-galaxy__nebula {
   position: absolute;
-  top: -175px;
-  left: -205px;
-  width: 410px;
-  height: 350px;
-  transform: rotate(-7deg);
-  border-radius: 61% 39% 54% 46% / 41% 54% 46% 59%;
+  top: var(--nebula-top, -196px);
+  left: var(--nebula-left, -238px);
+  width: var(--nebula-width, 476px);
+  height: var(--nebula-height, 392px);
+  transform: rotate(-9deg);
+  border-radius: 67% 33% 58% 42% / 39% 57% 43% 61%;
   background:
-    radial-gradient(ellipse at 52% 48%, color-mix(in srgb, var(--project-color) 25%, transparent), transparent 54%),
-    radial-gradient(ellipse at 30% 62%, color-mix(in srgb, var(--project-color) 14%, transparent), transparent 55%),
-    radial-gradient(ellipse at 72% 32%, rgba(255, 255, 255, 0.045), transparent 42%);
-  filter: blur(3px);
-  opacity: 0.72;
+    radial-gradient(ellipse at 51% 51%, rgba(235, 248, 255, 0.17) 0, color-mix(in srgb, var(--project-color) 26%, transparent) 12%, transparent 32%),
+    conic-gradient(from 18deg at 52% 49%, transparent 0 8%, color-mix(in srgb, var(--project-color) 15%, transparent) 13%, transparent 22% 34%, color-mix(in srgb, var(--project-color) 11%, transparent) 42%, transparent 51% 67%, color-mix(in srgb, var(--project-color) 13%, transparent) 76%, transparent 86%),
+    radial-gradient(ellipse at 32% 64%, color-mix(in srgb, var(--project-color) 12%, transparent), transparent 52%),
+    radial-gradient(ellipse at 74% 31%, color-mix(in srgb, var(--project-color) 8%, white), transparent 44%);
+  filter: blur(5px) saturate(1.16);
+  opacity: 0.76;
   transition: filter 240ms ease, opacity 240ms ease, transform 500ms ease;
   animation: nebula-breathe 11s ease-in-out infinite alternate;
   pointer-events: none;
 }
 
+.project-galaxy__nebula::before,
+.project-galaxy__nebula::after {
+  position: absolute;
+  content: "";
+  pointer-events: none;
+}
+
+.project-galaxy__nebula::before {
+  inset: 18% 10%;
+  transform: rotate(13deg);
+  border: 1px solid color-mix(in srgb, var(--project-color) 15%, transparent);
+  border-color: color-mix(in srgb, var(--project-color) 16%, transparent) transparent;
+  border-radius: 50%;
+  box-shadow: 0 0 34px color-mix(in srgb, var(--project-color) 9%, transparent);
+}
+
+.project-galaxy__nebula::after {
+  inset: 7% 21%;
+  transform: rotate(-24deg);
+  border-radius: 50%;
+  background: radial-gradient(ellipse, transparent 48%, color-mix(in srgb, var(--project-color) 8%, transparent) 52%, transparent 68%);
+}
+
 .project-galaxy--active .project-galaxy__nebula,
 .project-galaxy--selected .project-galaxy__nebula {
-  filter: blur(1px) brightness(1.22);
+  filter: blur(3px) brightness(1.22) saturate(1.18);
   opacity: 1;
 }
 
@@ -565,34 +636,36 @@ onBeforeUnmount(() => {
 }
 
 .cosmos-node__star {
-  width: 17px;
-  height: 17px;
-  border: 1px solid rgba(255, 255, 255, 0.76);
+  width: 13px;
+  height: 13px;
+  border: 1px solid rgba(241, 249, 255, 0.72);
   border-radius: 50%;
   background: #f8fafc;
   box-shadow:
     0 0 5px #fff,
-    0 0 15px var(--project-color),
-    0 0 38px color-mix(in srgb, var(--project-color) 72%, transparent);
+    0 0 12px var(--project-color),
+    0 0 30px color-mix(in srgb, var(--project-color) 64%, transparent);
   transition: transform 160ms ease, box-shadow 160ms ease;
   animation: node-pulse 4.8s ease-in-out infinite;
 }
 
 .cosmos-node--projectroot .cosmos-node__star {
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
+  border-color: rgba(255, 255, 255, 0.9);
   background: radial-gradient(circle at 38% 32%, #fff, var(--project-color) 44%, #1e1b4b 100%);
+  box-shadow: 0 0 7px #fff, 0 0 22px var(--project-color), 0 0 58px color-mix(in srgb, var(--project-color) 58%, transparent);
 }
 
 .cosmos-node--domain .cosmos-node__star,
 .cosmos-node--cluster .cosmos-node__star {
-  width: 23px;
-  height: 23px;
+  width: 20px;
+  height: 20px;
 }
 
 .cosmos-node--detail .cosmos-node__star {
-  width: 11px;
-  height: 11px;
+  width: 8px;
+  height: 8px;
 }
 
 .cosmos-node:hover .cosmos-node__star,
@@ -602,8 +675,8 @@ onBeforeUnmount(() => {
 }
 
 .cosmos-node--selected .cosmos-node__hitbox {
-  outline: 1px solid color-mix(in srgb, var(--project-color) 76%, white);
-  outline-offset: -8px;
+  outline: 1px solid color-mix(in srgb, var(--project-color) 62%, white);
+  outline-offset: -11px;
 }
 
 .cosmos-node__label {
@@ -613,17 +686,18 @@ onBeforeUnmount(() => {
   width: max-content;
   max-width: 190px;
   transform: translateX(-50%);
-  color: rgba(241, 245, 249, 0.86);
-  font-size: 0.72rem;
-  font-weight: 520;
-  letter-spacing: 0.02em;
-  text-shadow: 0 2px 7px #020617;
+  color: rgba(225, 237, 244, 0.78);
+  font-size: 0.67rem;
+  font-weight: 480;
+  letter-spacing: 0.055em;
+  text-shadow: 0 2px 8px #01030a, 0 0 12px #01030a;
 }
 
 .cosmos-node--projectroot .cosmos-node__label {
   top: calc(50% + 35px);
-  font-size: 0.84rem;
-  font-weight: 620;
+  font-size: 0.86rem;
+  font-weight: 560;
+  letter-spacing: 0.08em;
 }
 
 .cosmos-connections {
@@ -639,16 +713,16 @@ onBeforeUnmount(() => {
 .cosmos-connection {
   fill: none;
   stroke-linecap: round;
-  stroke-width: 2;
-  opacity: 0.46;
-  filter: drop-shadow(0 0 4px rgba(125, 211, 252, 0.32));
+  stroke-width: 1.15;
+  opacity: 0.34;
+  filter: drop-shadow(0 0 3px rgba(98, 200, 234, 0.22));
 }
 
 .cosmos-connection--semantic,
 .cosmos-connection--discovery {
   stroke-width: 1;
-  opacity: 0.2;
-  stroke-dasharray: 7 8;
+  opacity: 0.14;
+  stroke-dasharray: 3 7;
 }
 
 .map-status {
@@ -692,11 +766,11 @@ onBeforeUnmount(() => {
   padding: 8px;
   transform: translateX(-50%);
   overflow: auto;
-  border: 1px solid rgba(226, 232, 240, 0.15);
-  border-radius: 16px;
-  background: rgba(7, 12, 29, 0.94);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.48);
-  backdrop-filter: blur(18px);
+  border: 1px solid var(--cosmos-color-border-strong);
+  border-radius: var(--cosmos-radius-window, 10px);
+  background: var(--cosmos-color-surface-raised);
+  box-shadow: var(--cosmos-window-shadow);
+  backdrop-filter: blur(var(--cosmos-surface-blur, 18px));
 }
 
 .quick-travel header {
@@ -727,7 +801,7 @@ onBeforeUnmount(() => {
   padding: 8px 10px;
   align-items: center;
   border: 1px solid transparent;
-  border-radius: 11px;
+  border-radius: var(--cosmos-radius-control, 5px);
   background: transparent;
   color: #e2e8f0;
   text-align: left;
@@ -781,7 +855,7 @@ onBeforeUnmount(() => {
   padding: 7px 12px;
   transform: translate(-50%, 8px);
   border: 1px solid rgba(226, 232, 240, 0.09);
-  border-radius: 999px;
+  border-radius: var(--cosmos-radius-control, 5px);
   background: rgba(3, 7, 18, 0.66);
   color: #64748b;
   font-size: 0.65rem;

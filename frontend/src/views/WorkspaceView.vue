@@ -263,87 +263,118 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeyDown));
 .workspace-stage {
   z-index: 20;
   overflow: hidden;
-  background: rgba(2, 5, 12, 0.28);
+  background:
+    radial-gradient(ellipse at 50% 46%, rgba(31, 79, 102, 0.11), transparent 50%),
+    rgba(1, 3, 8, 0.46);
   pointer-events: auto;
 }
 
 .workspace-environment {
-  --workspace-accent: #8ae6c6;
+  --workspace-accent: #75cfa9;
   position: fixed;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--workspace-accent) 32%, transparent);
-  border-radius: 18px;
-  background: rgba(9, 17, 25, 0.96);
-  box-shadow: 0 42px 120px rgba(0, 0, 0, 0.66), inset 0 1px rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(24px);
+  border: 1px solid color-mix(in srgb, var(--workspace-accent) 24%, var(--cosmos-color-border));
+  border-radius: var(--cosmos-radius-window, 10px);
+  background: rgba(5, 10, 16, 0.965);
+  box-shadow: var(--cosmos-window-shadow-active), inset 0 1px rgba(255, 255, 255, 0.045);
+  backdrop-filter: blur(22px);
   animation: workspace-open 360ms cubic-bezier(0.22, 0.78, 0.18, 1) both;
 }
 
-.workspace-environment--creationworkbench { --workspace-accent: #e9a86d; }
-.workspace-environment--graphicsdesk { --workspace-accent: #bda7f4; }
+.workspace-environment--creationworkbench { --workspace-accent: #d9a765; }
+.workspace-environment--graphicsdesk { --workspace-accent: #a88ce7; }
 
 .workspace-environment__header {
   position: relative;
   z-index: 60;
   display: flex;
-  height: 62px;
+  height: 54px;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px 0 22px;
-  border-bottom: 1px solid rgba(218, 233, 238, 0.1);
-  background: linear-gradient(180deg, rgba(38, 55, 66, 0.8), rgba(18, 29, 38, 0.76));
+  padding: 0 13px 0 18px;
+  border-bottom: 1px solid rgba(181, 211, 225, 0.1);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--workspace-accent) 7%, transparent), transparent 34%),
+    linear-gradient(180deg, rgba(24, 36, 47, 0.88), rgba(11, 20, 28, 0.82));
 }
 
-.workspace-environment__identity { display: flex; align-items: center; gap: 11px; }
-.workspace-environment__identity > i { width: 9px; height: 9px; border-radius: 50%; background: var(--workspace-accent); box-shadow: 0 0 15px var(--workspace-accent); }
+.workspace-environment__identity { display: flex; align-items: center; gap: 10px; }
+.workspace-environment__identity > i { width: 8px; height: 8px; transform: rotate(45deg); border: 1px solid color-mix(in srgb, var(--workspace-accent) 78%, white); background: color-mix(in srgb, var(--workspace-accent) 72%, #071018); box-shadow: 0 0 12px color-mix(in srgb, var(--workspace-accent) 54%, transparent); }
 .workspace-environment__identity > span { display: grid; gap: 1px; }
-.workspace-environment__identity small { color: rgba(202, 219, 226, 0.45); font-size: 0.54rem; letter-spacing: 0.16em; text-transform: uppercase; }
-.workspace-environment__identity strong { color: #edf4f6; font-size: 0.8rem; font-weight: 640; }
+.workspace-environment__identity small { color: var(--cosmos-color-faint); font-size: 0.49rem; letter-spacing: 0.2em; text-transform: uppercase; }
+.workspace-environment__identity strong { color: var(--cosmos-color-text); font-size: 0.77rem; font-weight: 560; letter-spacing: 0.035em; }
 
 .workspace-environment__header > button {
   display: grid;
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
   padding: 0;
   place-items: center;
-  border: 1px solid rgba(225, 238, 241, 0.14);
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(181, 211, 225, 0.14);
+  border-radius: var(--cosmos-radius-control, 5px);
+  background: rgba(204, 232, 241, 0.025);
   color: rgba(231, 240, 242, 0.78);
-  font-size: 1.2rem;
+  font-size: 0.98rem;
   cursor: pointer;
 }
 .workspace-environment__header > button:hover,
 .workspace-environment__header > button:focus-visible { border-color: rgba(255, 255, 255, 0.46); background: rgba(105, 61, 61, 0.72); outline: 0; }
 
-.workspace-canvas { position: absolute; inset: 62px 0 0; overflow: hidden; background: radial-gradient(ellipse at 52% 48%, color-mix(in srgb, var(--workspace-accent) 5%, transparent), transparent 58%), #0d151d; }
-.workspace-canvas::before { position: absolute; inset: 0; background-image: linear-gradient(rgba(178, 211, 218, 0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(178, 211, 218, 0.025) 1px, transparent 1px); background-size: 34px 34px; content: ""; pointer-events: none; }
+.workspace-canvas {
+  position: absolute;
+  inset: 54px 0 0;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 62% 32%, color-mix(in srgb, var(--workspace-accent) 5%, transparent), transparent 31%),
+    radial-gradient(ellipse at 36% 72%, rgba(74, 116, 151, 0.055), transparent 35%),
+    linear-gradient(142deg, #071019, #08121b 47%, #050b11);
+}
+.workspace-canvas::before {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(168, 201, 213, 0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(168, 201, 213, 0.022) 1px, transparent 1px),
+    radial-gradient(circle, rgba(205, 228, 238, 0.34) 0 0.65px, transparent 1px);
+  background-position: 0 0, 0 0, 17px 23px;
+  background-size: 40px 40px, 40px 40px, 131px 131px;
+  content: "";
+  opacity: 0.72;
+  pointer-events: none;
+}
+.workspace-canvas::after {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 45%, rgba(0, 2, 5, 0.34) 100%);
+  content: "";
+  pointer-events: none;
+}
 .workspace-canvas__overlay { position: absolute; inset: 0; pointer-events: none; }
-.workspace-canvas__overlay i { position: absolute; width: 170px; height: 170px; border: 1px solid var(--workspace-accent); border-radius: 50%; transform: translate(-50%, -50%); }
+.workspace-canvas__overlay i { position: absolute; width: 190px; height: 116px; border: 1px solid var(--workspace-accent); border-color: color-mix(in srgb, var(--workspace-accent) 58%, transparent) transparent; border-radius: 50%; transform: translate(-50%, -50%) rotate(-12deg); }
 
 .tool-area {
   position: absolute;
   z-index: 58;
-  top: 18px;
-  left: 18px;
+  top: 14px;
+  left: 14px;
   display: flex;
   max-width: calc(100% - 36px);
-  min-height: 46px;
-  padding: 6px;
+  min-height: 40px;
+  padding: 4px;
   align-items: center;
-  border: 1px solid rgba(210, 229, 234, 0.1);
-  border-radius: 13px;
-  background: rgba(12, 22, 29, 0.78);
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.24);
+  border: 1px solid rgba(181, 211, 225, 0.11);
+  border-radius: 7px;
+  background: rgba(6, 14, 20, 0.76);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(14px);
   gap: 5px;
 }
-.tool-area__label { padding: 0 8px; color: rgba(199, 218, 223, 0.38); font-size: 0.54rem; letter-spacing: 0.15em; text-transform: uppercase; }
-.tool-area button { display: flex; min-height: 34px; padding: 4px 9px 4px 6px; align-items: center; border: 1px solid transparent; border-radius: 8px; background: transparent; color: #dce9ec; cursor: pointer; gap: 6px; }
+.tool-area__label { padding: 0 7px; color: var(--cosmos-color-faint); font-size: 0.49rem; letter-spacing: 0.18em; text-transform: uppercase; }
+.tool-area button { display: flex; min-height: 30px; padding: 3px 8px 3px 5px; align-items: center; border: 1px solid transparent; border-radius: 4px; background: transparent; color: #d7e5eb; cursor: pointer; gap: 6px; }
 .tool-area button:hover,
 .tool-area button:focus-visible { border-color: color-mix(in srgb, var(--workspace-accent) 28%, transparent); background: color-mix(in srgb, var(--workspace-accent) 8%, transparent); outline: 0; }
-.tool-area button i { display: grid; width: 24px; height: 24px; place-items: center; border-radius: 7px; background: color-mix(in srgb, var(--workspace-accent) 14%, #16232c); color: var(--workspace-accent); font-size: 0.64rem; font-style: normal; }
-.tool-area button span { font-size: 0.66rem; }
+.tool-area button i { display: grid; width: 22px; height: 22px; place-items: center; border: 1px solid color-mix(in srgb, var(--workspace-accent) 18%, transparent); border-radius: 3px; background: color-mix(in srgb, var(--workspace-accent) 9%, #101b23); color: var(--workspace-accent); font-size: 0.59rem; font-style: normal; }
+.tool-area button span { font-size: 0.63rem; letter-spacing: 0.02em; }
 
 .workspace-status { position: absolute; z-index: 70; top: 50%; left: 50%; display: grid; transform: translate(-50%, -50%); place-items: center; color: #b5c8cd; font-size: 0.72rem; }
 .workspace-status > span { width: 38px; height: 38px; border: 1px solid rgba(138, 230, 198, 0.25); border-top-color: #8ae6c6; border-radius: 50%; animation: spin 1.1s linear infinite; }

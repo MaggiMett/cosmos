@@ -143,29 +143,33 @@ onBeforeUnmount(() => stopActivePointer?.());
   min-height: 240px;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid rgba(196, 181, 253, 0.28);
-  border-radius: 18px;
-  background: rgba(8, 12, 28, 0.92);
-  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.52), inset 0 1px rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(22px);
+  border: 1px solid rgba(165, 196, 211, 0.2);
+  border-radius: var(--cosmos-radius-window, 10px);
+  background: linear-gradient(145deg, rgba(8, 15, 23, 0.96), rgba(4, 9, 15, 0.94));
+  box-shadow: var(--cosmos-window-shadow), inset 0 1px rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(var(--cosmos-surface-blur, 18px));
+  opacity: 0.94;
+  transition: border-color var(--cosmos-transition-duration) ease, box-shadow var(--cosmos-transition-duration) ease, opacity var(--cosmos-transition-duration) ease;
 }
 
 .tool-window--active {
-  border-color: rgba(196, 181, 253, 0.48);
-  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.6), 0 0 28px rgba(139, 92, 246, 0.08);
+  border-color: rgba(119, 193, 222, 0.38);
+  box-shadow: var(--cosmos-window-shadow-active), 0 0 24px rgba(59, 166, 207, 0.07), inset 0 1px rgba(255, 255, 255, 0.055);
+  opacity: 1;
 }
 
 .tool-window__header {
   display: flex;
-  min-height: 52px;
+  min-height: 42px;
   align-items: center;
   justify-content: space-between;
-  padding: 0 14px 0 18px;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.1);
-  color: #f8fafc;
-  font-size: 0.82rem;
-  font-weight: 650;
-  letter-spacing: 0.08em;
+  padding: 0 9px 0 14px;
+  border-bottom: 1px solid rgba(181, 211, 225, 0.09);
+  background: linear-gradient(180deg, rgba(25, 38, 49, 0.54), rgba(10, 18, 26, 0.36));
+  color: var(--cosmos-color-text, #e5edf2);
+  font-size: 0.7rem;
+  font-weight: 560;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   cursor: move;
   user-select: none;
@@ -173,20 +177,21 @@ onBeforeUnmount(() => stopActivePointer?.());
 
 .tool-window__header button {
   display: grid;
-  width: 32px;
-  height: 32px;
+  width: 27px;
+  height: 27px;
   padding: 0;
   place-items: center;
-  border: 1px solid rgba(226, 232, 240, 0.14);
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(181, 211, 225, 0.13);
+  border-radius: 4px;
+  background: rgba(202, 230, 240, 0.025);
   cursor: pointer;
 }
 
 .tool-window__header button:hover,
 .tool-window__header button:focus-visible {
-  border-color: rgba(248, 250, 252, 0.5);
-  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(201, 123, 123, 0.45);
+  background: rgba(125, 58, 58, 0.28);
+  outline: none;
 }
 
 .tool-window__content {
@@ -207,9 +212,9 @@ onBeforeUnmount(() => stopActivePointer?.());
 .tool-window__resize--e, .tool-window__resize--w { top: 18px; bottom: 18px; width: 8px; }
 .tool-window__resize--e { right: 0; cursor: ew-resize; }
 .tool-window__resize--w { left: 0; cursor: ew-resize; }
-.tool-window__resize--ne, .tool-window__resize--se, .tool-window__resize--sw, .tool-window__resize--nw { width: 18px; height: 18px; }
+.tool-window__resize--ne, .tool-window__resize--se, .tool-window__resize--sw, .tool-window__resize--nw { width: 16px; height: 16px; }
 .tool-window__resize--ne { top: 0; right: 0; cursor: nesw-resize; }
-.tool-window__resize--se { right: 0; bottom: 0; cursor: nwse-resize; background: linear-gradient(135deg, transparent 45%, rgba(196, 181, 253, 0.72) 46% 53%, transparent 54% 64%, rgba(196, 181, 253, 0.52) 65% 72%, transparent 73%); }
+.tool-window__resize--se { right: 0; bottom: 0; cursor: nwse-resize; background: linear-gradient(135deg, transparent 49%, rgba(114, 183, 210, 0.48) 50% 55%, transparent 56% 67%, rgba(114, 183, 210, 0.3) 68% 73%, transparent 74%); }
 .tool-window__resize--sw { bottom: 0; left: 0; cursor: nesw-resize; }
 .tool-window__resize--nw { top: 0; left: 0; cursor: nwse-resize; }
 </style>

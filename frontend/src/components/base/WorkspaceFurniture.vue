@@ -44,7 +44,7 @@ const label = computed(() =>
 
 <style scoped>
 .workspace-furniture {
-  --furniture-accent: #7dd3fc;
+  --furniture-accent: #62c8ea;
   position: absolute;
   z-index: 6;
   display: grid;
@@ -53,26 +53,78 @@ const label = computed(() =>
   padding: 0;
   border: 0;
   background: transparent;
-  color: #e7edf5;
+  color: var(--cosmos-color-text, #e5edf2);
   cursor: pointer;
   filter: drop-shadow(0 18px 18px rgba(0, 0, 0, 0.34));
 }
 
-.workspace-furniture--knowledgedesk { --furniture-accent: #8ae6c6; }
-.workspace-furniture--creationworkbench { --furniture-accent: #e9a86d; }
+.workspace-furniture--knowledgedesk { --furniture-accent: #75cfa9; }
+.workspace-furniture--creationworkbench { --furniture-accent: #d9a765; }
 .workspace-furniture--workshopbench { --furniture-accent: #8eb9cb; }
 
 .workspace-furniture__surface {
   position: absolute;
-  inset: 18% 5% 22%;
-  border: 1px solid rgba(224, 238, 244, 0.26);
-  border-radius: 10px 10px 5px 5px;
+  inset: 21% 4% 22%;
+  border: 1px solid rgba(181, 205, 215, 0.18);
+  border-radius: 4px 4px 2px 2px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 16%),
-    linear-gradient(155deg, #526573, #25323d 68%, #18212b);
-  box-shadow: inset 0 2px rgba(255, 255, 255, 0.08);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.075), transparent 14%),
+    linear-gradient(155deg, #45545e, #222d35 68%, #12191f);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.07), 0 12px 24px rgba(0, 0, 0, 0.24);
   transform: perspective(500px) rotateX(12deg);
   transition: border-color 160ms ease, filter 160ms ease, transform 160ms ease;
+}
+
+.workspace-furniture__surface::before {
+  position: absolute;
+  right: -2%;
+  bottom: -4%;
+  left: -2%;
+  height: 13%;
+  border: 1px solid rgba(190, 211, 218, 0.14);
+  border-radius: 1px;
+  background: linear-gradient(180deg, #3d4950, #1a2329);
+  box-shadow: 0 5px 9px rgba(0, 0, 0, 0.25);
+  content: "";
+}
+
+.workspace-furniture__surface::after {
+  position: absolute;
+  right: 7%;
+  bottom: 17%;
+  width: 18%;
+  height: 12%;
+  transform: rotate(-5deg);
+  border: 1px solid color-mix(in srgb, var(--furniture-accent) 24%, transparent);
+  background: rgba(4, 10, 14, 0.56);
+  box-shadow: -18px 3px 0 -5px color-mix(in srgb, var(--furniture-accent) 15%, transparent);
+  content: "";
+}
+
+.workspace-furniture--knowledgedesk .workspace-furniture__surface {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 14%),
+    linear-gradient(155deg, #4a4b46, #2e302d 62%, #171c1d);
+}
+
+.workspace-furniture--knowledgedesk .workspace-furniture__surface::before {
+  background: linear-gradient(180deg, #69533b, #34291f);
+}
+
+.workspace-furniture--knowledgedesk .workspace-furniture__surface::after {
+  width: 23%;
+  height: 15%;
+  border-color: rgba(205, 184, 143, 0.24);
+  background: linear-gradient(90deg, #aa9a79 0 47%, #817458 48% 52%, #a89b7e 53%);
+  box-shadow: -22px -2px 0 -7px rgba(117, 207, 169, 0.22);
+}
+
+.workspace-furniture--creationworkbench .workspace-furniture__surface::after {
+  width: 27%;
+  height: 5%;
+  border: 0;
+  background: repeating-linear-gradient(90deg, #9b7851 0 3px, transparent 3px 8px);
+  box-shadow: 0 -7px 0 -2px rgba(217, 167, 101, 0.18);
 }
 
 .workspace-furniture__screen {
@@ -81,13 +133,13 @@ const label = computed(() =>
   bottom: 78%;
   left: 22%;
   height: 54%;
-  border: 5px solid #26333e;
-  border-bottom-width: 9px;
-  border-radius: 9px;
+  border: 4px solid #1b252c;
+  border-bottom-width: 7px;
+  border-radius: 4px;
   background:
     linear-gradient(140deg, rgba(255, 255, 255, 0.14), transparent 38%),
     color-mix(in srgb, var(--furniture-accent) 30%, #07141c);
-  box-shadow: 0 0 18px color-mix(in srgb, var(--furniture-accent) 22%, transparent);
+  box-shadow: 0 0 15px color-mix(in srgb, var(--furniture-accent) 16%, transparent);
 }
 
 .workspace-furniture:not(.workspace-furniture--assigned) .workspace-furniture__screen {
@@ -104,7 +156,7 @@ const label = computed(() =>
   right: 7%;
   width: 5px;
   height: 5px;
-  border-radius: 50%;
+  border-radius: 1px;
   background: var(--furniture-accent);
   box-shadow: 0 0 9px var(--furniture-accent);
 }
@@ -114,8 +166,8 @@ const label = computed(() =>
   top: 92%;
   width: 8%;
   height: 48%;
-  border-radius: 0 0 3px 3px;
-  background: #25323c;
+  border-radius: 0 0 2px 2px;
+  background: #1d282f;
 }
 
 .workspace-furniture__leg--left { left: 13%; }
@@ -138,9 +190,9 @@ const label = computed(() =>
 }
 
 .workspace-furniture__label small {
-  color: rgba(199, 218, 229, 0.56);
-  font-size: 0.58rem;
-  letter-spacing: 0.08em;
+  color: rgba(186, 205, 214, 0.48);
+  font-size: 0.53rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 

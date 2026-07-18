@@ -81,23 +81,24 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeyDown));
 .cosmos-dialog {
   width: min(440px, 100%);
   overflow: hidden;
-  border: 1px solid rgba(210, 221, 242, 0.22);
-  border-radius: 16px;
-  background: rgba(9, 14, 31, 0.97);
-  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.62);
-  color: #e5edf8;
+  border: 1px solid var(--cosmos-color-border-strong);
+  border-radius: var(--cosmos-radius-window, 10px);
+  background: var(--cosmos-color-surface-raised);
+  box-shadow: var(--cosmos-window-shadow-active);
+  color: var(--cosmos-color-text);
   animation: dialog-open 160ms cubic-bezier(0.22, 0.78, 0.18, 1) both;
 }
 
 .cosmos-dialog header {
   display: flex;
-  min-height: 48px;
+  min-height: 44px;
   padding: 0 12px 0 18px;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid rgba(220, 232, 248, 0.09);
   font-size: 0.8rem;
-  font-weight: 650;
+  font-weight: 560;
+  letter-spacing: 0.04em;
 }
 
 .cosmos-dialog header button {
@@ -109,10 +110,10 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeyDown));
   cursor: pointer;
 }
 
-.cosmos-dialog p { margin: 0; padding: 20px 20px 22px; color: #aab8cc; line-height: 1.55; }
+.cosmos-dialog p { margin: 0; padding: 20px 20px 22px; color: var(--cosmos-color-muted); line-height: 1.55; }
 .cosmos-dialog footer { display: flex; padding: 12px 16px 16px; justify-content: flex-end; gap: 8px; }
-.cosmos-dialog footer button { min-height: 38px; padding: 0 15px; border: 1px solid rgba(220, 232, 248, 0.16); border-radius: 9px; background: rgba(255, 255, 255, 0.04); cursor: pointer; }
-.cosmos-dialog footer .cosmos-dialog__primary { border-color: rgba(139, 202, 238, 0.42); background: rgba(85, 166, 213, 0.16); color: #edf8ff; }
+.cosmos-dialog footer button { min-height: 36px; padding: 0 14px; border: 1px solid var(--cosmos-color-border); border-radius: var(--cosmos-radius-control, 5px); background: rgba(204, 232, 241, 0.035); cursor: pointer; }
+.cosmos-dialog footer .cosmos-dialog__primary { border-color: color-mix(in srgb, var(--cosmos-color-accent) 42%, transparent); background: color-mix(in srgb, var(--cosmos-color-accent) 13%, transparent); color: #edf8ff; }
 
 @keyframes dialog-veil { from { opacity: 0; } }
 @keyframes dialog-open { from { transform: scale(0.98); opacity: 0; } }

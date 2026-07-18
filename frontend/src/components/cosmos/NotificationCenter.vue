@@ -87,14 +87,14 @@ onMounted(load);
 
 <style scoped>
 .notification-center { display: flex; height: 100%; min-height: 0; flex-direction: column; }
-.notification-center > header { display: flex; min-height: 44px; padding: 0 16px; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(226, 232, 240, 0.08); color: #cbd5e1; font-size: 0.72rem; }
-.notification-center > header small { color: #718096; font-size: 0.61rem; }
+.notification-center > header { display: flex; min-height: 44px; padding: 0 16px; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(181, 211, 225, 0.09); color: var(--cosmos-color-text); font-size: 0.72rem; }
+.notification-center > header small { color: var(--cosmos-color-faint); font-size: 0.61rem; }
 .notification-center > nav { display: flex; padding: 5px 10px; overflow-x: auto; border-bottom: 1px solid rgba(226, 232, 240, 0.07); gap: 3px; }
-.notification-center > nav button { min-height: 28px; padding: 0 8px; border: 1px solid transparent; border-radius: 999px; background: transparent; color: #718096; font-size: 0.57rem; cursor: pointer; }
+.notification-center > nav button { min-height: 28px; padding: 0 8px; border: 1px solid transparent; border-radius: var(--cosmos-radius-control, 5px); background: transparent; color: var(--cosmos-color-faint); font-size: 0.57rem; cursor: pointer; }
 .notification-center > nav button:hover, .notification-center > nav button:focus-visible, .notification-center > nav button[aria-current="true"] { border-color: rgba(125, 211, 252, 0.17); outline: none; background: rgba(125, 211, 252, 0.06); color: #a9dff6; }
 .notification-center ol { min-height: 0; margin: 0; padding: 10px; flex: 1; overflow: auto; list-style: none; }
 .notification-center li + li { margin-top: 6px; }
-.notification-center li button { position: relative; display: grid; width: 100%; padding: 10px 12px 10px 15px; border: 1px solid rgba(220, 232, 248, 0.09); border-radius: 10px; background: rgba(255, 255, 255, 0.025); color: #cbd5e1; text-align: left; cursor: pointer; gap: 4px; }
+.notification-center li button { position: relative; display: grid; width: 100%; padding: 10px 12px 10px 15px; border: 1px solid rgba(181, 211, 225, 0.09); border-radius: var(--cosmos-radius-control, 5px); background: rgba(204, 232, 241, 0.02); color: var(--cosmos-color-text); text-align: left; cursor: pointer; gap: 4px; }
 .notification-center li button:hover, .notification-center li button:focus-visible { border-color: rgba(125, 211, 252, 0.28); outline: none; background: rgba(125, 211, 252, 0.06); }
 .notification-entry--unread::before { position: absolute; top: 9px; bottom: 9px; left: 5px; width: 2px; border-radius: 999px; background: #7dd3fc; box-shadow: 0 0 8px rgba(125, 211, 252, 0.6); content: ""; }
 .notification-entry__category { color: #7f91aa; font-size: 0.54rem; letter-spacing: 0.12em; text-transform: uppercase; }
@@ -103,5 +103,5 @@ onMounted(load);
 .notification-center time { color: #5f6f85; font-size: 0.56rem; }
 .notification-center__state { display: grid; min-height: 0; padding: 20px; flex: 1; place-items: center; color: #718096; font-size: 0.7rem; text-align: center; }
 .notification-center__state p { margin: 0 0 8px; }
-.notification-center__state button { padding: 6px 9px; border: 1px solid rgba(220, 232, 248, 0.14); border-radius: 8px; background: transparent; cursor: pointer; }
+.notification-center__state button { padding: 6px 9px; border: 1px solid var(--cosmos-color-border); border-radius: var(--cosmos-radius-control, 5px); background: transparent; cursor: pointer; }
 </style>

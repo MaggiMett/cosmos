@@ -90,11 +90,11 @@ onBeforeUnmount(() => {
   width: 240px;
   padding: 7px;
   overflow: hidden;
-  border: 1px solid rgba(205, 220, 242, 0.18);
-  border-radius: 12px;
-  background: rgba(7, 12, 27, 0.96);
-  box-shadow: 0 18px 58px rgba(0, 0, 0, 0.52);
-  backdrop-filter: blur(18px);
+  border: 1px solid var(--cosmos-color-border-strong);
+  border-radius: var(--cosmos-radius-window, 10px);
+  background: var(--cosmos-color-surface-raised);
+  box-shadow: var(--cosmos-window-shadow);
+  backdrop-filter: blur(var(--cosmos-surface-blur, 18px));
   animation: context-menu-open 120ms ease-out both;
 }
 
@@ -103,13 +103,13 @@ onBeforeUnmount(() => {
   padding: 8px 10px 9px;
   align-items: baseline;
   justify-content: space-between;
-  color: #e7edf7;
+  color: var(--cosmos-color-text);
   font-size: 0.75rem;
   font-weight: 650;
 }
 
 .context-menu header small {
-  color: #73839d;
+  color: var(--cosmos-color-faint);
   font-size: 0.55rem;
   font-weight: 500;
   letter-spacing: 0.12em;
@@ -131,9 +131,9 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: var(--cosmos-radius-control, 5px);
   background: transparent;
-  color: #cbd5e1;
+  color: var(--cosmos-color-text);
   font-size: 0.7rem;
   text-align: left;
   cursor: pointer;
@@ -141,9 +141,9 @@ onBeforeUnmount(() => {
 
 .context-menu button:hover,
 .context-menu button:focus-visible {
-  border-color: rgba(196, 181, 253, 0.2);
+  border-color: color-mix(in srgb, var(--cosmos-color-accent) 26%, transparent);
   outline: none;
-  background: rgba(139, 92, 246, 0.11);
+  background: color-mix(in srgb, var(--cosmos-color-accent) 8%, transparent);
   color: #f8fafc;
 }
 

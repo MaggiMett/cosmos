@@ -30,11 +30,11 @@ defineEmits<{ companion: []; ship: [] }>();
 .home-hub {
   position: fixed;
   z-index: 22;
-  right: clamp(20px, 3vw, 52px);
-  bottom: clamp(18px, 3.5vh, 44px);
+  right: clamp(18px, 2.8vw, 48px);
+  bottom: clamp(16px, 3vh, 38px);
   display: flex;
-  width: clamp(210px, 15vw, 290px);
-  height: clamp(140px, 15vh, 210px);
+  width: clamp(250px, 18vw, 330px);
+  height: clamp(155px, 18vh, 225px);
   align-items: flex-end;
   justify-content: flex-end;
   gap: 4px;
@@ -46,7 +46,7 @@ defineEmits<{ companion: []; ship: [] }>();
   padding: 0;
   border: 0;
   background: transparent;
-  color: #e2e8f0;
+  color: var(--cosmos-color-text);
   cursor: pointer;
   pointer-events: auto;
 }
@@ -56,9 +56,9 @@ defineEmits<{ companion: []; ship: [] }>();
   bottom: -17px;
   left: 50%;
   transform: translateX(-50%);
-  color: rgba(226, 232, 240, 0.72);
-  font-size: 0.62rem;
-  letter-spacing: 0.1em;
+  color: rgba(204, 221, 230, 0.64);
+  font-size: 0.55rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   opacity: 0;
   transition: opacity 160ms ease;
@@ -71,23 +71,23 @@ defineEmits<{ companion: []; ship: [] }>();
 
 .companion-object {
   z-index: 2;
-  width: clamp(82px, 7vw, 112px);
-  height: clamp(82px, 7vw, 112px);
-  margin-right: -18px;
-  margin-bottom: 54px;
+  width: clamp(90px, 7.2vw, 118px);
+  height: clamp(90px, 7.2vw, 118px);
+  margin-right: -22px;
+  margin-bottom: 62px;
   border-radius: 50% !important;
   animation: companion-float 6s ease-in-out infinite;
 }
 
 .ship-object {
-  width: clamp(140px, 11vw, 200px);
-  height: clamp(95px, 9vw, 150px);
+  width: clamp(180px, 14vw, 250px);
+  height: clamp(108px, 10vw, 166px);
 }
 
 .ship-object__vessel {
   position: absolute;
   inset: 0;
-  filter: drop-shadow(0 14px 16px rgba(0, 0, 0, 0.46));
+  filter: drop-shadow(0 16px 18px rgba(0, 0, 0, 0.58));
   transition: transform 180ms ease, filter 180ms ease;
   animation: ship-hover 7s ease-in-out infinite;
 }
@@ -95,29 +95,59 @@ defineEmits<{ companion: []; ship: [] }>();
 .ship-object:hover .ship-object__vessel,
 .ship-object:focus-visible .ship-object__vessel {
   transform: translateY(-4px) scale(1.03);
-  filter: drop-shadow(0 16px 24px rgba(125, 211, 252, 0.2));
+  filter: drop-shadow(0 17px 26px rgba(75, 171, 211, 0.18));
+}
+
+.ship-object__vessel::before,
+.ship-object__vessel::after {
+  position: absolute;
+  z-index: 3;
+  content: "";
+}
+
+.ship-object__vessel::before {
+  right: 29%;
+  bottom: 41%;
+  width: 33%;
+  height: 4%;
+  transform: skewX(-16deg);
+  background: linear-gradient(90deg, transparent, rgba(98, 200, 234, 0.86), transparent);
+  box-shadow: 0 0 9px rgba(98, 200, 234, 0.42);
+}
+
+.ship-object__vessel::after {
+  right: 21%;
+  bottom: 30%;
+  width: 43%;
+  height: 2%;
+  background: repeating-linear-gradient(90deg, rgba(138, 201, 225, 0.62) 0 5px, transparent 5px 10px);
+  opacity: 0.58;
 }
 
 .ship-object__body {
   position: absolute;
-  right: 20%;
-  bottom: 28%;
-  left: 18%;
-  height: 38%;
-  transform: skewX(-7deg);
-  border: 1px solid rgba(226, 232, 240, 0.52);
-  border-radius: 52% 44% 36% 42%;
-  background: linear-gradient(165deg, #cbd5e1 0 28%, #64748b 55%, #1e293b 100%);
-  box-shadow: inset 0 4px rgba(255, 255, 255, 0.18);
+  right: 8%;
+  bottom: 29%;
+  left: 13%;
+  height: 34%;
+  transform: skewX(-10deg);
+  border: 1px solid rgba(183, 203, 214, 0.48);
+  border-radius: 46% 62% 31% 38%;
+  background:
+    linear-gradient(175deg, rgba(255, 255, 255, 0.16) 0 2%, transparent 3% 31%, rgba(1, 5, 9, 0.26) 32% 35%, transparent 36%),
+    linear-gradient(155deg, #9ca8ae 0 12%, #44535e 44%, #17232d 76%, #0b1118 100%);
+  box-shadow: inset 0 3px rgba(255, 255, 255, 0.12), inset -14px -12px 22px rgba(0, 0, 0, 0.38);
+  clip-path: polygon(0 48%, 11% 16%, 64% 0, 100% 40%, 91% 75%, 23% 100%);
 }
 
 .ship-object__wing {
   position: absolute;
-  bottom: 18%;
-  width: 47%;
-  height: 28%;
-  background: linear-gradient(150deg, #475569, #111827);
-  clip-path: polygon(0 70%, 100% 0, 86% 100%);
+  bottom: 15%;
+  width: 51%;
+  height: 31%;
+  border-top: 1px solid rgba(171, 198, 211, 0.34);
+  background: linear-gradient(150deg, #3b4b57, #0b121a 74%);
+  clip-path: polygon(0 72%, 100% 4%, 82% 100%, 21% 88%);
 }
 
 .ship-object__wing--left { left: 0; }
@@ -126,29 +156,29 @@ defineEmits<{ companion: []; ship: [] }>();
 .ship-object__window {
   position: absolute;
   z-index: 2;
-  top: 34%;
-  left: 45%;
-  width: 22%;
-  height: 20%;
-  transform: skewX(-7deg);
-  border: 1px solid rgba(186, 230, 253, 0.52);
-  border-radius: 50% 50% 36% 36%;
-  background: linear-gradient(145deg, rgba(224, 242, 254, 0.86), rgba(14, 116, 144, 0.62));
-  box-shadow: 0 0 16px rgba(56, 189, 248, 0.32);
+  top: 36%;
+  left: 58%;
+  width: 19%;
+  height: 13%;
+  transform: skewX(-14deg);
+  border: 1px solid rgba(143, 207, 232, 0.45);
+  border-radius: 46% 64% 28% 32%;
+  background: linear-gradient(145deg, rgba(185, 224, 237, 0.76), rgba(13, 78, 103, 0.7));
+  box-shadow: 0 0 13px rgba(75, 177, 215, 0.26);
 }
 
 .ship-object__engine {
   position: absolute;
-  bottom: 24%;
-  width: 17%;
-  height: 12%;
+  bottom: 25%;
+  width: 13%;
+  height: 9%;
   border-radius: 50%;
-  background: #bae6fd;
-  box-shadow: 0 0 12px #38bdf8, -12px 2px 22px rgba(56, 189, 248, 0.46);
+  background: #8bd3ef;
+  box-shadow: 0 0 11px #3ba9d5, -12px 2px 22px rgba(59, 169, 213, 0.38);
 }
 
-.ship-object__engine--left { left: 18%; }
-.ship-object__engine--right { right: 22%; }
+.ship-object__engine--left { left: 13%; }
+.ship-object__engine--right { right: 24%; }
 
 @keyframes companion-float { 50% { transform: translateY(-5px) rotate(1deg); } }
 @keyframes ship-hover { 50% { transform: translateY(-3px); } }
