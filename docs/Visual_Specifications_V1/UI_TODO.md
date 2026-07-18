@@ -40,10 +40,10 @@ After completion this document may be archived.
 
 Remaining:
 
-- [ ] Dialog
-- [ ] Notification
+- [x] Dialog
+- [x] Notification
 - [ ] Loading Overlay
-- [ ] Context Menu
+- [x] Context Menu
 
 ---
 
@@ -75,7 +75,7 @@ Future:
 
 # Remaining Visual Objects
 
-- [ ] Object Window
+- [x] Object Window
 - [ ] Object Card
 - [ ] Discovery Card
 - [ ] Tag
