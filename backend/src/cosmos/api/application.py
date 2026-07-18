@@ -181,6 +181,204 @@ async def workspace_tool(request: Request) -> JSONResponse:
         return _service_error(error)
 
 
+async def tool_definitions(request: Request) -> JSONResponse:
+    try:
+        return JSONResponse(request.app.state.runtime.tools.definitions(_local_owner_context()))
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
+async def project_files(request: Request) -> JSONResponse:
+    try:
+        context = _workspace_context(request)
+        runtime = request.app.state.runtime
+        if request.method == "GET":
+            return JSONResponse(runtime.resources.tree(context, request.query_params.get("q", "")))
+        payload = await _json_object(request)
+        return JSONResponse(
+            runtime.resources.create(_string(payload, "path"), _text(payload, "content"), context),
+            status_code=201,
+        )
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
+async def project_file(request: Request) -> JSONResponse:
+    try:
+        context = _workspace_context(request)
+        runtime = request.app.state.runtime
+        if request.method == "GET":
+            return JSONResponse(runtime.resources.read(_query_path(request), context))
+        if request.method == "DELETE":
+            return JSONResponse(runtime.resources.delete(_query_path(request), context))
+        payload = await _json_object(request)
+        return JSONResponse(
+            runtime.resources.edit(
+                _string(payload, "path"),
+                _text(payload, "content"),
+                _string(payload, "expectedHash"),
+                context,
+            )
+        )
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
+async def move_project_file(request: Request) -> JSONResponse:
+    try:
+        payload = await _json_object(request)
+        return JSONResponse(
+            request.app.state.runtime.resources.move(
+                _string(payload, "sourcePath"),
+                _string(payload, "destinationPath"),
+                _workspace_context(request),
+            )
+        )
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
+async def archive(request: Request) -> JSONResponse:
+    try:
+        return JSONResponse(
+            request.app.state.runtime.knowledge.list(
+                _workspace_context(request), request.query_params.get("q", "")
+            )
+        )
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
+async def archive_object(request: Request) -> JSONResponse:
+    try:
+        context = _workspace_context(request)
+        runtime = request.app.state.runtime
+        knowledge_id = request.path_params["object_id"]
+        if request.method == "GET":
+            return JSONResponse(runtime.knowledge.get(knowledge_id, context))
+        payload = await _json_object(request)
+        return JSONResponse(
+            runtime.knowledge.edit(
+                knowledge_id,
+                title=_string(payload, "title"),
+                content=_text(payload, "content"),
+                summary=_text(payload, "summary"),
+                context=context,
+            )
+        )
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
+async def capture_drafts(request: Request) -> JSONResponse:
+    try:
+        return JSONResponse(request.app.state.runtime.knowledge.list_drafts(_workspace_context(request)))
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
+async def capture_draft(request: Request) -> JSONResponse:
+    try:
+        context = _workspace_context(request)
+        service = request.app.state.runtime.knowledge
+        draft_id = request.path_params["draft_id"]
+        if request.method == "DELETE":
+            service.delete_draft(draft_id, context)
+            return JSONResponse({"draftId": draft_id, "deleted": True})
+        payload = await _json_object(request)
+        return JSONResponse(
+            service.save_draft(
+                draft_id,
+                mode=_string(payload, "mode"),
+                content=_text(payload, "content"),
+                attachments=_array(payload, "attachments"),
+                context=context,
+            )
+        )
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
+async def submit_capture(request: Request) -> JSONResponse:
+    try:
+        payload = await _json_object(request)
+        draft_id = payload.get("draftId")
+        return JSONResponse(
+            request.app.state.runtime.knowledge.submit_capture(
+                mode=_string(payload, "mode"),
+                content=_text(payload, "content"),
+                attachments=_array(payload, "attachments"),
+                draft_id=draft_id if isinstance(draft_id, str) else None,
+                context=_workspace_context(request),
+            ),
+            status_code=201,
+        )
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
+async def reviews(request: Request) -> JSONResponse:
+    try:
+        include_resolved = request.query_params.get("includeResolved", "false").casefold() == "true"
+        return JSONResponse(
+            request.app.state.runtime.reviews.list(
+                _workspace_context(request), include_resolved=include_resolved
+            )
+        )
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
+async def review_item(request: Request) -> JSONResponse:
+    try:
+        return JSONResponse(
+            request.app.state.runtime.reviews.get(
+                request.path_params["review_id"], _workspace_context(request)
+            )
+        )
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
+async def review_decision(request: Request) -> JSONResponse:
+    try:
+        payload = await _json_object(request)
+        return JSONResponse(
+            request.app.state.runtime.reviews.decide(
+                request.path_params["review_id"],
+                action=_string(payload, "action"),
+                note=_text(payload, "note"),
+                context=_workspace_context(request),
+            )
+        )
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
+async def journeyman_tasks(request: Request) -> JSONResponse:
+    try:
+        context = _workspace_context(request)
+        service = request.app.state.runtime.journeyman
+        if request.method == "GET":
+            return JSONResponse(service.list(context))
+        payload = await _json_object(request)
+        return JSONResponse(service.create_task(_string(payload, "objective"), context), status_code=201)
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
+async def journeyman_task(request: Request) -> JSONResponse:
+    try:
+        context = _workspace_context(request)
+        service = request.app.state.runtime.journeyman
+        task_id = request.path_params["task_id"]
+        return JSONResponse(
+            service.cancel(task_id, context) if request.method == "DELETE" else service.get(task_id, context)
+        )
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
 def create_app(
     settings: RuntimeSettings | None = None,
     runtime: CosmosRuntime | None = None,
@@ -207,6 +405,7 @@ def create_app(
             Route("/cosmos/camera", update_camera, methods=["PUT"]),
             Route("/objects/{object_id:str}/position", move_node, methods=["PUT"]),
             Route("/companion/messages", companion_message, methods=["POST"]),
+            Route("/tools", tool_definitions),
             Route("/workspaces/{workspace_id:str}", workspace_definition),
             Route("/workspaces/{workspace_id:str}/sessions", open_workspace, methods=["POST"]),
             Route(
@@ -228,6 +427,55 @@ def create_app(
                 "/workspace-sessions/{session_id:str}/tools/{instance_id:str}",
                 workspace_tool,
                 methods=["PUT", "DELETE"],
+            ),
+            Route(
+                "/workspace-sessions/{session_id:str}/files",
+                project_files,
+                methods=["GET", "POST"],
+            ),
+            Route(
+                "/workspace-sessions/{session_id:str}/files/content",
+                project_file,
+                methods=["GET", "PUT", "DELETE"],
+            ),
+            Route(
+                "/workspace-sessions/{session_id:str}/files/move",
+                move_project_file,
+                methods=["POST"],
+            ),
+            Route("/workspace-sessions/{session_id:str}/archive", archive),
+            Route(
+                "/workspace-sessions/{session_id:str}/archive/{object_id:str}",
+                archive_object,
+                methods=["GET", "PUT"],
+            ),
+            Route("/workspace-sessions/{session_id:str}/capture/drafts", capture_drafts),
+            Route(
+                "/workspace-sessions/{session_id:str}/capture/drafts/{draft_id:str}",
+                capture_draft,
+                methods=["PUT", "DELETE"],
+            ),
+            Route(
+                "/workspace-sessions/{session_id:str}/capture/submissions",
+                submit_capture,
+                methods=["POST"],
+            ),
+            Route("/workspace-sessions/{session_id:str}/reviews", reviews),
+            Route("/workspace-sessions/{session_id:str}/reviews/{review_id:str}", review_item),
+            Route(
+                "/workspace-sessions/{session_id:str}/reviews/{review_id:str}/decisions",
+                review_decision,
+                methods=["POST"],
+            ),
+            Route(
+                "/workspace-sessions/{session_id:str}/journeyman/tasks",
+                journeyman_tasks,
+                methods=["GET", "POST"],
+            ),
+            Route(
+                "/workspace-sessions/{session_id:str}/journeyman/tasks/{task_id:str}",
+                journeyman_task,
+                methods=["GET", "DELETE"],
             ),
         ],
         lifespan=lifespan,
@@ -265,6 +513,18 @@ def _local_owner_context(
                 "tools.write",
                 "workspaces.read",
                 "workspaces.write",
+                "resources.read",
+                "resources.write",
+                "knowledge.read",
+                "knowledge.write",
+                "drafts.read",
+                "drafts.write",
+                "reviews.read",
+                "reviews.write",
+                "jobs.read",
+                "jobs.write",
+                "journeyman.read",
+                "journeyman.write",
             }
         ),
     )
@@ -294,6 +554,42 @@ def _string(payload: dict[str, object], key: str) -> str:
     return value
 
 
+def _text(payload: dict[str, object], key: str) -> str:
+    value = payload.get(key)
+    if not isinstance(value, str):
+        raise RuntimeServiceError("validation_failed", f"{key} must be a string.")
+    return value
+
+
+def _array(payload: dict[str, object], key: str) -> list:
+    value = payload.get(key, [])
+    if not isinstance(value, list):
+        raise RuntimeServiceError("validation_failed", f"{key} must be an array.")
+    return value
+
+
+def _workspace_context(request: Request) -> RuntimeContext:
+    return request.app.state.runtime.workspaces.context(
+        request.path_params["session_id"], _local_owner_context()
+    )
+
+
+def _query_path(request: Request) -> str:
+    value = request.query_params.get("path")
+    if not value:
+        raise RuntimeServiceError("validation_failed", "path query parameter is required.")
+    return value
+
+
 def _service_error(error: RuntimeServiceError) -> JSONResponse:
-    status = 403 if error.code == "permission_denied" else 404 if error.code.endswith("_not_found") else 422
+    if error.code == "permission_denied":
+        status = 403
+    elif error.code.endswith("_not_found"):
+        status = 404
+    elif (
+        error.code.endswith("_exists") or error.code.endswith("_conflict") or error.code == "review_resolved"
+    ):
+        status = 409
+    else:
+        status = 422
     return JSONResponse({"code": error.code, "message": str(error)}, status_code=status)

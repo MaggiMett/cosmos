@@ -6,6 +6,9 @@ from enum import StrEnum
 
 from cosmos.config import RuntimeSettings
 from cosmos.persistence import (
+    CaptureDraftRepository,
+    JobRepository,
+    KnowledgeVersionRepository,
     ObjectRepository,
     RelationshipRepository,
     RuntimeStateRepository,
@@ -15,10 +18,16 @@ from cosmos.runtime import EventDispatcher, ProviderRuntime, Registry, RuntimeCo
 from cosmos.services import (
     BaseService,
     CompanionService,
+    CoreToolCatalog,
     CosmosMapService,
+    JobService,
+    JourneymanService,
+    KnowledgeService,
     ObjectService,
     ProjectService,
     RelationshipService,
+    ResourceService,
+    ReviewService,
     ToolService,
     WorkspaceService,
     create_version_one_object_contract,
@@ -57,6 +66,12 @@ class CosmosRuntime:
     tools: ToolService
     workspaces: WorkspaceService
     cosmos_map: CosmosMapService
+    core_tools: CoreToolCatalog
+    jobs: JobService
+    resources: ResourceService
+    knowledge: KnowledgeService
+    reviews: ReviewService
+    journeyman: JourneymanService
     startup: StartupReport = StartupReport(phase=StartupPhase.CREATED)
 
     @classmethod
@@ -64,25 +79,35 @@ class CosmosRuntime:
         registry = Registry()
         persistence = SQLitePersistence(settings.database_path)
         events = EventDispatcher()
+        providers = ProviderRuntime(registry)
         objects = ObjectService(
             create_version_one_object_contract(),
             ObjectRepository(persistence),
             events,
         )
+        projects = ProjectService(settings.runtime_path, persistence, objects, events)
         relationships = RelationshipService(RelationshipRepository(persistence), objects, events)
         companion = CompanionService(objects)
         base = BaseService(objects, companion)
         runtime_state = RuntimeStateRepository(persistence)
         tools = ToolService(objects, ToolRuntime(objects.contract), events)
         workspaces = WorkspaceService(objects, runtime_state, tools, events)
+        jobs = JobService(JobRepository(persistence), events)
+        knowledge = KnowledgeService(
+            persistence,
+            objects,
+            KnowledgeVersionRepository(persistence),
+            CaptureDraftRepository(persistence),
+            jobs,
+        )
         return cls(
             settings=settings,
             persistence=persistence,
             registry=registry,
             events=events,
-            providers=ProviderRuntime(registry),
+            providers=providers,
             objects=objects,
-            projects=ProjectService(settings.runtime_path, persistence, objects, events),
+            projects=projects,
             relationships=relationships,
             companion=companion,
             base=base,
@@ -94,6 +119,12 @@ class CosmosRuntime:
                 runtime_state,
                 companion,
             ),
+            core_tools=CoreToolCatalog(objects),
+            jobs=jobs,
+            resources=ResourceService(projects, objects, events),
+            knowledge=knowledge,
+            reviews=ReviewService(objects),
+            journeyman=JourneymanService(objects, providers, jobs),
         )
 
     def initialize(self) -> None:
@@ -131,12 +162,26 @@ class CosmosRuntime:
                         "tools.write",
                         "workspaces.read",
                         "workspaces.write",
+                        "resources.read",
+                        "resources.write",
+                        "knowledge.read",
+                        "knowledge.write",
+                        "drafts.read",
+                        "drafts.write",
+                        "reviews.read",
+                        "reviews.write",
+                        "jobs.read",
+                        "jobs.write",
+                        "journeyman.read",
+                        "journeyman.write",
                     }
                 )
             )
             self.projects.ensure_version_one_system_projects(system_context)
+            self.core_tools.ensure_version_one(system_context)
             self.companion.ensure_default(system_context)
             self.base.ensure_default(system_context)
+            self.jobs.initialize()
 
             self.startup = StartupReport(
                 phase=StartupPhase.READY,
@@ -153,6 +198,7 @@ class CosmosRuntime:
             raise
 
     def shutdown(self) -> None:
+        self.jobs.shutdown()
         self.startup = StartupReport(
             phase=StartupPhase.STOPPED,
             started_at=self.startup.started_at,

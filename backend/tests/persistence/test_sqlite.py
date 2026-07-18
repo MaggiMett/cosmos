@@ -19,6 +19,7 @@ def test_sqlite_initialization_applies_foundation_once(tmp_path: Path) -> None:
     assert [(row["version"], row["name"]) for row in migrations] == [
         (1, "0001_foundation.sql"),
         (2, "0002_cosmos_map.sql"),
+        (3, "0003_core_tools.sql"),
     ]
     assert {
         "objects",

@@ -5,6 +5,7 @@ import { CosmosApiClient } from "./apiClient";
 import { ApplicationRuntime } from "./applicationRuntime";
 import { BaseRuntime } from "./baseRuntime";
 import { CosmosMapRuntime } from "./cosmosMapRuntime";
+import { CoreToolsRuntime } from "./coreToolsRuntime";
 import { ThemeRegistry } from "./themeRegistry";
 import { ThemeRuntime } from "./themeRuntime";
 import { ToolRuntime } from "./toolRuntime";
@@ -17,6 +18,7 @@ export interface CosmosFrontendRuntime {
   application: ApplicationRuntime;
   base: BaseRuntime;
   cosmosMap: CosmosMapRuntime;
+  coreTools: CoreToolsRuntime;
   themes: ThemeRuntime;
   tools: ToolRuntime;
   transitions: TransitionRuntime;
@@ -47,6 +49,7 @@ export function createCosmosFrontendRuntime(apiBaseUrl?: string): CosmosFrontend
     application: new ApplicationRuntime(api, themes, cosmosTheme.objectId),
     base,
     cosmosMap,
+    coreTools: new CoreToolsRuntime(api),
     themes,
     tools,
     transitions,

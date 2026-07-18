@@ -122,6 +122,10 @@ class WorkspaceService:
         require_permission(context.permissions, "workspaces.read")
         return self._session_payload(self._session(session_id))
 
+    def context(self, session_id: str, context: RuntimeContext) -> RuntimeContext:
+        require_permission(context.permissions, "workspaces.read")
+        return self._session(session_id).context
+
     def focus(self, session_id: str, context: RuntimeContext) -> dict[str, JSONValue]:
         require_permission(context.permissions, "workspaces.write")
         selected = self._session(session_id)
@@ -376,9 +380,12 @@ def _workspace_context(
     configuration = definition.properties["context_configuration"]
     if not isinstance(configuration, Mapping):
         configuration = {}
-    raw_scopes = configuration.get("projectScopeIds", inherited.project_scope_ids)
-    scopes = tuple(str(value) for value in raw_scopes) if isinstance(raw_scopes, list) else ()
-    raw_focus = configuration.get("focusedProjectId", inherited.focused_project_id)
+    source_project_id = str(definition.properties["source_project_id"])
+    default_scopes = inherited.project_scope_ids or (source_project_id,)
+    raw_scopes = configuration.get("projectScopeIds", default_scopes)
+    scopes = tuple(str(value) for value in raw_scopes) if isinstance(raw_scopes, (list, tuple)) else ()
+    default_focus = inherited.focused_project_id or source_project_id
+    raw_focus = configuration.get("focusedProjectId", default_focus)
     focus = str(raw_focus) if raw_focus else None
     try:
         return replace(

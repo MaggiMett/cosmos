@@ -1,4 +1,23 @@
+from cosmos.persistence.core_tools import (
+    CaptureDraftRecord,
+    CaptureDraftRepository,
+    JobRepository,
+    KnowledgeVersionRecord,
+    KnowledgeVersionRepository,
+    PersistedJob,
+)
 from cosmos.persistence.repositories import ObjectRepository, RelationshipRepository, RuntimeStateRepository
 from cosmos.persistence.sqlite import SQLitePersistence
 
-__all__ = ["ObjectRepository", "RelationshipRepository", "RuntimeStateRepository", "SQLitePersistence"]
+__all__ = [
+    "CaptureDraftRecord",
+    "CaptureDraftRepository",
+    "JobRepository",
+    "KnowledgeVersionRecord",
+    "KnowledgeVersionRepository",
+    "ObjectRepository",
+    "PersistedJob",
+    "RelationshipRepository",
+    "RuntimeStateRepository",
+    "SQLitePersistence",
+]

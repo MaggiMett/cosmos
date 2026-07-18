@@ -11,6 +11,9 @@ export interface ToolDefinition {
   icon: string;
   minimumSize: Readonly<{ width: number; height: number }>;
   componentKey: string;
+  category?: string;
+  capabilities?: string[];
+  permissions?: string[];
 }
 
 export interface PersistedToolRecord {
@@ -61,6 +64,14 @@ export class ToolRuntime {
       throw new Error("Tool minimum size must be positive.");
     }
     this.definitions.set(definition.objectId, Object.freeze({ ...definition }));
+  }
+
+  async loadDefinitions(): Promise<void> {
+    const result = await this.api.get<ToolDefinition[]>("/tools");
+    if (!result.ok) throw new Error(result.error.message);
+    this.definitions.clear();
+    for (const definition of result.data) this.register(definition);
+    this.mutableState.unavailableDefinitionIds = [];
   }
 
   available(assignedToolIds?: readonly string[]): readonly Readonly<ToolDefinition>[] {

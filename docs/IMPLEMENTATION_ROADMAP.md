@@ -210,6 +210,10 @@ Goals:
 
 Core Tools
 
+Status:
+
+Completed
+
 Goals:
 
 - Files with create, edit, rename, move and delete operations scoped to the active Cosmos Project

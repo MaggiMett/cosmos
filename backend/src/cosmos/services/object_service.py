@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from types import MappingProxyType
 
 from cosmos.domain import CosmosObject, ObjectContract, ObjectIdentity
@@ -88,6 +88,32 @@ class ObjectService:
         )
         self.repository.replace_properties(updated)
         self._publish("ObjectPropertiesChanged", updated, context)
+        return updated
+
+    def update_details(
+        self,
+        object_id: str,
+        *,
+        display_name: str,
+        description: str,
+        context: RuntimeContext,
+    ) -> CosmosObject:
+        require_permission(context.permissions, "objects.write")
+        if not display_name.strip():
+            raise RuntimeServiceError("validation_failed", "Object display name must not be empty.")
+        existing = self.repository.get(object_id)
+        if existing is None:
+            raise RuntimeServiceError("object_not_found", f"Object not found: {object_id}")
+        updated = replace(
+            existing,
+            identity=replace(
+                existing.identity,
+                display_name=display_name.strip(),
+                description=description.strip(),
+            ),
+        )
+        self.repository.replace_identity(updated)
+        self._publish("ObjectDetailsChanged", updated, context)
         return updated
 
     def publish_created(self, value: CosmosObject, context: RuntimeContext) -> None:

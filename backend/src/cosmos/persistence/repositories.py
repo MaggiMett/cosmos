@@ -85,16 +85,34 @@ class ObjectRepository:
                 ).fetchall()
             return tuple(self._hydrate(connection, row) for row in rows)
 
-    def replace_properties(self, value: CosmosObject) -> None:
+    def replace_properties(self, value: CosmosObject, connection: sqlite3.Connection | None = None) -> None:
+        if connection is None:
+            with self._persistence.connect() as active:
+                self.replace_properties(value, active)
+            return
+        connection.execute("DELETE FROM object_properties WHERE object_id = ?", (value.identity.object_id,))
+        connection.executemany(
+            "INSERT INTO object_properties (object_id, property_name, value_json) VALUES (?, ?, ?)",
+            (
+                (value.identity.object_id, name, json.dumps(property, sort_keys=True))
+                for name, property in value.properties.items()
+            ),
+        )
+
+    def replace_identity(self, value: CosmosObject) -> None:
+        identity = value.identity
         with self._persistence.connect() as connection:
             connection.execute(
-                "DELETE FROM object_properties WHERE object_id = ?", (value.identity.object_id,)
-            )
-            connection.executemany(
-                "INSERT INTO object_properties (object_id, property_name, value_json) VALUES (?, ?, ?)",
+                """
+                UPDATE objects SET
+                    display_name = ?, description = ?, lifecycle_state = ?
+                WHERE object_id = ?
+                """,
                 (
-                    (value.identity.object_id, name, json.dumps(property, sort_keys=True))
-                    for name, property in value.properties.items()
+                    identity.display_name,
+                    identity.description,
+                    identity.lifecycle_state,
+                    identity.object_id,
                 ),
             )
 

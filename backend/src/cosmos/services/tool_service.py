@@ -5,6 +5,7 @@ from dataclasses import replace
 from types import MappingProxyType
 from uuid import uuid4
 
+from cosmos.domain import CosmosObject
 from cosmos.domain.objects import JSONValue
 from cosmos.runtime import (
     ContextSnapshot,
@@ -16,6 +17,7 @@ from cosmos.runtime import (
 )
 from cosmos.services.errors import RuntimeServiceError, require_permission
 from cosmos.services.object_service import ObjectService
+from cosmos.services.serialization import object_payload
 
 
 class ToolService:
@@ -55,6 +57,10 @@ class ToolService:
         )
         self._publish("ToolOpened", instance, tool_context)
         return instance
+
+    def definitions(self, context: RuntimeContext) -> list[dict[str, JSONValue]]:
+        require_permission(context.permissions, "tools.read")
+        return [self._definition_payload(value) for value in self._objects.list(context, system_tag="Tool")]
 
     def focus(self, object_id: str, context: RuntimeContext) -> ToolInstance:
         require_permission(context.permissions, "tools.write")
@@ -107,3 +113,18 @@ class ToolService:
                 ),
             )
         )
+
+    @staticmethod
+    def _definition_payload(definition: CosmosObject) -> dict[str, JSONValue]:
+        payload = object_payload(definition)
+        properties = definition.properties
+        minimum = properties["minimum_window_size"]
+        return {
+            **payload,
+            "category": properties["category"],
+            "componentKey": properties["component_id"],
+            "icon": properties["icon"],
+            "capabilities": properties["capabilities"],
+            "permissions": properties["permissions"],
+            "minimumSize": minimum,
+        }

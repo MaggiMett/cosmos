@@ -62,7 +62,12 @@
           @move="moveTool(instance.instanceId, $event)"
           @resize="resizeTool(instance.instanceId, $event)"
         >
-          <div class="tool-surface" :data-component="instance.definition.componentKey" />
+          <component
+            :is="toolComponents[instance.definition.componentKey]"
+            v-if="toolComponents[instance.definition.componentKey]"
+            :workspace-session-id="instance.workspaceSessionId"
+            :tool-instance-id="instance.instanceId"
+          />
         </ToolWindow>
       </div>
     </article>
@@ -70,10 +75,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, type Component } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import ToolWindow from "../components/windows/ToolWindow.vue";
+import ArchiveTool from "../components/tools/ArchiveTool.vue";
+import CaptureTool from "../components/tools/CaptureTool.vue";
+import FilesTool from "../components/tools/FilesTool.vue";
+import JourneymanTool from "../components/tools/JourneymanTool.vue";
+import ReviewTool from "../components/tools/ReviewTool.vue";
 import type { WorkspaceSession } from "../runtime/workspaceRuntime";
 import { useCosmosRuntime } from "../runtime/plugin";
 
@@ -84,6 +94,13 @@ const session = ref<Readonly<WorkspaceSession> | null>(null);
 const phase = ref<"idle" | "opening" | "ready" | "closing">("idle");
 const error = ref<string | null>(null);
 const environmentBounds = ref(workspaceBounds());
+const toolComponents: Record<string, Component> = {
+  archive: ArchiveTool,
+  capture: CaptureTool,
+  files: FilesTool,
+  journeyman: JourneymanTool,
+  review: ReviewTool,
+};
 
 const environmentStyle = computed(() => ({
   left: `${environmentBounds.value.x}px`,
@@ -105,6 +122,7 @@ async function openWorkspace() {
   error.value = null;
   try {
     if (runtime.base.state.phase !== "ready") await runtime.base.load();
+    await runtime.tools.loadDefinitions();
     const definitionObjectId = resolveDefinitionObjectId(String(route.params.workspaceId ?? ""));
     const roomId = resolveRoomId(definitionObjectId);
     environmentBounds.value = workspaceBounds();
@@ -164,8 +182,8 @@ function openTool(definitionObjectId: string) {
     .open(session.value.objectId, session.value.environmentWindow.objectId, definitionObjectId, {
       x: environmentBounds.value.x + 110 + offset,
       y: environmentBounds.value.y + 96 + offset,
-      width: Math.min(580, environmentBounds.value.width - 180),
-      height: Math.min(460, environmentBounds.value.height - 150),
+      width: Math.min(760, environmentBounds.value.width - 80),
+      height: Math.min(540, environmentBounds.value.height - 100),
     })
     .catch((cause: unknown) => {
       error.value = cause instanceof Error ? cause.message : "Tool could not open.";
@@ -306,8 +324,6 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeyDown));
 .tool-area button:focus-visible { border-color: color-mix(in srgb, var(--workspace-accent) 28%, transparent); background: color-mix(in srgb, var(--workspace-accent) 8%, transparent); outline: 0; }
 .tool-area button i { display: grid; width: 24px; height: 24px; place-items: center; border-radius: 7px; background: color-mix(in srgb, var(--workspace-accent) 14%, #16232c); color: var(--workspace-accent); font-size: 0.64rem; font-style: normal; }
 .tool-area button span { font-size: 0.66rem; }
-
-.tool-surface { width: 100%; height: 100%; background: rgba(5, 10, 18, 0.32); }
 
 .workspace-status { position: absolute; z-index: 70; top: 50%; left: 50%; display: grid; transform: translate(-50%, -50%); place-items: center; color: #b5c8cd; font-size: 0.72rem; }
 .workspace-status > span { width: 38px; height: 38px; border: 1px solid rgba(138, 230, 198, 0.25); border-top-color: #8ae6c6; border-radius: 50%; animation: spin 1.1s linear infinite; }

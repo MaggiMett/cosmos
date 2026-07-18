@@ -2,7 +2,7 @@
 
 Cosmos is a new implementation of the personal operating system defined by `Product_Bible_V2`, `Experience_V1`, and `Architecture_Review_V3`.
 
-Sprint 4 adds fixed Workspace Environment Windows, isolated Tool Runtime lifecycles, multi-window layout foundations, and durable Workspace restoration without partially implementing the core Tools assigned to Sprint 5.
+Sprint 5 adds the five Version 1 core Tools on the universal Workspace, Tool Runtime, Runtime Service, Job, Provider, Object, and Persistence foundations.
 
 ## Repository map
 
@@ -46,7 +46,7 @@ The development server is available at `http://127.0.0.1:5173` and proxies `/api
 
 The backend exposes `/health`, `/ready`, and the Runtime Service-backed Cosmos Map API. The frontend waits for readiness before activating the spatial application routes.
 
-## Sprint 4 runtime
+## Sprint 5 runtime
 
 The runnable implementation provides:
 
@@ -71,8 +71,13 @@ The runnable implementation provides:
 - isolated Direct and Workspace Tool Instance lifecycles
 - multiple contained Tool Windows with movement, resizing, focus, Close, and boundary recovery
 - SQLite-backed restoration of open Tool instances, bounds, focus order, Tool state, selection, filters, camera, and fixed Panel configuration
+- Files create, preview, edit, rename/move, search, and delete operations constrained to the active Project's prepared `Files` root
+- Archive search and direct inline Knowledge editing in one versioned Object View
+- Capture modes, attachments, recoverable Workspace drafts, immutable original source, and asynchronous Knowledge processing
+- Review queues with evidence, confidence, explicit available actions, and durable decision history
+- Journeyman as an independent planning and development-assistance Tool Window, routed through Provider Runtime when an eligible Provider is active
 
-The Files, Archive, Capture, Review, and Journeyman Tool capabilities are implemented in Sprint 5.
+Journeyman and Companion remain separate Objects and experience concepts. Companion is the global Entity; Journeyman is an independent Tool inside the Creation Workspace.
 
 ## Architectural authority
 

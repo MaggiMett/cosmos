@@ -201,4 +201,78 @@ def create_version_one_object_contract() -> ObjectContract:
     )
     contract.register_system_tag("EnvironmentWindow")
     contract.register_system_tag("ToolWindow")
+    contract.register_system_tag(
+        "Knowledge",
+        PropertySchema(
+            "cosmos.schema.knowledge",
+            1,
+            (
+                PropertyDefinition("title", PropertyKind.STRING, ""),
+                PropertyDefinition("current_content", PropertyKind.STRING, ""),
+                PropertyDefinition("summary", PropertyKind.STRING, ""),
+                PropertyDefinition("current_version", PropertyKind.INTEGER, 1),
+                PropertyDefinition("source_type", PropertyKind.STRING, "Manual"),
+                PropertyDefinition("source_reference", PropertyKind.STRING, ""),
+                PropertyDefinition("original_source", PropertyKind.OBJECT, {}),
+                PropertyDefinition("project_ids", PropertyKind.ARRAY, []),
+                PropertyDefinition("object_ids", PropertyKind.ARRAY, []),
+                PropertyDefinition("resource_refs", PropertyKind.ARRAY, []),
+                PropertyDefinition("review_history", PropertyKind.ARRAY, []),
+                PropertyDefinition("processed_status", PropertyKind.STRING, "stored"),
+                PropertyDefinition("author", PropertyKind.STRING, "cosmos.local-owner"),
+            ),
+        ),
+    )
+    contract.register_system_tag(
+        "Capture",
+        PropertySchema(
+            "cosmos.schema.capture",
+            1,
+            (
+                PropertyDefinition("capture_mode", PropertyKind.STRING, "quick"),
+                PropertyDefinition("attachments", PropertyKind.ARRAY, []),
+                PropertyDefinition("submitted_at", PropertyKind.STRING, ""),
+                PropertyDefinition("inherited_context", PropertyKind.OBJECT, {}),
+            ),
+        ),
+    )
+    contract.register_system_tag(
+        "ReviewItem",
+        PropertySchema(
+            "cosmos.schema.review-item",
+            1,
+            (
+                PropertyDefinition("review_category", PropertyKind.STRING, "RuntimeDecision"),
+                PropertyDefinition("summary", PropertyKind.STRING, ""),
+                PropertyDefinition("review_reason", PropertyKind.STRING, ""),
+                PropertyDefinition("source_tool", PropertyKind.STRING, ""),
+                PropertyDefinition("affected_project_ids", PropertyKind.ARRAY, []),
+                PropertyDefinition("affected_object_ids", PropertyKind.ARRAY, []),
+                PropertyDefinition("related_knowledge_ids", PropertyKind.ARRAY, []),
+                PropertyDefinition("evidence", PropertyKind.ARRAY, []),
+                PropertyDefinition("confidence", PropertyKind.NUMBER, 0.0),
+                PropertyDefinition("available_actions", PropertyKind.ARRAY, []),
+                PropertyDefinition("review_state", PropertyKind.STRING, "open"),
+                PropertyDefinition("decision_history", PropertyKind.ARRAY, []),
+                PropertyDefinition("urgency", PropertyKind.STRING, "normal"),
+            ),
+        ),
+    )
+    contract.register_system_tag(
+        "JourneymanTask",
+        PropertySchema(
+            "cosmos.schema.journeyman-task",
+            1,
+            (
+                PropertyDefinition("objective", PropertyKind.STRING, ""),
+                PropertyDefinition("task_state", PropertyKind.STRING, "planning"),
+                PropertyDefinition("plan", PropertyKind.ARRAY, []),
+                PropertyDefinition("task_context", PropertyKind.OBJECT, {}),
+                PropertyDefinition("events", PropertyKind.ARRAY, []),
+                PropertyDefinition("result", PropertyKind.OBJECT, {}),
+                PropertyDefinition("job_id", PropertyKind.STRING, ""),
+                PropertyDefinition("provider_id", PropertyKind.STRING, ""),
+            ),
+        ),
+    )
     return contract

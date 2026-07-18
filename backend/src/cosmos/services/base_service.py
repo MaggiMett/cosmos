@@ -7,6 +7,13 @@ from cosmos.domain import CosmosObject, ObjectIdentity
 from cosmos.domain.objects import JSONValue
 from cosmos.runtime import RuntimeContext
 from cosmos.services.companion_service import CompanionService
+from cosmos.services.core_tool_catalog import (
+    ARCHIVE_TOOL_ID,
+    CAPTURE_TOOL_ID,
+    FILES_TOOL_ID,
+    JOURNEYMAN_TOOL_ID,
+    REVIEW_TOOL_ID,
+)
 from cosmos.services.object_service import CreateObjectCommand, ObjectService
 from cosmos.services.serialization import object_payload
 
@@ -39,7 +46,7 @@ WORKSPACES = (
             "overlay": "KnowledgeDesk",
             "default_layout": {},
             "context_configuration": {},
-            "assigned_tool_ids": [],
+            "assigned_tool_ids": [FILES_TOOL_ID, ARCHIVE_TOOL_ID, CAPTURE_TOOL_ID, REVIEW_TOOL_ID],
             "theme_override": "",
             "source_project_id": "cosmos.project.system.knowledge",
         },
@@ -55,7 +62,13 @@ WORKSPACES = (
             "overlay": "CreationWorkbench",
             "default_layout": {},
             "context_configuration": {},
-            "assigned_tool_ids": [],
+            "assigned_tool_ids": [
+                FILES_TOOL_ID,
+                ARCHIVE_TOOL_ID,
+                CAPTURE_TOOL_ID,
+                REVIEW_TOOL_ID,
+                JOURNEYMAN_TOOL_ID,
+            ],
             "theme_override": "",
             "source_project_id": "cosmos.project.system.creation",
         },
@@ -71,7 +84,7 @@ WORKSPACES = (
             "overlay": "GraphicsDesk",
             "default_layout": {},
             "context_configuration": {},
-            "assigned_tool_ids": [],
+            "assigned_tool_ids": [FILES_TOOL_ID, ARCHIVE_TOOL_ID, CAPTURE_TOOL_ID, REVIEW_TOOL_ID],
             "theme_override": "",
             "source_project_id": "cosmos.project.system.graphics",
         },
@@ -270,6 +283,18 @@ class BaseService:
     def _ensure(self, seed: SeedObject, context: RuntimeContext) -> CosmosObject:
         existing = self._objects.repository.get(seed.object_id)
         if existing is not None:
+            if "Workspace" in seed.system_tags and (
+                existing.properties.get("assigned_tool_ids") != seed.properties["assigned_tool_ids"]
+                or existing.properties.get("source_project_id") != seed.properties["source_project_id"]
+            ):
+                return self._objects.update_properties(
+                    seed.object_id,
+                    {
+                        "assigned_tool_ids": seed.properties["assigned_tool_ids"],
+                        "source_project_id": seed.properties["source_project_id"],
+                    },
+                    context,
+                )
             return existing
         return self._objects.create(
             CreateObjectCommand(

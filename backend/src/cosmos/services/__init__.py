@@ -2,11 +2,17 @@
 
 from cosmos.services.base_service import BASE_ID, MAIN_ROOM_ID, WORKSHOP_ROOM_ID, BaseService
 from cosmos.services.companion_service import COMPANION_ID, CompanionReply, CompanionService
+from cosmos.services.core_tool_catalog import CoreToolCatalog
 from cosmos.services.cosmos_map_service import CosmosMapService
 from cosmos.services.errors import RuntimeServiceError
+from cosmos.services.job_service import JobService
+from cosmos.services.journeyman_service import JourneymanService
+from cosmos.services.knowledge_service import KnowledgeService
 from cosmos.services.object_service import CreateObjectCommand, ObjectService
 from cosmos.services.project_service import PREPARED_AREAS, CreateProjectCommand, ProjectService
 from cosmos.services.relationship_service import RelationshipService
+from cosmos.services.resource_service import ResourceService
+from cosmos.services.review_service import ReviewService
 from cosmos.services.schemas import create_version_one_object_contract
 from cosmos.services.tool_service import ToolService
 from cosmos.services.workspace_service import WorkspaceService
@@ -20,12 +26,18 @@ __all__ = [
     "BaseService",
     "CompanionReply",
     "CompanionService",
+    "CoreToolCatalog",
     "CosmosMapService",
     "CreateObjectCommand",
     "CreateProjectCommand",
+    "JobService",
+    "JourneymanService",
+    "KnowledgeService",
     "ObjectService",
     "ProjectService",
     "RelationshipService",
+    "ResourceService",
+    "ReviewService",
     "RuntimeServiceError",
     "ToolService",
     "WorkspaceService",

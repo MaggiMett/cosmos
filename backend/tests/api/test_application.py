@@ -85,3 +85,39 @@ def test_workspace_api_opens_persists_and_closes_temporary_sessions(tmp_path: Pa
     assert saved.json()["restorableState"]["filters"] == {"scope": "all"}
     assert closed.json()["state"] == "closed"
     assert missing.status_code == 404
+
+
+def test_core_tool_api_is_session_scoped_and_journeyman_is_its_own_tool(tmp_path: Path) -> None:
+    settings = RuntimeSettings(runtime_path=tmp_path / "Runtime", port=0)
+
+    with TestClient(create_app(settings)) as client:
+        tools = client.get("/tools")
+        opened = client.post(
+            "/workspaces/cosmos.workspace.creation/sessions",
+            json={"roomId": "cosmos.room.main"},
+        )
+        session_id = opened.json()["objectId"]
+        created = client.post(
+            f"/workspace-sessions/{session_id}/files",
+            json={"path": "sprint.md", "content": "Sprint 5"},
+        )
+        read = client.get(f"/workspace-sessions/{session_id}/files/content", params={"path": "sprint.md"})
+        capture = client.post(
+            f"/workspace-sessions/{session_id}/capture/submissions",
+            json={"mode": "quick", "content": "API Knowledge", "attachments": []},
+        )
+        journey = client.post(
+            f"/workspace-sessions/{session_id}/journeyman/tasks",
+            json={"objective": "Plan a verified change"},
+        )
+
+    definitions = {item["componentKey"]: item for item in tools.json()}
+    assert tools.status_code == 200
+    assert definitions["journeyman"]["objectId"] == "cosmos.tool.journeyman"
+    assert definitions["journeyman"]["category"] == "SystemTool"
+    assert created.status_code == 201
+    assert read.json()["content"] == "Sprint 5"
+    assert capture.status_code == 201
+    assert journey.status_code == 201
+    assert journey.json()["task_state"] == "awaiting_provider"
+    assert "Companion" not in journey.json()["systemTags"]
