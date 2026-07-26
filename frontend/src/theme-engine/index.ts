@@ -26,6 +26,22 @@ export {
   canonicalVisualAssets,
 } from "./assetCatalogFixtures";
 export {
+  createCanonicalAssetImportFixtures,
+} from "./assetImportFixtures";
+export {
+  AssetImportService,
+  AssetImportServiceError,
+  ImportSession,
+} from "./assetImportService";
+export {
+  DEFAULT_MAXIMUM_ASSET_BYTE_SIZE,
+  DEFAULT_MAXIMUM_ASSET_DIMENSION,
+  DEFAULT_RECOMMENDED_ASSET_DIMENSION,
+  validateAssetImportFile,
+} from "./assetImportValidation";
+export type { AssetImportValidationLimits } from "./assetImportValidation";
+export type * from "./assetImportTypes";
+export {
   AssetCatalogRegistry,
   AssetCatalogRegistryError,
 } from "./assetCatalogRegistry";
