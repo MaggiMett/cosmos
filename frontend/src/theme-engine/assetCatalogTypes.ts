@@ -63,7 +63,8 @@ export interface AssetLicense {
 
 /**
  * Discovery metadata for a Visual Asset. Compatibility fields are descriptive
- * filters only; they do not grant placement, interaction or runtime behavior.
+ * filters only. An entry does not define a Visual Object, create an Interaction
+ * Zone, grant placement, or carry Function Binding/runtime behavior.
  */
 export interface AssetCatalogEntry {
   $schema?: string;

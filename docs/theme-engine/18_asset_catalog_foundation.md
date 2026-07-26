@@ -81,9 +81,43 @@ All arrays are explicit, including empty arrays. The schemas contain no
 defaults, coercion or unknown-property removal.
 
 Compatibility metadata is descriptive and queryable. It does not grant
-placement, interaction, function or Runtime authority. The more specific Room
-Composition, Template, Skin and Function Container validators remain
-authoritative at their own boundaries.
+placement, interaction, function or Runtime authority. A Catalog entry does
+not create a Visual Object Definition. Future Visual Object Definition,
+Interaction Zone, Interaction Zone Profile and Function Binding validators
+remain authoritative at their own boundaries.
+
+### 2.3 Approved Visual / Interaction / Function model
+
+`17_visual_interaction_function_model.md` defines the canonical downstream
+chain:
+
+```text
+Visual Asset
+  -> Asset Catalog Entry
+  -> Visual Object Definition
+  -> Visual Object Instance
+  -> optional Interaction Zone
+  -> Interaction Zone Profile
+  -> Function Binding
+  -> Function Definition Pack
+  -> Core Runtime Target
+```
+
+Phase 1A ends after the second node. `compatibleTemplates`,
+`compatibleSurfaceTypes` and `compatibleVisualObjectTypes` are searchable
+compatibility claims only. They neither create a Visual Object Definition nor
+authorize placement. In particular:
+
+- Visual Asset owns media only;
+- Asset Catalog Entry owns discoverability only;
+- Visual Object Definition will own visual bounds, layers, placement rules,
+  anchors and Skin compatibility in a later phase;
+- Interaction Zone and Interaction Zone Profile will own interaction geometry
+  and reusable interaction rules in a later phase;
+- Function Binding will be the only source of Runtime meaning.
+
+The current Function Container remains a compatibility layer outside Phase 1A.
+This foundation neither depends on it nor refactors it.
 
 ## 3. Identity and versioning
 
@@ -219,6 +253,7 @@ authorities remain in their existing specialized contracts.
 - absence of silent defaults;
 - semantic versions and version ranges;
 - forbidden placement, hitbox, function and Runtime data;
+- forbidden Visual Object, Interaction Zone/Profile and Function Binding data;
 - exact Visual Asset and replacement references;
 - atomic registration and duplicates;
 - multiple versions and compatible resolution;

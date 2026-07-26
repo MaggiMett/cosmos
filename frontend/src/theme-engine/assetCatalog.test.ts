@@ -55,6 +55,22 @@ describe("Asset Catalog schemas and validators", () => {
     }
   });
 
+  it("keeps Catalog entries separate from Visual Objects, Interaction Zones and Function Bindings", () => {
+    const entry = clone(canonicalAssetCatalogEntries[0]!);
+    for (const forbidden of [
+      { visualBounds: { type: "rect", x: 0, y: 0, width: 10, height: 10 } },
+      { placementRules: { surface: "floor" } },
+      { interactionZone: { shape: "rect" } },
+      { interactionZoneProfile: "core.interaction-zone.standard" },
+      { functionBinding: { functionDefinition: "core.function.workspace" } },
+      { runtimeTarget: "workspace-1" },
+    ]) {
+      expect(() =>
+        validateAssetCatalogEntry({ ...entry, ...forbidden }),
+      ).toThrow(ThemeValidationError);
+    }
+  });
+
   it("rejects missing fields, unknown fields and mismatched media without defaults", () => {
     const missingTags = clone(canonicalAssetCatalogEntries[0]!) as Partial<AssetCatalogEntry>;
     delete missingTags.userTags;
@@ -286,6 +302,11 @@ describe("Asset Catalog Registry", () => {
     expect(queryResults(forward).visualObject).toEqual([
       "core.asset-catalog.workbench@1.0.0",
     ]);
+    expect(
+      forward
+        .list()
+        .flatMap((entry) => entry.compatibleVisualObjectTypes),
+    ).not.toContain("catalog-object");
   });
 
   it("defensively isolates registered data from caller mutation", () => {

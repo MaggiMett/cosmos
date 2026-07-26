@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:cosmos:schema:theme-engine:asset-catalog-entry:1",
   "title": "Cosmos Asset Catalog Entry",
-  "description": "Versioned discovery metadata for one Visual Asset.",
+  "description": "Versioned discovery metadata for one Visual Asset. It defines no Visual Object, placement, Interaction Zone or Function Binding.",
   "type": "object",
   "additionalProperties": false,
   "required": [

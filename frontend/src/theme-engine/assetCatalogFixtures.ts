@@ -119,7 +119,7 @@ export const canonicalAssetCatalogEntries: readonly Readonly<AssetCatalogEntry>[
       layerPreviewRef: bookshelfAssetRef,
       compatibleTemplates: [STANDARD_ROOM_TEMPLATE],
       compatibleSurfaceTypes: ["floor", "object-anchor"],
-      compatibleVisualObjectTypes: ["catalog-object", "room-object"],
+      compatibleVisualObjectTypes: ["furniture", "room-object"],
       deprecated: false,
     },
     {
@@ -148,7 +148,7 @@ export const canonicalAssetCatalogEntries: readonly Readonly<AssetCatalogEntry>[
       previewRef: woodenDoorAssetRef,
       compatibleTemplates: [STANDARD_ROOM_TEMPLATE],
       compatibleSurfaceTypes: ["wall"],
-      compatibleVisualObjectTypes: ["catalog-object", "door"],
+      compatibleVisualObjectTypes: ["door"],
       deprecated: false,
     },
     {
@@ -177,7 +177,7 @@ export const canonicalAssetCatalogEntries: readonly Readonly<AssetCatalogEntry>[
       previewRef: steelDoorAssetRef,
       compatibleTemplates: [STANDARD_ROOM_TEMPLATE],
       compatibleSurfaceTypes: ["wall"],
-      compatibleVisualObjectTypes: ["catalog-object", "door"],
+      compatibleVisualObjectTypes: ["door"],
       deprecated: false,
     },
     {
@@ -206,11 +206,7 @@ export const canonicalAssetCatalogEntries: readonly Readonly<AssetCatalogEntry>[
       previewRef: plantAssetRef,
       compatibleTemplates: [STANDARD_ROOM_TEMPLATE],
       compatibleSurfaceTypes: ["floor", "object-anchor"],
-      compatibleVisualObjectTypes: [
-        "catalog-object",
-        "decoration",
-        "plant",
-      ],
+      compatibleVisualObjectTypes: ["decoration", "plant"],
       deprecated: false,
     },
     {
@@ -240,7 +236,6 @@ export const canonicalAssetCatalogEntries: readonly Readonly<AssetCatalogEntry>[
       compatibleTemplates: [STANDARD_ROOM_TEMPLATE],
       compatibleSurfaceTypes: ["floor"],
       compatibleVisualObjectTypes: [
-        "catalog-object",
         "furniture",
         "workspace-furniture",
       ],
