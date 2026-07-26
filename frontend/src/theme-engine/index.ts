@@ -22,6 +22,16 @@ export type {
   ResolvedAsset,
 } from "./assetRegistry";
 export {
+  canonicalAssetCatalogEntries,
+  canonicalVisualAssets,
+} from "./assetCatalogFixtures";
+export {
+  AssetCatalogRegistry,
+  AssetCatalogRegistryError,
+} from "./assetCatalogRegistry";
+export type { AssetCatalogTagMatch } from "./assetCatalogRegistry";
+export type * from "./assetCatalogTypes";
+export {
   BaseCompositionLoader,
   BaseCompositionLoaderError,
 } from "./baseCompositionLoader";
@@ -70,6 +80,7 @@ export {
 export type { RegisteredTemplate } from "./templateRegistry";
 export {
   ThemeValidationError,
+  validateAssetCatalogEntry,
   validateBaseComposition,
   validateCatalogObject,
   validateComposition,
@@ -82,6 +93,7 @@ export {
   validateRoomShell,
   validateSkinPack,
   validateThemeManifest,
+  validateVisualAsset,
 } from "./validation";
 export type {
   ThemeArtifactKind,

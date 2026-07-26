@@ -3,6 +3,7 @@ import Ajv2020, {
   type ValidateFunction,
 } from "ajv/dist/2020";
 
+import assetCatalogEntrySchema from "../../../docs/theme-engine/schemas/asset-catalog-entry.schema.json";
 import compositionSchema from "../../../docs/theme-engine/schemas/composition.schema.json";
 import baseCompositionSchema from "../../../docs/theme-engine/schemas/base-composition.schema.json";
 import catalogObjectSchema from "../../../docs/theme-engine/schemas/catalog-object.schema.json";
@@ -16,6 +17,11 @@ import roomPresetSchema from "../../../docs/theme-engine/schemas/room-preset.sch
 import roomShellSchema from "../../../docs/theme-engine/schemas/room-shell.schema.json";
 import skinPackSchema from "../../../docs/theme-engine/schemas/skin-pack.schema.json";
 import themeManifestSchema from "../../../docs/theme-engine/schemas/theme-manifest.schema.json";
+import visualAssetSchema from "../../../docs/theme-engine/schemas/visual-asset.schema.json";
+import type {
+  AssetCatalogEntry,
+  VisualAsset,
+} from "./assetCatalogTypes";
 import type {
   BaseComposition,
   CatalogObject,
@@ -32,8 +38,11 @@ import type {
   SkinPack,
   ThemeManifest,
 } from "./types";
+import { parseVersion } from "./version";
 
 export type ThemeArtifactKind =
+  | "visual-asset"
+  | "asset-catalog-entry"
   | "theme-manifest"
   | "skin-pack"
   | "object-template"
@@ -105,8 +114,12 @@ ajv.addSchema(functionContainerSchema);
 ajv.addSchema(roomPresetSchema);
 ajv.addSchema(roomCompositionSchema);
 ajv.addSchema(baseCompositionSchema);
+ajv.addSchema(visualAssetSchema);
+ajv.addSchema(assetCatalogEntrySchema);
 
 const validators = {
+  "visual-asset": requireSchemaValidator(visualAssetSchema.$id),
+  "asset-catalog-entry": requireSchemaValidator(assetCatalogEntrySchema.$id),
   "theme-manifest": ajv.compile(themeManifestSchema),
   "skin-pack": ajv.compile(skinPackSchema),
   "object-template": ajv.compile(objectTemplateSchema),
@@ -148,6 +161,43 @@ const forbiddenStringPatterns: readonly RegExp[] = [
 
 export function validateThemeManifest(value: unknown): ThemeManifest {
   return validateArtifact("theme-manifest", validators["theme-manifest"], value);
+}
+
+export function validateVisualAsset(value: unknown): VisualAsset {
+  return validateArtifact("visual-asset", validators["visual-asset"], value);
+}
+
+export function validateAssetCatalogEntry(value: unknown): AssetCatalogEntry {
+  const entry = validateArtifact<AssetCatalogEntry>(
+    "asset-catalog-entry",
+    validators["asset-catalog-entry"],
+    value,
+  );
+  const issues: ThemeValidationIssue[] = [];
+
+  entry.compatibleTemplates.forEach((reference, index) => {
+    if (!isSupportedVersionRange(reference.versionRange)) {
+      issues.push({
+        path: `/compatibleTemplates/${index}/versionRange`,
+        keyword: "version-range",
+        message: `unsupported semantic version range "${reference.versionRange}"`,
+      });
+    }
+  });
+
+  if (
+    entry.replacement?.id === entry.id &&
+    entry.replacement.version === entry.version
+  ) {
+    issues.push({
+      path: "/replacement",
+      keyword: "reference",
+      message: "replacement must not reference the same catalog entry version",
+    });
+  }
+
+  throwSemanticIssues("asset-catalog-entry", issues);
+  return entry;
 }
 
 export function validateSkinPack(value: unknown): SkinPack {
@@ -292,6 +342,17 @@ function requireSchemaValidator(id: string): ValidateFunction {
   const validator = ajv.getSchema(id);
   if (!validator) throw new Error(`Ajv schema "${id}" was not registered`);
   return validator;
+}
+
+function isSupportedVersionRange(range: string): boolean {
+  const normalized = range.trim();
+  if (normalized === "*" || normalized.toLowerCase() === "latest") {
+    return true;
+  }
+  const exact = normalized.startsWith("^") || normalized.startsWith("~")
+    ? normalized.slice(1)
+    : normalized;
+  return parseVersion(exact) !== null;
 }
 
 function throwSemanticIssues(
