@@ -2,7 +2,12 @@ import type { RouteRecordRaw } from "vue-router";
 
 import EnvironmentView from "../views/EnvironmentView";
 
-export type EnvironmentKind = "cosmos" | "base" | "room" | "workspace";
+export type EnvironmentKind =
+  | "cosmos"
+  | "base"
+  | "room"
+  | "workspace"
+  | "development";
 
 export const routeRecords = [
   {
@@ -28,6 +33,16 @@ export const routeRecords = [
     name: "workspace",
     component: EnvironmentView,
     meta: { title: "Workspace", environment: "workspace" },
+  },
+  {
+    path: "/dev/base-builder",
+    name: "dev-base-builder",
+    component: () => import("../dev/base-builder/BaseBuilderView.vue"),
+    meta: {
+      title: "Base Builder Development Preview",
+      environment: "development",
+      developmentPreview: true,
+    },
   },
   {
     path: "/:pathMatch(.*)*",

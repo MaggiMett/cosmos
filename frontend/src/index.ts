@@ -14,6 +14,7 @@ export { ToolRuntime } from "./runtime/toolRuntime";
 export { TransitionRuntime } from "./runtime/transitionRuntime";
 export { WindowRuntime, WindowRuntimeError, capabilitiesFor } from "./runtime/windowRuntime";
 export { WorkspaceRuntime, WorkspaceRuntimeError } from "./runtime/workspaceRuntime";
+export * from "./theme-engine";
 export type {
   ApiError,
   ApiRequestOptions,

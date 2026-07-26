@@ -2,7 +2,11 @@ import { createMemoryHistory } from "vue-router";
 import { describe, expect, it } from "vitest";
 
 import { TransitionRuntime } from "../runtime/transitionRuntime";
-import { createCosmosRouter } from "./index";
+import {
+  createCosmosRouter,
+  shouldEnqueueRuntimeTransition,
+} from "./index";
+import { routeRecords } from "./routes";
 
 describe("Cosmos routing", () => {
   it("resolves the spatial environment hierarchy without page-style feature routes", () => {
@@ -42,5 +46,38 @@ describe("Cosmos routing", () => {
     await router.push("/not-a-cosmos-location");
 
     expect(router.currentRoute.value.name).toBe("cosmos");
+  });
+
+  it("keeps the Base Builder preview isolated from the Base environment route", () => {
+    const router = createCosmosRouter({ history: createMemoryHistory() });
+    const preview = router.resolve("/dev/base-builder");
+    const previewRecord = routeRecords.find(
+      (record) => record.name === "dev-base-builder",
+    );
+    const baseRecord = routeRecords.find((record) => record.name === "base");
+
+    expect(preview.name).toBe("dev-base-builder");
+    expect(preview.meta).toMatchObject({
+      environment: "development",
+      developmentPreview: true,
+    });
+    expect(previewRecord?.component).not.toBe(baseRecord?.component);
+    expect(String(previewRecord?.component)).not.toContain("BaseView");
+  });
+
+  it("does not enqueue Runtime transitions into or out of the Development Preview", () => {
+    expect(
+      shouldEnqueueRuntimeTransition(
+        { developmentPreview: true },
+        { developmentPreview: false },
+      ),
+    ).toBe(false);
+    expect(
+      shouldEnqueueRuntimeTransition(
+        { developmentPreview: false },
+        { developmentPreview: true },
+      ),
+    ).toBe(false);
+    expect(shouldEnqueueRuntimeTransition({}, {})).toBe(true);
   });
 });

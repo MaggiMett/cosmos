@@ -14,19 +14,29 @@ export interface CosmosRouterOptions {
   transitions?: TransitionRuntime;
 }
 
+export function shouldEnqueueRuntimeTransition(
+  to: { developmentPreview?: boolean },
+  from: { developmentPreview?: boolean },
+): boolean {
+  return !to.developmentPreview && !from.developmentPreview;
+}
+
 export function createCosmosRouter(options: CosmosRouterOptions = {}): Router {
   const history = options.history ??
     (typeof window === "undefined" ? createMemoryHistory() : createWebHistory(import.meta.env.BASE_URL));
   const router = createRouter({ history, routes: routeRecords });
 
   if (options.transitions) {
-    router.beforeEach((to, from) =>
-      options.transitions?.enqueue({
+    router.beforeEach((to, from) => {
+      if (!shouldEnqueueRuntimeTransition(to.meta, from.meta)) {
+        return true;
+      }
+      return options.transitions?.enqueue({
         kind: to.meta.environment === from.meta.environment ? "navigation" : "environment",
         targetId: String(to.name ?? to.path),
         run: () => true,
-      }),
-    );
+      });
+    });
   }
 
   router.afterEach((to) => {

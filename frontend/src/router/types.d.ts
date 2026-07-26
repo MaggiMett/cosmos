@@ -6,5 +6,6 @@ declare module "vue-router" {
   interface RouteMeta {
     title: string;
     environment: EnvironmentKind;
+    developmentPreview?: boolean;
   }
 }
