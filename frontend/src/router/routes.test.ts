@@ -65,6 +65,26 @@ describe("Cosmos routing", () => {
     expect(String(previewRecord?.component)).not.toContain("BaseView");
   });
 
+  it("resolves the Asset Library as a separate isolated development preview", () => {
+    const router = createCosmosRouter({ history: createMemoryHistory() });
+    const preview = router.resolve("/dev/asset-library");
+    const previewRecord = routeRecords.find(
+      (record) => record.name === "dev-asset-library",
+    );
+    const baseBuilderRecord = routeRecords.find(
+      (record) => record.name === "dev-base-builder",
+    );
+
+    expect(preview.name).toBe("dev-asset-library");
+    expect(preview.meta).toMatchObject({
+      title: "Asset Library Development Preview",
+      environment: "development",
+      developmentPreview: true,
+    });
+    expect(previewRecord?.component).not.toBe(baseBuilderRecord?.component);
+    expect(String(previewRecord?.component)).toContain("AssetLibraryView.vue");
+  });
+
   it("does not enqueue Runtime transitions into or out of the Development Preview", () => {
     expect(
       shouldEnqueueRuntimeTransition(

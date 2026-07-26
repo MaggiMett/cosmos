@@ -45,6 +45,16 @@ export const routeRecords = [
     },
   },
   {
+    path: "/dev/asset-library",
+    name: "dev-asset-library",
+    component: () => import("../dev/asset-library/AssetLibraryView.vue"),
+    meta: {
+      title: "Asset Library Development Preview",
+      environment: "development",
+      developmentPreview: true,
+    },
+  },
+  {
     path: "/:pathMatch(.*)*",
     redirect: "/",
   },
