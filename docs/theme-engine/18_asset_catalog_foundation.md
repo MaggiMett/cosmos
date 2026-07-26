@@ -60,6 +60,8 @@ Required fields are:
 - `visualAssetRef`;
 - `displayName`, `description`;
 - `category`;
+- `scope`, `origin` as finalized by
+  `21_catalog_completion_experience.md`;
 - `systemTags`, `userTags`;
 - `perspective`, `orientation`, `scaleClass`;
 - `creator`, `provenance`, `license`;
@@ -191,7 +193,8 @@ Metadata-only fixtures are provided for:
 - Workbench.
 
 Each fixture has one corresponding Visual Asset metadata record and one
-Asset Catalog entry. Paths, digests and dimensions are fixture metadata only;
+Asset Catalog entry. Core fixtures declare `scope: "core"` and
+`origin: "built-in"`. Paths, digests and dimensions are fixture metadata only;
 no PNG, SVG or preview bytes are created by this phase.
 
 ## 7. Design Intelligence

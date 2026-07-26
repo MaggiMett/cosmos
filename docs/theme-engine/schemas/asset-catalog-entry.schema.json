@@ -13,6 +13,8 @@
     "displayName",
     "description",
     "category",
+    "scope",
+    "origin",
     "systemTags",
     "userTags",
     "perspective",
@@ -58,6 +60,20 @@
     },
     "subCategory": {
       "$ref": "#/$defs/namespacedId"
+    },
+    "scope": {
+      "enum": [
+        "core",
+        "theme",
+        "personal"
+      ]
+    },
+    "origin": {
+      "enum": [
+        "built-in",
+        "imported",
+        "generated"
+      ]
     },
     "systemTags": {
       "type": "array",

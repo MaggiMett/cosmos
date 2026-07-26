@@ -29,6 +29,14 @@ export {
   createCanonicalAssetImportFixtures,
 } from "./assetImportFixtures";
 export {
+  createCatalogCompletionFixture,
+} from "./catalogCompletionFixtures";
+export {
+  CatalogPromotionService,
+  CatalogPromotionServiceError,
+} from "./catalogPromotionService";
+export type * from "./catalogCompletionTypes";
+export {
   AssetImportService,
   AssetImportServiceError,
   ImportSession,

@@ -79,6 +79,19 @@ describe("Asset Catalog schemas and validators", () => {
     );
     expect(missingTags).not.toHaveProperty("userTags");
 
+    const missingScope = clone(canonicalAssetCatalogEntries[0]!) as Partial<AssetCatalogEntry>;
+    delete missingScope.scope;
+    expect(() => validateAssetCatalogEntry(missingScope)).toThrow(
+      /required property "scope"/,
+    );
+
+    expect(() =>
+      validateAssetCatalogEntry({
+        ...clone(canonicalAssetCatalogEntries[0]!),
+        origin: "uploaded",
+      }),
+    ).toThrow(ThemeValidationError);
+
     expect(() =>
       validateAssetCatalogEntry({
         ...clone(canonicalAssetCatalogEntries[0]!),

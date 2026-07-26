@@ -61,6 +61,9 @@ export interface AssetLicense {
   url?: string;
 }
 
+export type AssetCatalogScope = "core" | "theme" | "personal";
+export type AssetCatalogOrigin = "built-in" | "imported" | "generated";
+
 /**
  * Discovery metadata for a Visual Asset. Compatibility fields are descriptive
  * filters only. An entry does not define a Visual Object, create an Interaction
@@ -76,6 +79,8 @@ export interface AssetCatalogEntry {
   description: string;
   category: NamespacedId;
   subCategory?: NamespacedId;
+  scope: AssetCatalogScope;
+  origin: AssetCatalogOrigin;
   systemTags: readonly NamespacedId[];
   userTags: readonly string[];
   perspective: string;

@@ -101,6 +101,8 @@ export const canonicalAssetCatalogEntries: readonly Readonly<AssetCatalogEntry>[
       description: "A neutral reusable bookshelf visual.",
       category: "core.category.furniture",
       subCategory: "core.category.furniture.storage",
+      scope: "core",
+      origin: "built-in",
       systemTags: [
         "core.tag.furniture",
         "core.tag.storage",
@@ -131,6 +133,8 @@ export const canonicalAssetCatalogEntries: readonly Readonly<AssetCatalogEntry>[
       description: "A neutral wooden door visual.",
       category: "core.category.architecture",
       subCategory: "core.category.architecture.doors",
+      scope: "core",
+      origin: "built-in",
       systemTags: [
         "core.tag.architecture",
         "core.tag.door",
@@ -160,6 +164,8 @@ export const canonicalAssetCatalogEntries: readonly Readonly<AssetCatalogEntry>[
       description: "A neutral steel door visual.",
       category: "core.category.architecture",
       subCategory: "core.category.architecture.doors",
+      scope: "core",
+      origin: "built-in",
       systemTags: [
         "core.tag.architecture",
         "core.tag.door",
@@ -189,6 +195,8 @@ export const canonicalAssetCatalogEntries: readonly Readonly<AssetCatalogEntry>[
       description: "A neutral decorative plant visual.",
       category: "core.category.decoration",
       subCategory: "core.category.decoration.plants",
+      scope: "core",
+      origin: "built-in",
       systemTags: [
         "core.tag.decoration",
         "core.tag.nature",
@@ -218,6 +226,8 @@ export const canonicalAssetCatalogEntries: readonly Readonly<AssetCatalogEntry>[
       description: "A neutral reusable workbench visual.",
       category: "core.category.furniture",
       subCategory: "core.category.furniture.work-surfaces",
+      scope: "core",
+      origin: "built-in",
       systemTags: [
         "core.tag.furniture",
         "core.tag.utility",
