@@ -35,6 +35,12 @@ export {
   CatalogPromotionService,
   CatalogPromotionServiceError,
 } from "./catalogPromotionService";
+export {
+  clonePreparedCatalogPromotion,
+  createImportedCatalogTarget,
+  prepareCatalogPersistence,
+} from "./catalogPersistenceHandoff";
+export type { PreparedCatalogPromotion } from "./catalogPersistenceHandoff";
 export type * from "./catalogCompletionTypes";
 export {
   AssetImportService,

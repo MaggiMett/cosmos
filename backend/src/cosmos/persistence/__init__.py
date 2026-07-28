@@ -1,3 +1,4 @@
+from cosmos.persistence.asset_catalog import AssetCatalogRepository
 from cosmos.persistence.core_tools import (
     CaptureDraftRecord,
     CaptureDraftRepository,
@@ -10,6 +11,7 @@ from cosmos.persistence.repositories import ObjectRepository, RelationshipReposi
 from cosmos.persistence.sqlite import SQLitePersistence
 
 __all__ = [
+    "AssetCatalogRepository",
     "CaptureDraftRecord",
     "CaptureDraftRepository",
     "JobRepository",

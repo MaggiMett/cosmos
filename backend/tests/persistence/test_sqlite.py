@@ -20,6 +20,7 @@ def test_sqlite_initialization_applies_foundation_once(tmp_path: Path) -> None:
         (1, "0001_foundation.sql"),
         (2, "0002_cosmos_map.sql"),
         (3, "0003_core_tools.sql"),
+        (4, "0004_asset_catalog.sql"),
     ]
     assert {
         "objects",
@@ -30,4 +31,6 @@ def test_sqlite_initialization_applies_foundation_once(tmp_path: Path) -> None:
         "prepared_structures",
         "relationships",
         "runtime_state",
+        "visual_assets",
+        "asset_catalog_entries",
     }.issubset(tables)

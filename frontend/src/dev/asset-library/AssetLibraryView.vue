@@ -5,9 +5,27 @@
         <span class="asset-library__eyebrow">Development Preview</span>
         <div>
           <h1>Asset Library</h1>
-          <p>Browse &amp; Manage · Local fixtures · No Runtime or persistence</p>
+          <p>Browse &amp; Manage · Runtime-backed static Asset Catalog</p>
         </div>
       </div>
+      <input
+        ref="fileInput"
+        class="sr-only"
+        type="file"
+        accept=".png,.webp,.svg,image/png,image/webp,image/svg+xml"
+        multiple
+        data-testid="asset-import-input"
+        @change="importSelectedFiles"
+      />
+      <button
+        type="button"
+        class="asset-library__import"
+        :disabled="importing"
+        data-testid="asset-import-action"
+        @click="fileInput?.click()"
+      >
+        {{ importing ? "Reviewing…" : "Import assets" }}
+      </button>
       <div class="asset-library__context" aria-label="Library context">
         <span>Current Theme</span>
         <strong>{{ prototypeState?.currentTheme || "Not selected" }}</strong>
@@ -16,11 +34,12 @@
 
     <div v-if="loading" class="asset-library__state" role="status">
       <span class="asset-library__spinner" aria-hidden="true" />
-      Preparing the fixture library…
+      Loading the persistent Asset Catalog…
     </div>
     <div v-else-if="loadError" class="asset-library__state asset-library__state--error" role="alert">
-      <strong>The fixture library could not be prepared.</strong>
+      <strong>The Asset Catalog could not be loaded.</strong>
       <span>{{ loadError }}</span>
+      <button type="button" @click="reloadLibrary">Retry</button>
     </div>
 
     <div
@@ -85,6 +104,15 @@
             {{ results.length === 1 ? "item" : "items" }}
           </p>
         </header>
+
+        <div v-if="operationMessage" class="library-operation" role="status">
+          {{ operationMessage }}
+        </div>
+        <div v-if="importError" class="library-operation library-operation--error" role="alert">
+          <strong>Import needs attention.</strong>
+          {{ importError }}
+          <button type="button" @click="fileInput?.click()">Choose another file</button>
+        </div>
 
         <div class="discovery-toolbar" aria-label="Search and filters">
           <label class="search-control">
@@ -248,10 +276,10 @@
             with the active filters.
           </p>
           <p v-else-if="selectedView === 'my-assets'">
-            The canonical fixtures contain no cataloged Personal assets.
+            No Personal asset has been cataloged yet.
           </p>
           <p v-else>
-            This system view is empty in the local fixture library.
+            This system view is empty. Import a static PNG, WebP or safe SVG to begin.
           </p>
           <button
             v-if="search || activeFilterChips.length"
@@ -371,6 +399,36 @@
               <strong>{{ statusDetails(selectedItem.status).label }}</strong>
               {{ statusDetails(selectedItem.status).explanation }}
             </p>
+            <div class="asset-detail__primary-actions">
+              <button
+                v-if="selectedItem.kind === 'catalog-draft' && selectedItem.catalogDraft.status === 'ready-for-catalog'"
+                type="button"
+                :disabled="promotionBusy"
+                data-testid="catalog-promote-action"
+                @click="promoteSelectedDraft"
+              >
+                {{ promotionBusy ? "Saving…" : "Add to Catalog" }}
+              </button>
+              <button
+                v-if="selectedItem.kind === 'cataloged' && !selectedItem.previewUrl"
+                type="button"
+                @click="reloadLibrary"
+              >
+                Reload Resource status
+              </button>
+            </div>
+            <div v-if="promotionError" class="promotion-error" role="alert">
+              <strong>Catalog promotion failed.</strong>
+              <span>{{ promotionError }}</span>
+              <button
+                v-if="selectedItem.kind === 'catalog-draft' && selectedItem.catalogDraft.status === 'ready-for-catalog'"
+                type="button"
+                :disabled="promotionBusy"
+                @click="promoteSelectedDraft"
+              >
+                Retry save
+              </button>
+            </div>
           </section>
 
           <section v-if="selectedItem.issues.length" class="asset-detail__issues">
@@ -382,6 +440,131 @@
               </li>
             </ul>
           </section>
+
+          <form
+            v-if="selectedItem.kind === 'catalog-draft'"
+            class="catalog-editor"
+            data-testid="catalog-metadata-editor"
+            @submit.prevent="applyCatalogMetadata"
+          >
+            <header>
+              <div>
+                <span>Catalog completion</span>
+                <h3>Describe this visual asset</h3>
+              </div>
+              <strong>{{ selectedItem.catalogDraft.validation.missingFields.length }} required fields missing</strong>
+            </header>
+
+            <div v-if="metadataIssues.length" class="catalog-editor__issues" role="status">
+              <span v-for="issue in metadataIssues" :key="`${issue.field}:${issue.message}`">
+                {{ issue.message }}
+              </span>
+            </div>
+
+            <fieldset>
+              <legend>Identity</legend>
+              <label>
+                <span>Display name</span>
+                <input v-model="metadataForm.displayName" required maxlength="200" />
+              </label>
+              <label class="catalog-editor__wide">
+                <span>Description</span>
+                <textarea v-model="metadataForm.description" required maxlength="4000" rows="3" />
+              </label>
+              <label>
+                <span>Category ID</span>
+                <input
+                  v-model="metadataForm.category"
+                  required
+                  placeholder="personal.category.decoration"
+                />
+              </label>
+              <label>
+                <span>User tags</span>
+                <input v-model="metadataForm.userTags" placeholder="calm, green, decorative" />
+              </label>
+              <label class="catalog-editor__wide">
+                <span>System tags</span>
+                <input v-model="metadataForm.systemTags" required />
+              </label>
+            </fieldset>
+
+            <fieldset>
+              <legend>Library context</legend>
+              <label>
+                <span>Scope</span>
+                <select v-model="metadataForm.scope" required>
+                  <option value="personal">Personal</option>
+                  <option value="theme">Theme</option>
+                </select>
+              </label>
+              <label v-if="metadataForm.scope === 'theme'">
+                <span>Theme ID</span>
+                <input v-model="metadataForm.theme" required placeholder="personal.theme.example" />
+              </label>
+              <label>
+                <span>Perspective</span>
+                <select v-model="metadataForm.perspective" required>
+                  <option value="unspecified">Unspecified</option>
+                  <option value="front">Front</option>
+                  <option value="side">Side</option>
+                  <option value="top">Top</option>
+                  <option value="isometric">Isometric</option>
+                </select>
+              </label>
+              <label>
+                <span>Orientation</span>
+                <select v-model="metadataForm.orientation" required>
+                  <option value="unspecified">Unspecified</option>
+                  <option value="portrait">Portrait</option>
+                  <option value="landscape">Landscape</option>
+                  <option value="square">Square</option>
+                </select>
+              </label>
+              <label>
+                <span>Scale class</span>
+                <select v-model="metadataForm.scaleClass" required>
+                  <option value="unspecified">Unspecified</option>
+                  <option value="small">Small</option>
+                  <option value="medium">Medium</option>
+                  <option value="large">Large</option>
+                </select>
+              </label>
+            </fieldset>
+
+            <fieldset>
+              <legend>Creator and rights</legend>
+              <label>
+                <span>Creator</span>
+                <input v-model="metadataForm.creator" required maxlength="200" />
+              </label>
+              <label>
+                <span>License expression</span>
+                <input v-model="metadataForm.license" required maxlength="500" />
+              </label>
+              <label class="catalog-editor__wide">
+                <span>Provenance source</span>
+                <input v-model="metadataForm.provenanceSource" required maxlength="1000" />
+              </label>
+              <label class="catalog-editor__wide">
+                <span>Attribution (optional)</span>
+                <input v-model="metadataForm.attribution" maxlength="1000" />
+              </label>
+            </fieldset>
+
+            <label class="catalog-editor__confirmation">
+              <input v-model="metadataForm.compatibilityConfirmed" type="checkbox" required />
+              <span>
+                Declare compatibility as explicitly empty for this first slice.
+                This grants no placement or behavior.
+              </span>
+            </label>
+
+            <button type="submit">Apply catalog metadata</button>
+            <p>
+              Applying metadata keeps this item as a draft. “Add to Catalog” is a separate action.
+            </p>
+          </form>
 
           <section class="detail-section">
             <h3>About</h3>
@@ -514,26 +697,40 @@ import type {
   AssetCatalogOrigin,
   AssetCatalogScope,
   CatalogCompatibilityMetadata,
+  CatalogCompletionIssue,
+  CatalogDraft,
   CatalogDraftMetadata,
   DraftVisualAsset,
+  ImportSession,
   VisualAsset,
 } from "../../theme-engine";
+import {
+  AssetImportService,
+  CatalogPromotionService,
+  createImportedCatalogTarget,
+  prepareCatalogPersistence,
+} from "../../theme-engine";
+import { assetCatalogApi } from "../../runtime/assetCatalogApi";
 import {
   ASSET_LIBRARY_STATUS_DETAILS,
   ASSET_LIBRARY_VIEWS,
   AssetLibraryStatus,
   assetLibraryFacetValues,
   cardAccessibleLabel,
+  catalogDraftItem,
   catalogContextsFor,
   countAssetLibraryView,
   createAssetLibraryPrototype,
   humanizeAssetValue,
   nextAssetGridIndex,
   queryAssetLibrary,
+  rejectedImportItem,
+  replaceAssetLibrarySessionItems,
   type AssetGridNavigationKey,
   type AssetLibraryFilters,
   type AssetLibraryItem,
   type AssetLibraryPrototype,
+  type AssetLibraryIssue,
   type AssetLibraryStatus as AssetLibraryStatusValue,
   type AssetLibraryViewId,
 } from "./assetLibraryPrototype";
@@ -542,11 +739,34 @@ const props = defineProps<{
   prototype?: Readonly<AssetLibraryPrototype>;
 }>();
 
+interface CatalogMetadataForm {
+  displayName: string;
+  description: string;
+  category: string;
+  userTags: string;
+  systemTags: string;
+  scope: "personal" | "theme";
+  theme: string;
+  perspective: string;
+  orientation: string;
+  scaleClass: string;
+  creator: string;
+  license: string;
+  attribution: string;
+  provenanceSource: string;
+  compatibilityConfirmed: boolean;
+}
+
 const prototypeState = shallowRef<Readonly<AssetLibraryPrototype> | null>(
   props.prototype ?? null,
 );
 const loading = ref(props.prototype === undefined);
 const loadError = ref("");
+const importing = ref(false);
+const importError = ref("");
+const operationMessage = ref("");
+const promotionBusy = ref(false);
+const promotionError = ref("");
 const selectedView = ref<AssetLibraryViewId>("all-assets");
 const search = ref("");
 const filters = ref<AssetLibraryFilters>({
@@ -559,11 +779,17 @@ const selectedKey = ref<string | null>(null);
 const selectedOriginIndex = ref(0);
 const focusedIndex = ref(0);
 const searchInput = ref<HTMLInputElement | null>(null);
+const fileInput = ref<HTMLInputElement | null>(null);
 const assetGrid = ref<HTMLElement | null>(null);
 const detailHeading = ref<HTMLElement | null>(null);
 const previewBackground = ref<"checker" | "light" | "dark">("checker");
 const previewFit = ref(true);
 const previewScale = ref(1);
+const metadataForm = ref<CatalogMetadataForm>(emptyMetadataForm());
+const importService = new AssetImportService();
+const completionService = new CatalogPromotionService();
+let importSession: ImportSession | null = null;
+let sessionItems: readonly Readonly<AssetLibraryItem>[] = Object.freeze([]);
 
 const navigationGroups = ["Library", "Work"] as const;
 const statusOptions: readonly AssetLibraryStatusValue[] = [
@@ -597,6 +823,11 @@ const selectedItem = computed(
   () =>
     prototypeState.value?.items.find((item) => item.key === selectedKey.value)
     ?? null,
+);
+const metadataIssues = computed<readonly Readonly<CatalogCompletionIssue>[]>(() =>
+  selectedItem.value?.kind === "catalog-draft"
+    ? selectedItem.value.catalogDraft.validation.issues
+    : [],
 );
 const categoryOptions = computed(() =>
   prototypeState.value === null
@@ -675,20 +906,193 @@ watch(results, (nextResults) => {
 
 onMounted(async () => {
   window.addEventListener("keydown", handleLibraryShortcut);
-  if (prototypeState.value !== null) return;
-  try {
-    prototypeState.value = await createAssetLibraryPrototype();
-  } catch (cause) {
-    loadError.value =
-      cause instanceof Error ? cause.message : "Unknown fixture error.";
-  } finally {
-    loading.value = false;
+  if (prototypeState.value !== null) {
+    initializeImportSession(prototypeState.value);
+    return;
   }
+  await reloadLibrary();
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", handleLibraryShortcut);
 });
+
+async function reloadLibrary(): Promise<void> {
+  loading.value = prototypeState.value === null;
+  loadError.value = "";
+  try {
+    const loaded = await createAssetLibraryPrototype();
+    prototypeState.value = replaceAssetLibrarySessionItems(loaded, sessionItems);
+    initializeImportSession(loaded);
+    operationMessage.value = "Persistent Catalog reloaded.";
+  } catch (cause) {
+    loadError.value =
+      cause instanceof Error ? cause.message : "The Cosmos Runtime is unavailable.";
+  } finally {
+    loading.value = false;
+  }
+}
+
+function initializeImportSession(
+  prototype: Readonly<AssetLibraryPrototype>,
+): void {
+  if (importSession !== null) return;
+  importSession = importService.createSession({
+    existingVisualAssets: prototype.registry.listVisualAssets().map((asset) => ({
+      visualAssetRef: { id: asset.id, version: asset.version },
+      sha256: asset.sha256,
+    })),
+  });
+}
+
+async function importSelectedFiles(event: Event): Promise<void> {
+  const input = event.target as HTMLInputElement;
+  const files = [...(input.files ?? [])];
+  input.value = "";
+  if (files.length === 0 || prototypeState.value === null) return;
+  initializeImportSession(prototypeState.value);
+  if (importSession === null) return;
+
+  importing.value = true;
+  importError.value = "";
+  operationMessage.value = "";
+  try {
+    const batch = await importSession.importFiles(
+      await Promise.all(files.map(async (file) => ({
+        fileName: file.name,
+        declaredMimeType: file.type || undefined,
+        bytes: new Uint8Array(await file.arrayBuffer()),
+      }))),
+    );
+    const addedItems: Readonly<AssetLibraryItem>[] = batch.items.map((result) => {
+      if (result.draftVisualAsset === undefined) {
+        return rejectedImportItem(result);
+      }
+      const catalogDraft = completionService.createDraft({
+        flow: "user-import",
+        sourceVisualAsset: result.draftVisualAsset,
+        target: createImportedCatalogTarget(result.draftVisualAsset),
+        metadata: { origin: "imported" },
+      });
+      return catalogDraftItem(
+        catalogDraft,
+        result.issues as readonly Readonly<AssetLibraryIssue>[],
+      );
+    });
+    sessionItems = Object.freeze([...sessionItems, ...addedItems]);
+    prototypeState.value = replaceAssetLibrarySessionItems(
+      prototypeState.value,
+      sessionItems,
+    );
+    const firstDraft = addedItems.find((item) => item.kind === "catalog-draft");
+    selectedView.value = firstDraft === undefined ? "needs-attention" : "drafts";
+    selectedKey.value = (firstDraft ?? addedItems[0])?.key ?? null;
+    if (firstDraft?.kind === "catalog-draft") {
+      metadataForm.value = metadataFormFromDraft(firstDraft.catalogDraft);
+    }
+    operationMessage.value =
+      `${batch.counts.total} file${batch.counts.total === 1 ? "" : "s"} reviewed; `
+      + `${batch.counts.rejected} rejected.`;
+    await nextTick();
+    detailHeading.value?.focus();
+  } catch (cause) {
+    importError.value =
+      cause instanceof Error ? cause.message : "The selected files could not be reviewed.";
+  } finally {
+    importing.value = false;
+  }
+}
+
+function applyCatalogMetadata(): void {
+  const item = selectedItem.value;
+  if (item?.kind !== "catalog-draft") return;
+  promotionError.value = "";
+  const form = metadataForm.value;
+  const metadata: CatalogDraftMetadata = {
+    displayName: form.displayName.trim(),
+    description: form.description.trim(),
+    category: form.category.trim(),
+    scope: form.scope,
+    origin: "imported",
+    systemTags: splitList(form.systemTags),
+    userTags: splitList(form.userTags),
+    perspective: form.perspective,
+    orientation: form.orientation,
+    scaleClass: form.scaleClass,
+    ...(form.scope === "theme" && form.theme.trim()
+      ? { theme: form.theme.trim() }
+      : {}),
+    creator: { name: form.creator.trim() },
+    provenance: {
+      kind: "imported",
+      source: form.provenanceSource.trim(),
+    },
+    license: {
+      expression: form.license.trim(),
+      ...(form.attribution.trim()
+        ? { attribution: form.attribution.trim() }
+        : {}),
+    },
+    ...(form.compatibilityConfirmed
+      ? {
+          compatibility: {
+            compatibleTemplates: [],
+            compatibleSurfaceTypes: [],
+            compatibleVisualObjectTypes: [],
+          },
+        }
+      : {}),
+  };
+  const updatedDraft = completionService.setMetadata(item.catalogDraft, metadata);
+  const replacement = catalogDraftItem(updatedDraft, item.issues);
+  sessionItems = Object.freeze(
+    sessionItems.map((candidate) =>
+      candidate.key === item.key ? replacement : candidate,
+    ),
+  );
+  if (prototypeState.value !== null) {
+    prototypeState.value = replaceAssetLibrarySessionItems(
+      prototypeState.value,
+      sessionItems,
+    );
+  }
+  operationMessage.value = updatedDraft.status === "ready-for-catalog"
+    ? "Metadata applied. The draft is ready for explicit Catalog promotion."
+    : "Metadata applied. Review the remaining validation messages.";
+}
+
+async function promoteSelectedDraft(): Promise<void> {
+  const item = selectedItem.value;
+  if (item?.kind !== "catalog-draft") return;
+  promotionBusy.value = true;
+  promotionError.value = "";
+  operationMessage.value = "";
+  try {
+    const prepared = prepareCatalogPersistence(item.catalogDraft);
+    const result = await assetCatalogApi.promote(prepared);
+    if (!result.ok) {
+      promotionError.value = result.error.message;
+      return;
+    }
+    sessionItems = Object.freeze(
+      sessionItems.filter((candidate) => candidate.key !== item.key),
+    );
+    const catalogKey =
+      `catalog:${result.data.catalogEntry.id}@${result.data.catalogEntry.version}`;
+    await reloadLibrary();
+    selectedView.value = "all-assets";
+    selectedKey.value = catalogKey;
+    operationMessage.value =
+      `"${result.data.catalogEntry.displayName}" is cataloged and persistent.`;
+    await nextTick();
+    detailHeading.value?.focus();
+  } catch (cause) {
+    promotionError.value =
+      cause instanceof Error ? cause.message : "Catalog promotion failed.";
+  } finally {
+    promotionBusy.value = false;
+  }
+}
 
 function viewsForGroup(group: (typeof navigationGroups)[number]) {
   return ASSET_LIBRARY_VIEWS.filter((view) => view.group === group);
@@ -739,6 +1143,10 @@ function clearDiscovery(): void {
 function openDetail(item: Readonly<AssetLibraryItem>, index: number): void {
   selectedKey.value = item.key;
   selectedOriginIndex.value = index;
+  promotionError.value = "";
+  if (item.kind === "catalog-draft") {
+    metadataForm.value = metadataFormFromDraft(item.catalogDraft);
+  }
   previewBackground.value = "checker";
   previewFit.value = true;
   previewScale.value = 1;
@@ -1031,6 +1439,68 @@ function formatBytes(byteSize: number): string {
   return `${(byteSize / 1024).toFixed(1)} KiB`;
 }
 
+function emptyMetadataForm(): CatalogMetadataForm {
+  return {
+    displayName: "",
+    description: "",
+    category: "",
+    userTags: "",
+    systemTags: "cosmos.asset.visual",
+    scope: "personal",
+    theme: "",
+    perspective: "unspecified",
+    orientation: "unspecified",
+    scaleClass: "unspecified",
+    creator: "",
+    license: "",
+    attribution: "",
+    provenanceSource: "",
+    compatibilityConfirmed: false,
+  };
+}
+
+function metadataFormFromDraft(
+  draft: Readonly<CatalogDraft>,
+): CatalogMetadataForm {
+  const metadata = draft.metadata;
+  return {
+    displayName:
+      metadata.displayName ?? suggestedDisplayName(draft.sourceVisualAsset.sourceFileName),
+    description: metadata.description ?? "",
+    category: metadata.category ?? "",
+    userTags: (metadata.userTags ?? []).join(", "),
+    systemTags: (metadata.systemTags ?? ["cosmos.asset.visual"]).join(", "),
+    scope: metadata.scope === "theme" ? "theme" : "personal",
+    theme: metadata.theme ?? "",
+    perspective: metadata.perspective ?? "unspecified",
+    orientation: metadata.orientation ?? "unspecified",
+    scaleClass: metadata.scaleClass ?? "unspecified",
+    creator: metadata.creator?.name ?? "",
+    license: metadata.license?.expression ?? "",
+    attribution: metadata.license?.attribution ?? "",
+    provenanceSource:
+      metadata.provenance?.source ?? draft.sourceVisualAsset.sourceFileName,
+    compatibilityConfirmed: metadata.compatibility !== undefined,
+  };
+}
+
+function suggestedDisplayName(fileName: string): string {
+  const stem = fileName.replace(/\.[^.]+$/u, "");
+  return stem
+    .split(/[\s._-]+/u)
+    .filter(Boolean)
+    .map((part) => `${part.charAt(0).toLocaleUpperCase()}${part.slice(1)}`)
+    .join(" ");
+}
+
+function splitList(value: string): readonly string[] {
+  return [
+    ...new Set(
+      value.split(",").map((item) => item.trim()).filter(Boolean),
+    ),
+  ];
+}
+
 function gridColumnCount(grid: HTMLElement | null): number {
   if (grid === null) return 1;
   const template = getComputedStyle(grid).gridTemplateColumns;
@@ -1161,6 +1631,20 @@ function emptyVersions() {
   white-space: nowrap;
 }
 
+.asset-library__import {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid #397159;
+  border-radius: 6px;
+  background: #1d4b38;
+  color: #e5f4ec;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.asset-library__import:disabled { cursor: wait; opacity: 0.65; }
+
 .asset-library__state {
   display: grid;
   margin: auto;
@@ -1170,6 +1654,34 @@ function emptyVersions() {
 }
 
 .asset-library__state--error { color: var(--library-danger); }
+
+.asset-library__state button,
+.library-operation button {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--library-border);
+  border-radius: 5px;
+  background: #17201d;
+  color: #cbd6d0;
+}
+
+.library-operation {
+  margin: 0 16px 10px;
+  padding: 9px 11px;
+  border: 1px solid #28533f;
+  border-radius: 6px;
+  background: #10251c;
+  color: #9ec9b4;
+  font-size: 10px;
+}
+
+.library-operation--error {
+  border-color: #6a3434;
+  background: #2b1717;
+  color: #e2aaaa;
+}
+
+.library-operation button { margin-left: 8px; }
 
 .asset-library__spinner {
   width: 28px;
@@ -1878,6 +2390,123 @@ function emptyVersions() {
 .asset-detail__status-copy strong {
   display: block;
   color: #bbc6c0;
+}
+
+.asset-detail__primary-actions {
+  display: flex;
+  margin-top: 10px;
+  gap: 8px;
+}
+
+.asset-detail__primary-actions button,
+.promotion-error button,
+.catalog-editor > button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #3b735a;
+  border-radius: 5px;
+  background: #1b4b37;
+  color: #e1f0e8;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.promotion-error {
+  display: grid;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #743b3b;
+  border-radius: 5px;
+  background: #2a1717;
+  color: #d9a3a3;
+  font-size: 10px;
+  gap: 5px;
+}
+
+.promotion-error button { justify-self: start; border-color: #805151; background: #4a2525; }
+
+.catalog-editor {
+  display: grid;
+  margin: 0;
+  padding: 15px 16px;
+  border-bottom: 1px solid var(--library-border-soft);
+  background: #101719;
+  gap: 14px;
+}
+
+.catalog-editor > header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.catalog-editor > header span,
+.catalog-editor legend {
+  color: var(--library-faint);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.catalog-editor > header h3 { margin: 3px 0 0; color: #d0dad5; font-size: 13px; }
+.catalog-editor > header strong { color: #c7a96d; font-size: 9px; }
+
+.catalog-editor fieldset {
+  display: grid;
+  margin: 0;
+  padding: 11px;
+  border: 1px solid var(--library-border-soft);
+  border-radius: 6px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.catalog-editor legend { padding: 0 5px; }
+
+.catalog-editor label {
+  display: grid;
+  color: #8f9b95;
+  font-size: 9px;
+  gap: 4px;
+}
+
+.catalog-editor input,
+.catalog-editor select,
+.catalog-editor textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 7px 8px;
+  border: 1px solid #303b3e;
+  border-radius: 4px;
+  background: #0b1012;
+  color: #d3dcd7;
+  font: 10px/1.35 "Segoe UI Variable", sans-serif;
+}
+
+.catalog-editor textarea { resize: vertical; }
+.catalog-editor__wide { grid-column: 1 / -1; }
+
+.catalog-editor__confirmation {
+  grid-template-columns: auto minmax(0, 1fr) !important;
+  align-items: start;
+  line-height: 1.4;
+}
+
+.catalog-editor__confirmation input { width: auto; margin-top: 2px; }
+.catalog-editor > button { justify-self: start; }
+.catalog-editor > p { margin: -7px 0 0; color: var(--library-faint); font-size: 9px; }
+
+.catalog-editor__issues {
+  display: grid;
+  padding: 8px;
+  border-left: 2px solid var(--library-attention);
+  background: #1b1810;
+  color: #baa980;
+  font-size: 9px;
+  gap: 3px;
 }
 
 .asset-detail__issues h3,

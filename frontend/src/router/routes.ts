@@ -55,6 +55,56 @@ export const routeRecords = [
     },
   },
   {
+    path: "/dev/theme-board",
+    name: "dev-theme-board",
+    component: () => import("../dev/theme-builder/ThemeBoardView.vue"),
+    meta: {
+      title: "Theme Board Development Preview",
+      environment: "development",
+      developmentPreview: true,
+    },
+  },
+  {
+    path: "/dev/room-shell-studio",
+    name: "dev-room-shell-studio",
+    component: () => import("../dev/theme-builder/RoomShellStudioView.vue"),
+    meta: {
+      title: "Room Shell Studio Development Preview",
+      environment: "development",
+      developmentPreview: true,
+    },
+  },
+  {
+    path: "/dev/object-studio",
+    name: "dev-object-studio",
+    component: () => import("../dev/theme-builder/ObjectStudioView.vue"),
+    meta: {
+      title: "Object Studio Development Preview",
+      environment: "development",
+      developmentPreview: true,
+    },
+  },
+  {
+    path: "/dev/looks-studio",
+    name: "dev-looks-studio",
+    component: () => import("../dev/theme-builder/LooksStudioView.vue"),
+    meta: {
+      title: "Looks Studio Development Preview",
+      environment: "development",
+      developmentPreview: true,
+    },
+  },
+  {
+    path: "/dev/showcase",
+    name: "dev-showcase",
+    component: () => import("../dev/theme-builder/ShowcaseView.vue"),
+    meta: {
+      title: "Showcase Development Preview",
+      environment: "development",
+      developmentPreview: true,
+    },
+  },
+  {
     path: "/:pathMatch(.*)*",
     redirect: "/",
   },

@@ -59,7 +59,7 @@ describe("Asset Library development rendering", () => {
     expect(viewSource).toContain("Status:");
   });
 
-  it("renders preview controls and every required read-only detail section", () => {
+  it("renders preview controls, detail, metadata completion, and explicit promotion", () => {
     expect(viewSource).toContain("Fallback Preview");
     expect(viewSource).toContain("Checkerboard");
     expect(viewSource).toContain("Light neutral");
@@ -71,7 +71,10 @@ describe("Asset Library development rendering", () => {
     expect(viewSource).toContain("Catalog revision");
     expect(viewSource).toContain("Preview resources");
     expect(viewSource).toContain("Technical information");
-    expect(viewSource).not.toContain("Edit metadata");
+    expect(viewSource).toContain("Apply catalog metadata");
+    expect(viewSource).toContain("Add to Catalog");
+    expect(viewSource).toContain('data-testid="catalog-metadata-editor"');
+    expect(viewSource).toContain('data-testid="catalog-promote-action"');
   });
 
   it("wires keyboard focus, arrow navigation and focus restoration", () => {
@@ -83,11 +86,12 @@ describe("Asset Library development rendering", () => {
     expect(viewSource).toContain("Back to asset grid");
   });
 
-  it("stays isolated from Runtime, networking, persistence and downstream models", () => {
+  it("uses Runtime persistence while staying isolated from downstream models", () => {
     const script = descriptor.scriptSetup?.content ?? "";
 
-    expect(script).not.toContain("/runtime/");
-    expect(script).not.toContain("fetch(");
+    expect(script).toContain("../../runtime/assetCatalogApi");
+    expect(script).toContain("AssetImportService");
+    expect(script).toContain("prepareCatalogPersistence");
     expect(script).not.toContain("localStorage");
     expect(script).not.toContain("sessionStorage");
     expect(script).not.toContain("VisualObjectDefinition");

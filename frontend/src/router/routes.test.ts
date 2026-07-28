@@ -85,6 +85,86 @@ describe("Cosmos routing", () => {
     expect(String(previewRecord?.component)).toContain("AssetLibraryView.vue");
   });
 
+  it("resolves the Theme Board as an isolated Builder development preview", () => {
+    const router = createCosmosRouter({ history: createMemoryHistory() });
+    const preview = router.resolve("/dev/theme-board");
+    const previewRecord = routeRecords.find(
+      (record) => record.name === "dev-theme-board",
+    );
+
+    expect(preview.name).toBe("dev-theme-board");
+    expect(preview.meta).toMatchObject({
+      title: "Theme Board Development Preview",
+      environment: "development",
+      developmentPreview: true,
+    });
+    expect(String(previewRecord?.component)).toContain("ThemeBoardView.vue");
+  });
+
+  it("resolves the Room Shell Studio with the shared Builder preview boundary", () => {
+    const router = createCosmosRouter({ history: createMemoryHistory() });
+    const preview = router.resolve("/dev/room-shell-studio");
+    const previewRecord = routeRecords.find(
+      (record) => record.name === "dev-room-shell-studio",
+    );
+
+    expect(preview.name).toBe("dev-room-shell-studio");
+    expect(preview.meta).toMatchObject({
+      title: "Room Shell Studio Development Preview",
+      environment: "development",
+      developmentPreview: true,
+    });
+    expect(String(previewRecord?.component)).toContain("RoomShellStudioView.vue");
+  });
+
+  it("resolves the Object Studio with the shared Builder preview boundary", () => {
+    const router = createCosmosRouter({ history: createMemoryHistory() });
+    const preview = router.resolve("/dev/object-studio");
+    const previewRecord = routeRecords.find(
+      (record) => record.name === "dev-object-studio",
+    );
+
+    expect(preview.name).toBe("dev-object-studio");
+    expect(preview.meta).toMatchObject({
+      title: "Object Studio Development Preview",
+      environment: "development",
+      developmentPreview: true,
+    });
+    expect(String(previewRecord?.component)).toContain("ObjectStudioView.vue");
+  });
+
+  it("resolves the Looks Studio with the shared Builder preview boundary", () => {
+    const router = createCosmosRouter({ history: createMemoryHistory() });
+    const preview = router.resolve("/dev/looks-studio");
+    const previewRecord = routeRecords.find(
+      (record) => record.name === "dev-looks-studio",
+    );
+
+    expect(preview.name).toBe("dev-looks-studio");
+    expect(preview.meta).toMatchObject({
+      title: "Looks Studio Development Preview",
+      environment: "development",
+      developmentPreview: true,
+    });
+    expect(String(previewRecord?.component)).toContain("LooksStudioView.vue");
+  });
+
+  it("resolves Showcase with the shared Builder preview boundary", () => {
+    const router = createCosmosRouter({ history: createMemoryHistory() });
+    const preview = router.resolve("/dev/showcase");
+    const previewRecord = routeRecords.find(
+      (record) => record.name === "dev-showcase",
+    );
+
+    expect(preview.name).toBe("dev-showcase");
+    expect(preview.meta).toMatchObject({
+      title: "Showcase Development Preview",
+      environment: "development",
+      developmentPreview: true,
+    });
+    expect(String(previewRecord?.component)).toContain("ShowcaseView.vue");
+  });
+
   it("does not enqueue Runtime transitions into or out of the Development Preview", () => {
     expect(
       shouldEnqueueRuntimeTransition(

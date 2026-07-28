@@ -1,21 +1,18 @@
 import {
   AssetCatalogRegistry,
-  AssetImportService,
-  AssetImportStatus,
-  CatalogPromotionService,
-  canonicalAssetCatalogEntries,
-  canonicalVisualAssets,
-  createCanonicalAssetImportFixtures,
-  createCatalogCompletionFixture,
   type AssetCatalogEntry,
   type AssetCatalogOrigin,
   type AssetCatalogScope,
-  type AssetImportIssue,
   type BatchImportItemResult,
   type CatalogDraft,
   type DraftVisualAsset,
   type VisualAsset,
 } from "../../theme-engine";
+import {
+  assetCatalogApi,
+  type AssetCatalogApi,
+  type PersistedAssetCatalogRecord,
+} from "../../runtime/assetCatalogApi";
 
 export const AssetLibraryStatus = {
   NeedsMetadata: "needs-metadata",
@@ -58,7 +55,13 @@ interface AssetLibraryItemBase {
   creatorName?: string;
   previewUrl?: string;
   previewFallbackReason?: string;
-  issues: readonly Readonly<AssetImportIssue>[];
+  issues: readonly Readonly<AssetLibraryIssue>[];
+}
+
+export interface AssetLibraryIssue {
+  code: string;
+  severity: "information" | "warning" | "error";
+  message: string;
 }
 
 export interface CatalogedLibraryItem extends AssetLibraryItemBase {
@@ -167,83 +170,65 @@ export const ASSET_LIBRARY_STATUS_DETAILS: Readonly<
   }),
 });
 
-/**
- * Builds an entirely in-memory prototype projection from canonical fixtures.
- * The registry is local to the route and is never exposed to Runtime state.
- */
-export async function createAssetLibraryPrototype():
-Promise<Readonly<AssetLibraryPrototype>> {
+/** Loads the rebuildable in-memory Registry projection from Runtime persistence. */
+export async function createAssetLibraryPrototype(
+  api: AssetCatalogApi = assetCatalogApi,
+): Promise<Readonly<AssetLibraryPrototype>> {
+  const result = await api.list();
+  if (!result.ok) {
+    throw new Error(result.error.message);
+  }
+  return projectAssetLibrary(result.data);
+}
+
+export function projectAssetLibrary(
+  records: readonly Readonly<PersistedAssetCatalogRecord>[],
+  sessionItems: readonly Readonly<AssetLibraryItem>[] = [],
+): Readonly<AssetLibraryPrototype> {
   const registry = new AssetCatalogRegistry();
   registry.registerCatalog({
-    visualAssets: canonicalVisualAssets,
-    entries: canonicalAssetCatalogEntries,
-  });
-
-  const completionFixture = await createCatalogCompletionFixture();
-  const completionService = new CatalogPromotionService();
-  const readyDraft = completionService.createDraft({
-    flow: "user-import",
-    sourceVisualAsset: completionFixture.draftVisualAsset,
-    target: completionFixture.target,
-    metadata: completionFixture.completeMetadata,
-  });
-
-  const importFixtures = createCanonicalAssetImportFixtures();
-  const importService = new AssetImportService();
-  const session = importService.createSession({
-    sessionId: "asset-library-prototype",
-  });
-  const importBatch = await session.importFiles([
-    importFixtures.svg,
-    importFixtures.svg,
-    importFixtures.unsafeSvg,
-  ]);
-  const technicalResult = requireImportItem(importBatch.items, 0);
-  const warningResult = requireImportItem(importBatch.items, 1);
-  const rejectedResult = requireImportItem(importBatch.items, 2);
-  const technicalDraft = requireDraft(technicalResult);
-  const warningSource = requireDraft(warningResult);
-
-  // A second complete Catalog Draft is necessary to exercise the Warning
-  // projection without allowing missing metadata to outrank it. It reuses the
-  // canonical completion fixture's approved metadata shape.
-  const warningDraft = completionService.createDraft({
-    flow: "user-import",
-    sourceVisualAsset: warningSource,
-    target: {
-      assetCatalogEntryId: "personal.asset-catalog.imported-vector",
-      version: completionFixture.target.version,
-      visualAssetRef: {
-        id: "personal.visual-asset.imported-vector",
-        version: completionFixture.target.visualAssetRef.version,
-      },
-    },
-    metadata: {
-      ...completionFixture.completeMetadata,
-      displayName: "Imported Vector",
-      description:
-        "A validated vector fixture with a visible exact-file warning.",
-    },
+    visualAssets: records.map((record) => record.visualAsset),
+    entries: records.map((record) => record.catalogEntry),
   });
 
   const catalogedItems = currentCatalogEntries(registry.list())
     .filter((entry) => !entry.deprecated)
-    .map((entry) => catalogedItem(entry, registry));
+    .map((entry) => {
+      const record = records.find(
+        (candidate) =>
+          candidate.catalogEntry.id === entry.id
+          && candidate.catalogEntry.version === entry.version,
+      );
+      if (record === undefined) {
+        throw new Error(`Missing persisted record for "${entry.id}@${entry.version}".`);
+      }
+      return catalogedItem(entry, registry, record);
+    });
   const items: readonly Readonly<AssetLibraryItem>[] = Object.freeze([
     ...catalogedItems,
-    catalogDraftItem(readyDraft, []),
-    technicalDraftItem(technicalDraft, technicalResult.issues),
-    catalogDraftItem(warningDraft, warningResult.issues),
-    rejectedImportItem(rejectedResult),
+    ...sessionItems,
   ]);
   const currentTheme =
-    canonicalAssetCatalogEntries.find((entry) => entry.theme !== undefined)
+    records.map((record) => record.catalogEntry)
+      .find((entry) => entry.theme !== undefined)
       ?.theme ?? "";
 
   return Object.freeze({
     registry,
     items,
     currentTheme,
+  });
+}
+
+export function replaceAssetLibrarySessionItems(
+  prototype: Readonly<AssetLibraryPrototype>,
+  sessionItems: readonly Readonly<AssetLibraryItem>[],
+): Readonly<AssetLibraryPrototype> {
+  const catalogedItems = prototype.items.filter((item) => item.kind === "cataloged");
+  return Object.freeze({
+    registry: prototype.registry,
+    items: Object.freeze([...catalogedItems, ...sessionItems]),
+    currentTheme: prototype.currentTheme,
   });
 }
 
@@ -387,11 +372,12 @@ function currentCatalogEntries(
 function catalogedItem(
   entry: Readonly<AssetCatalogEntry>,
   registry: AssetCatalogRegistry,
+  record: Readonly<PersistedAssetCatalogRecord>,
 ): Readonly<CatalogedLibraryItem> {
   const visualAsset = registry.getVisualAsset(entry.visualAssetRef);
   if (visualAsset === undefined) {
     throw new Error(
-      `Canonical entry "${entry.id}@${entry.version}" has no VisualAsset fixture.`,
+      `Catalog entry "${entry.id}@${entry.version}" has no VisualAsset record.`,
     );
   }
   return Object.freeze({
@@ -409,24 +395,38 @@ function catalogedItem(
     systemTags: entry.systemTags,
     userTags: entry.userTags,
     creatorName: entry.creator.name,
-    previewFallbackReason:
-      "Metadata fixture — source preview bytes are intentionally not included.",
-    issues: Object.freeze([]),
+    ...(record.previewUrl === undefined ? {} : { previewUrl: record.previewUrl }),
+    ...(record.resourceAvailable
+      ? {}
+      : {
+          previewFallbackReason:
+            "The Catalog Entry is intact, but its original Resource is missing or invalid.",
+        }),
+    issues: record.resourceAvailable
+      ? Object.freeze([])
+      : Object.freeze([
+          Object.freeze({
+            code: "resource_missing",
+            severity: "error" as const,
+            message:
+              "The original Resource is unavailable. Restore it and reload the Library.",
+          }),
+        ]),
     catalogEntry: entry,
     visualAsset,
   });
 }
 
-function catalogDraftItem(
+export function catalogDraftItem(
   draft: Readonly<CatalogDraft>,
-  issues: readonly Readonly<AssetImportIssue>[],
+  issues: readonly Readonly<AssetLibraryIssue>[],
 ): Readonly<CatalogDraftLibraryItem> {
   const metadata = draft.metadata;
-  const status = issues.some((issue) => issue.severity === "warning")
-    ? AssetLibraryStatus.Warning
-    : draft.status === "ready-for-catalog"
-      ? AssetLibraryStatus.ReadyForCatalog
-      : AssetLibraryStatus.NeedsMetadata;
+  const status = draft.status !== "ready-for-catalog"
+    ? AssetLibraryStatus.NeedsMetadata
+    : issues.some((issue) => issue.severity === "warning")
+      ? AssetLibraryStatus.Warning
+      : AssetLibraryStatus.ReadyForCatalog;
   return Object.freeze({
     key: `draft:${draft.catalogDraftId}`,
     kind: "catalog-draft",
@@ -453,9 +453,9 @@ function catalogDraftItem(
   });
 }
 
-function technicalDraftItem(
+export function technicalDraftItem(
   draft: Readonly<DraftVisualAsset>,
-  issues: readonly Readonly<AssetImportIssue>[],
+  issues: readonly Readonly<AssetLibraryIssue>[],
 ): Readonly<TechnicalDraftLibraryItem> {
   return Object.freeze({
     key: `technical:${draft.draftId}`,
@@ -474,7 +474,7 @@ function technicalDraftItem(
   });
 }
 
-function rejectedImportItem(
+export function rejectedImportItem(
   result: Readonly<BatchImportItemResult>,
 ): Readonly<RejectedImportLibraryItem> {
   return Object.freeze({
@@ -572,26 +572,6 @@ function draftPreviewUrl(draft: Readonly<DraftVisualAsset>): string {
     binary += String.fromCharCode(...bytes.subarray(start, start + 0x8000));
   }
   return `data:${draft.mimeType};base64,${btoa(binary)}`;
-}
-
-function requireImportItem(
-  items: readonly Readonly<BatchImportItemResult>[],
-  index: number,
-): Readonly<BatchImportItemResult> {
-  const item = items[index];
-  if (item === undefined) {
-    throw new Error(`Missing canonical import result at index ${index}.`);
-  }
-  return item;
-}
-
-function requireDraft(
-  item: Readonly<BatchImportItemResult>,
-): Readonly<DraftVisualAsset> {
-  if (item.draftVisualAsset === undefined) {
-    throw new Error(`Import fixture "${item.fileName}" did not create a draft.`);
-  }
-  return item.draftVisualAsset;
 }
 
 function compareSemver(left: string, right: string): number {

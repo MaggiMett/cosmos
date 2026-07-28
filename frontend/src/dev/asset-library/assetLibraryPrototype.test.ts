@@ -1,12 +1,16 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import {
-  ASSET_LIBRARY_STATUS_DETAILS,
+  canonicalAssetCatalogEntries,
+  canonicalVisualAssets,
+} from "../../theme-engine";
+import type { PersistedAssetCatalogRecord } from "../../runtime/assetCatalogApi";
+import {
   AssetLibraryStatus,
   cardAccessibleLabel,
   catalogContextsFor,
-  createAssetLibraryPrototype,
   nextAssetGridIndex,
+  projectAssetLibrary,
   queryAssetLibrary,
   type AssetLibraryFilters,
   type AssetLibraryPrototype,
@@ -20,144 +24,56 @@ const noFilters: AssetLibraryFilters = {
   status: "",
 };
 
-describe("Asset Library fixture projection", () => {
-  let prototype: Readonly<AssetLibraryPrototype>;
+describe("Asset Library persistent projection", () => {
+  const prototype = projectAssetLibrary(persistedRecords());
 
-  beforeAll(async () => {
-    prototype = await createAssetLibraryPrototype();
-  });
-
-  it("projects canonical Catalog entries separately from fixture drafts", () => {
+  it("loads real Runtime records into the existing Registry projection", () => {
     const cataloged = query(prototype, "all-assets");
-    const drafts = query(prototype, "drafts");
 
-    expect(cataloged).toHaveLength(5);
+    expect(cataloged).toHaveLength(2);
     expect(cataloged.every((item) => item.kind === "cataloged")).toBe(true);
-    expect(drafts).toHaveLength(3);
-    expect(drafts.every((item) => item.kind !== "cataloged")).toBe(true);
-    expect(drafts.every((item) => item.kind !== "rejected-import")).toBe(true);
+    expect(query(prototype, "drafts")).toEqual([]);
+    expect(query(prototype, "my-assets").map((item) => item.name))
+      .toEqual(["Personal Bookshelf"]);
+    expect(query(prototype, "current-theme").map((item) => item.name))
+      .toEqual(["Theme Door"]);
   });
 
-  it("implements all five binding system views without inventing personal entries", () => {
-    expect(query(prototype, "all-assets")).toHaveLength(5);
-    expect(query(prototype, "my-assets")).toEqual([]);
-    expect(query(prototype, "current-theme")).toHaveLength(5);
-    expect(query(prototype, "drafts")).toHaveLength(3);
-    expect(query(prototype, "needs-attention")).toHaveLength(3);
+  it("uses persisted previews and exposes a missing Resource as attention", () => {
+    const personal = query(prototype, "my-assets")[0];
+    const theme = query(prototype, "current-theme")[0];
+
+    expect(personal?.previewUrl).toBe("/api/asset/personal-bookshelf");
+    expect(personal?.issues).toEqual([]);
+    expect(theme?.previewUrl).toBeUndefined();
+    expect(theme?.issues[0]?.code).toBe("resource_missing");
+    expect(theme?.issues[0]?.severity).toBe("error");
   });
 
-  it("searches names, descriptions, categories, tags and exact IDs in the active view", () => {
-    expect(search(prototype, "all-assets", "wood").map((item) => item.name))
-      .toEqual(["Bookshelf", "Wooden Door"]);
-    expect(search(prototype, "all-assets", "core.category.decoration").map(
-      (item) => item.name,
-    )).toEqual(["Plant"]);
-    expect(search(
-      prototype,
-      "all-assets",
-      "core.visual-asset.workbench",
-    ).map((item) => item.name)).toEqual(["Workbench"]);
-    expect(search(prototype, "drafts", "Imported Vector").map(
-      (item) => item.status,
-    )).toEqual([AssetLibraryStatus.Warning]);
-    expect(search(prototype, "all-assets", "Imported Vector")).toEqual([]);
-  });
-
-  it("combines category, Scope, Origin and Status filters deterministically", () => {
-    const architecture = filtered(prototype, "all-assets", {
+  it("searches and filters persisted metadata without mixing drafts", () => {
+    expect(search(prototype, "all-assets", "green").map((item) => item.name))
+      .toEqual(["Personal Bookshelf"]);
+    expect(filtered(prototype, "all-assets", {
       ...noFilters,
-      category: "core.category.architecture",
-    });
-    const coreBuiltIn = filtered(prototype, "all-assets", {
-      ...noFilters,
-      scope: "core",
-      origin: "built-in",
-      status: AssetLibraryStatus.Cataloged,
-    });
-    const personalWarning = filtered(prototype, "drafts", {
-      ...noFilters,
-      scope: "personal",
+      scope: "theme",
       origin: "imported",
-      status: AssetLibraryStatus.Warning,
-    });
-
-    expect(architecture.map((item) => item.name)).toEqual([
-      "Steel Door",
-      "Wooden Door",
-    ]);
-    expect(coreBuiltIn).toHaveLength(5);
-    expect(personalWarning.map((item) => item.name)).toEqual([
-      "Imported Vector",
-    ]);
+      status: AssetLibraryStatus.Cataloged,
+    }).map((item) => item.name)).toEqual(["Theme Door"]);
   });
 
-  it("exposes every required status with an icon and readable label", () => {
-    const statuses = new Set(prototype.items.map((item) => item.status));
+  it("exposes exact Catalog contexts and no downstream behavior records", () => {
+    const bookshelf = query(prototype, "my-assets")[0];
+    if (bookshelf?.kind !== "cataloged") throw new Error("Catalog record missing.");
 
-    expect(statuses).toEqual(new Set([
-      AssetLibraryStatus.NeedsMetadata,
-      AssetLibraryStatus.ReadyForCatalog,
-      AssetLibraryStatus.Cataloged,
-      AssetLibraryStatus.Warning,
-      AssetLibraryStatus.Rejected,
-    ]));
-    for (const status of statuses) {
-      expect(ASSET_LIBRARY_STATUS_DETAILS[status].icon).not.toBe("");
-      expect(ASSET_LIBRARY_STATUS_DETAILS[status].label).not.toBe("");
-    }
-  });
-
-  it("retains rejected files only in Needs Attention and creates no asset for them", () => {
-    const rejected = filtered(prototype, "needs-attention", {
-      ...noFilters,
-      status: AssetLibraryStatus.Rejected,
-    });
-
-    expect(rejected).toHaveLength(1);
-    expect(rejected[0]?.kind).toBe("rejected-import");
-    expect(query(prototype, "all-assets")).not.toContainEqual(rejected[0]);
-    expect(query(prototype, "drafts")).not.toContainEqual(rejected[0]);
-    expect("draftVisualAsset" in rejected[0]!).toBe(false);
-    expect("catalogEntry" in rejected[0]!).toBe(false);
-  });
-
-  it("provides metadata, technical source and exact Catalog contexts for detail", () => {
-    const bookshelf = query(prototype, "all-assets").find(
-      (item) => item.name === "Bookshelf",
-    );
-    expect(bookshelf?.kind).toBe("cataloged");
-    if (bookshelf?.kind !== "cataloged") throw new Error("Fixture missing.");
-
-    expect(bookshelf.visualAsset.format).toBe("svg");
-    expect(bookshelf.catalogEntry.creator.name).toBe("Cosmos Core Team");
-    expect(bookshelf.catalogEntry.license.expression).toBe("CC0-1.0");
     expect(catalogContextsFor(prototype, bookshelf).map((entry) => entry.id))
-      .toEqual(["core.asset-catalog.bookshelf"]);
+      .toEqual(["personal.asset-catalog.bookshelf"]);
     expect(cardAccessibleLabel(bookshelf)).toContain(
-      "Bookshelf, cataloged asset, Furniture, core scope, Cataloged, svg",
+      "Personal Bookshelf, cataloged asset",
     );
-  });
-
-  it("uses the existing completion and import services without promoting drafts", () => {
-    const readyDraft = filtered(prototype, "drafts", {
-      ...noFilters,
-      status: AssetLibraryStatus.ReadyForCatalog,
-    });
-
-    expect(readyDraft).toHaveLength(1);
-    expect(readyDraft[0]?.kind).toBe("catalog-draft");
-    expect(prototype.registry.list()).toHaveLength(5);
-    expect(
-      prototype.registry.getByVersion(
-        "personal.asset-catalog.imported-swatch",
-        "1.0.0",
-      ),
-    ).toBeUndefined();
-    expect(JSON.stringify(prototype.items)).not.toContain(
-      "visualObjectDefinition",
-    );
-    expect(JSON.stringify(prototype.items)).not.toContain("interactionZone");
-    expect(JSON.stringify(prototype.items)).not.toContain("functionBinding");
+    const serialized = JSON.stringify(prototype.items).toLocaleLowerCase();
+    expect(serialized).not.toContain("visualobjectdefinition");
+    expect(serialized).not.toContain("interactionzone");
+    expect(serialized).not.toContain("functionbinding");
   });
 });
 
@@ -173,6 +89,43 @@ describe("Asset Library keyboard navigation", () => {
     expect(nextAssetGridIndex(0, "Home", 3, 0)).toBe(-1);
   });
 });
+
+function persistedRecords(): readonly Readonly<PersistedAssetCatalogRecord>[] {
+  const firstAsset = canonicalVisualAssets[0]!;
+  const secondAsset = canonicalVisualAssets[1]!;
+  const firstEntry = canonicalAssetCatalogEntries[0]!;
+  const secondEntry = canonicalAssetCatalogEntries[1]!;
+  const { theme: _theme, ...personalEntry } = firstEntry;
+  return [
+    {
+      visualAsset: firstAsset,
+      catalogEntry: {
+        ...personalEntry,
+        id: "personal.asset-catalog.bookshelf",
+        visualAssetRef: { id: firstAsset.id, version: firstAsset.version },
+        displayName: "Personal Bookshelf",
+        scope: "personal",
+        origin: "imported",
+        userTags: ["green"],
+      },
+      resourceAvailable: true,
+      previewUrl: "/api/asset/personal-bookshelf",
+    },
+    {
+      visualAsset: secondAsset,
+      catalogEntry: {
+        ...secondEntry,
+        id: "personal.asset-catalog.theme-door",
+        visualAssetRef: { id: secondAsset.id, version: secondAsset.version },
+        displayName: "Theme Door",
+        scope: "theme",
+        origin: "imported",
+        theme: "personal.theme.studio",
+      },
+      resourceAvailable: false,
+    },
+  ];
+}
 
 function query(
   prototype: Readonly<AssetLibraryPrototype>,

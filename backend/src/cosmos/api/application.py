@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import base64
+import binascii
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import replace
@@ -7,7 +9,7 @@ from dataclasses import replace
 from starlette.applications import Starlette
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
 from cosmos import __version__
@@ -247,6 +249,53 @@ async def tool_definitions(request: Request) -> JSONResponse:
         return _service_error(error)
 
 
+async def asset_catalog(request: Request) -> JSONResponse:
+    try:
+        service = request.app.state.runtime.resources
+        context = _local_owner_context()
+        if request.method == "GET":
+            return JSONResponse({"items": service.list_asset_catalog(context)})
+        payload = await _json_object(request)
+        original_base64 = _string(payload, "originalBytesBase64")
+        try:
+            original_bytes = base64.b64decode(original_base64, validate=True)
+        except (binascii.Error, ValueError) as error:
+            raise RuntimeServiceError(
+                "validation_failed",
+                "originalBytesBase64 must contain valid base64-encoded original bytes.",
+            ) from error
+        result = service.promote_visual_asset(
+            payload.get("visualAsset"),
+            payload.get("catalogEntry"),
+            original_bytes,
+            context,
+        )
+        return JSONResponse(result, status_code=201)
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
+async def visual_asset_content(request: Request) -> Response:
+    try:
+        content, mime_type, digest = request.app.state.runtime.resources.read_visual_asset(
+            request.path_params["asset_id"],
+            request.path_params["version"],
+            _local_owner_context(),
+        )
+        return Response(
+            content,
+            media_type=mime_type,
+            headers={
+                "Cache-Control": "private, max-age=31536000, immutable",
+                "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+                "ETag": f'"sha256-{digest}"',
+                "X-Content-Type-Options": "nosniff",
+            },
+        )
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
 async def project_files(request: Request) -> JSONResponse:
     try:
         context = _workspace_context(request)
@@ -470,6 +519,11 @@ def create_app(
             Route("/notifications", notifications),
             Route("/notifications/{notification_id:str}", notification, methods=["PUT"]),
             Route("/tools", tool_definitions),
+            Route("/asset-catalog", asset_catalog, methods=["GET", "POST"]),
+            Route(
+                "/asset-catalog/visual-assets/{asset_id:str}/versions/{version:str}/content",
+                visual_asset_content,
+            ),
             Route("/workspaces/{workspace_id:str}", workspace_definition),
             Route("/workspaces/{workspace_id:str}/sessions", open_workspace, methods=["POST"]),
             Route(
@@ -731,6 +785,8 @@ def _query_path(request: Request) -> str:
 def _service_error(error: RuntimeServiceError) -> JSONResponse:
     if error.code == "permission_denied":
         status = 403
+    elif error.code == "asset_storage_failed":
+        status = 503
     elif error.code.endswith("_not_found"):
         status = 404
     elif (

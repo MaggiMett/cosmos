@@ -6,6 +6,7 @@ from enum import StrEnum
 
 from cosmos.config import RuntimeSettings
 from cosmos.persistence import (
+    AssetCatalogRepository,
     CaptureDraftRepository,
     JobRepository,
     KnowledgeVersionRepository,
@@ -134,7 +135,14 @@ class CosmosRuntime:
             ),
             core_tools=CoreToolCatalog(objects),
             jobs=jobs,
-            resources=ResourceService(projects, objects, events),
+            resources=ResourceService(
+                projects,
+                objects,
+                events,
+                persistence,
+                AssetCatalogRepository(persistence),
+                settings.runtime_path,
+            ),
             knowledge=knowledge,
             reviews=ReviewService(objects),
             journeyman=JourneymanService(objects, providers, jobs),
