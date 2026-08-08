@@ -6,7 +6,12 @@
   >
     <div class="cosmos-project-view__stars cosmos-project-view__stars--distant" aria-hidden="true" />
     <div class="cosmos-project-view__stars cosmos-project-view__stars--near" aria-hidden="true" />
-    <AsteriaConstellation v-if="visibleProject" :project="visibleProject" />
+    <AsteriaConstellation
+      v-if="visibleProject"
+      :project="visibleProject"
+      @select-node="selectNode"
+      @open-node="openNode"
+    />
 
     <div
       v-if="presentation.phase !== 'success'"
@@ -43,18 +48,24 @@
       :project-name="presentation.projectName"
       :zoom-label="presentation.zoomLabel"
     />
+    <ObjectInteractionHost ref="objectInteractionHost" />
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { navigateToGlobal } from "../cosmosNavigation";
+import ObjectInteractionHost from "../../components/windows/ObjectInteractionHost.vue";
 import { useCosmosRuntime } from "../../runtime/plugin";
 import AsteriaConstellation from "./components/AsteriaConstellation.vue";
 import ProjectCosmosChrome from "./components/ProjectCosmosChrome.vue";
 import ProjectCosmosControls from "./components/ProjectCosmosControls.vue";
+import {
+  openSelectedProjectCosmosNode,
+  selectProjectCosmosNode,
+} from "./projectCosmosInteraction";
 import {
   loadProjectCosmosSnapshot,
   projectIdFromQuery,
@@ -72,8 +83,10 @@ const presentation = computed(() =>
     mapState.snapshot,
     mapState.error,
     requestedProjectId.value,
+    mapState.selectedObjectId,
   ),
 );
+const objectInteractionHost = ref<InstanceType<typeof ObjectInteractionHost> | null>(null);
 const visibleProject = computed(() => {
   const state = presentation.value;
   return state.phase === "success" || state.phase === "empty-project" ? state.project : null;
@@ -81,6 +94,19 @@ const visibleProject = computed(() => {
 
 function backToGlobal(): void {
   void navigateToGlobal(router);
+}
+
+function selectNode(objectId: string): void {
+  const project = visibleProject.value;
+  if (!project) return;
+  void selectProjectCosmosNode(runtime.cosmosMap, project, objectId).catch(() => undefined);
+}
+
+function openNode(objectId: string): void {
+  const project = visibleProject.value;
+  const host = objectInteractionHost.value;
+  if (!project || !host) return;
+  void openSelectedProjectCosmosNode(host, project, objectId).catch(() => undefined);
 }
 
 onMounted(() => {

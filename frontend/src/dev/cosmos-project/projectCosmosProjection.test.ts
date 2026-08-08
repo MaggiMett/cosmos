@@ -156,7 +156,7 @@ describe("Project Cosmos presentation projection", () => {
     expect(state.project.nodes.some((item) => item.isSelected)).toBe(false);
   });
 
-  it("presents selectedObjectId when the Node belongs to the Project", () => {
+  it("restores selectedObjectId from a reloaded Runtime snapshot", () => {
     const state = projectProjectCosmosState(
       "ready",
       snapshot({ selectedObjectId: "node.alpha.build" }),
@@ -168,6 +168,22 @@ describe("Project Cosmos presentation projection", () => {
     if (state.phase !== "success") throw new Error("Expected a successful Project projection.");
     expect(state.project.nodes.find((item) => item.objectId === "node.alpha.build")?.isSelected).toBe(true);
     expect(state.project.nodes.filter((item) => item.isSelected)).toHaveLength(1);
+  });
+
+  it("uses the current Runtime selection without creating a local selection layer", () => {
+    const source = snapshot({ selectedObjectId: null });
+    const state = projectProjectCosmosState(
+      "ready",
+      source,
+      null,
+      "project.alpha",
+      "node.alpha.research",
+    );
+
+    expect(state.phase).toBe("success");
+    if (state.phase !== "success") throw new Error("Expected a successful Project projection.");
+    expect(state.project.nodes.find((item) => item.objectId === "node.alpha.research")?.isSelected).toBe(true);
+    expect(source.selectedObjectId).toBeNull();
   });
 
   it("does not create selection when selectedObjectId belongs to another Project", () => {
@@ -182,6 +198,17 @@ describe("Project Cosmos presentation projection", () => {
     if (state.phase !== "success") throw new Error("Expected a successful Project projection.");
     expect(state.project.isCoreSelected).toBe(false);
     expect(state.project.nodes.some((item) => item.isSelected)).toBe(false);
+
+    const disappeared = projectProjectCosmosState(
+      "ready",
+      snapshot(),
+      null,
+      "project.alpha",
+      "node.alpha.removed",
+    );
+    expect(disappeared.phase).toBe("success");
+    if (disappeared.phase !== "success") throw new Error("Expected a successful Project projection.");
+    expect(disappeared.project.nodes.some((item) => item.isSelected)).toBe(false);
   });
 
   it("returns Not Found for unknown or missing Project IDs and an empty snapshot", () => {

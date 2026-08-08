@@ -34,8 +34,10 @@ describe("Project Cosmos visual slice", () => {
   it("reuses Cosmos navigation and excludes Builder infrastructure", () => {
     const combined = files.map(sourceFor).join("\n");
     const chrome = sourceFor("./components/ProjectCosmosChrome.vue");
+    const view = sourceFor("./CosmosProjectView.vue");
 
     expect(chrome).toContain("<CosmosNavigation");
+    expect(view).toContain("<ObjectInteractionHost");
     expect(combined).not.toContain("ThemeBuilderShell");
     expect(combined).not.toContain("StudioRail");
     expect(combined).not.toContain("BuilderTopNavigation");
@@ -69,12 +71,30 @@ describe("Project Cosmos visual slice", () => {
     expect(constellation).toContain('v-for="node in project.nodes"');
     expect(constellation).toContain("node.isSelected");
     expect(constellation).toContain("project.isFocused");
+    expect(constellation).toContain('type="button"');
+    expect(constellation).toContain(':aria-label="`${node.displayName} node`"');
+    expect(constellation).toContain(':aria-pressed="node.isSelected"');
+    expect(constellation).toContain("@click=\"$emit('select-node', node.objectId)\"");
+    expect(constellation).toContain(".project-node:focus-visible::after");
+    expect(constellation).toContain("Inspect");
+    expect(constellation).toContain("@click=\"$emit('open-node', node.objectId)\"");
     for (const name of ["Research", "Design", "Assets", "Build", "Notes", "Archive"]) {
       expect(constellation).not.toContain(name);
     }
   });
 
-  it("projects real SVG connection paths without introducing graph behavior", () => {
+  it("uses native Node buttons for click and Enter/Space activation with distinct focus", () => {
+    const constellation = sourceFor("./components/AsteriaConstellation.vue");
+
+    expect(constellation).toContain("<button");
+    expect(constellation).toContain('type="button"');
+    expect(constellation).toContain("@click=\"$emit('select-node', node.objectId)\"");
+    expect(constellation).toContain(':aria-pressed="node.isSelected"');
+    expect(constellation).toContain(".project-node:focus-visible::after");
+    expect(constellation).toContain(".project-node--selected > i");
+  });
+
+  it("projects real SVG connection paths without introducing graph editing", () => {
     const constellation = sourceFor("./components/AsteriaConstellation.vue");
 
     expect(constellation).toContain("<svg");
@@ -82,11 +102,11 @@ describe("Project Cosmos visual slice", () => {
     expect(constellation).toContain(":d=\"connection.path\"");
     expect(constellation).toContain("project-connection--semantic");
     expect(constellation).toContain("project-connection--structural");
-    expect(constellation).not.toContain("@click");
+    expect(constellation).toContain("@click");
     expect(constellation).not.toContain("@pointer");
   });
 
-  it("loads through CosmosMapRuntime while remaining asset-free and read-only", () => {
+  it("loads and selects through existing Runtime paths without graph or camera writes", () => {
     const combined = files.map(sourceFor).join("\n");
     const view = sourceFor("./CosmosProjectView.vue");
 
@@ -94,12 +114,13 @@ describe("Project Cosmos visual slice", () => {
     expect(combined).not.toContain("/api");
     expect(view).toContain("useCosmosRuntime");
     expect(view).toContain("loadProjectCosmosSnapshot(runtime.cosmosMap)");
+    expect(view).toContain("selectProjectCosmosNode(runtime.cosmosMap, project, objectId)");
+    expect(view).toContain("openSelectedProjectCosmosNode(host, project, objectId)");
+    expect(view).toContain("mapState.selectedObjectId");
     expect(view).not.toContain("persistCamera");
     expect(view).not.toContain("persistNodePosition");
-    expect(view).not.toContain("persistSelection");
     expect(view).not.toContain("focusProject");
     expect(view).not.toContain("focusCosmos");
-    expect(view).not.toContain(".select(");
     expect(view).not.toContain(".setCamera(");
     expect(view).not.toContain(".moveNodeLocally(");
     expect(combined).not.toContain("localStorage");
@@ -107,7 +128,7 @@ describe("Project Cosmos visual slice", () => {
     expect(combined).not.toContain("<img");
     expect(combined).not.toContain("drag");
     expect(combined).not.toContain("contextmenu");
-    expect(combined).not.toContain("Workspace");
+    expect(view).not.toContain("selectedObjectId = ref");
   });
 
   it("contains quiet Loading, Error, Not Found and Empty Project states", () => {

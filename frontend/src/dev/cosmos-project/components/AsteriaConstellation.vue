@@ -41,19 +41,27 @@
     <div
       v-for="node in project.nodes"
       :key="node.objectId"
-      class="project-node"
-      :class="{ 'project-node--selected': node.isSelected }"
+      class="project-node-anchor"
       :style="node.style"
-      role="img"
-      :aria-label="`${node.displayName}${node.isSelected ? ', selected' : ''} node`"
       :data-node-id="node.objectId"
     >
-      <span v-if="node.isSelected" class="project-node__focus-ring" aria-hidden="true" />
-      <i aria-hidden="true" />
+      <button
+        type="button"
+        class="project-node"
+        :class="{ 'project-node--selected': node.isSelected }"
+        :aria-label="`${node.displayName} node`"
+        :aria-pressed="node.isSelected"
+        :data-node-id="node.objectId"
+        @click="$emit('select-node', node.objectId)"
+      >
+        <span v-if="node.isSelected" class="project-node__focus-ring" aria-hidden="true" />
+        <i aria-hidden="true" />
+      </button>
       <aside v-if="node.isSelected" class="project-node-card">
         <strong>{{ node.displayName }}</strong>
         <span>{{ node.typeLabel }}</span>
         <p>{{ node.description || "No description available." }}</p>
+        <button type="button" @click="$emit('open-node', node.objectId)">Inspect</button>
       </aside>
     </div>
   </section>
@@ -66,6 +74,11 @@ import type { ProjectCosmosPresentation } from "../projectCosmosProjection";
 
 const props = defineProps<{
   project: Readonly<ProjectCosmosPresentation>;
+}>();
+
+defineEmits<{
+  "select-node": [objectId: string];
+  "open-node": [objectId: string];
 }>();
 
 const coreLabel = computed(() => {
@@ -143,6 +156,43 @@ const coreLabel = computed(() => {
   place-items: center;
 }
 
+.project-node-anchor {
+  position: absolute;
+  top: var(--node-top);
+  left: var(--node-left);
+  width: 60px;
+  height: 60px;
+  transform: translate(-50%, -50%);
+}
+
+.project-node-anchor > .project-node {
+  position: relative;
+  top: auto;
+  left: auto;
+  padding: 0;
+  border: 0;
+  appearance: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  transform: none;
+}
+
+.project-node-anchor > .project-node:focus-visible {
+  outline: none;
+}
+
+.project-node-anchor > .project-node:focus-visible::after {
+  position: absolute;
+  inset: -7px;
+  border: 1px dashed rgba(var(--project-light), 0.74);
+  border-radius: 50%;
+  box-shadow: 0 0 18px rgba(var(--project-light), 0.16);
+  content: "";
+  pointer-events: none;
+}
+
 .project-node > i {
   display: block;
   width: var(--node-size);
@@ -198,6 +248,7 @@ const coreLabel = computed(() => {
 
 .project-node-card {
   position: absolute;
+  z-index: 8;
   top: 42px;
   left: 48px;
   display: grid;
@@ -241,5 +292,26 @@ const coreLabel = computed(() => {
   color: #98a8af;
   font-size: 0.58rem;
   line-height: 1.45;
+}
+
+.project-node-card button {
+  justify-self: start;
+  margin-top: 5px;
+  padding: 5px 9px;
+  border: 1px solid rgba(var(--project-light), 0.34);
+  border-radius: 7px;
+  background: rgba(var(--project-light), 0.08);
+  color: #dce7ec;
+  font: inherit;
+  font-size: 0.56rem;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+
+.project-node-card button:hover,
+.project-node-card button:focus-visible {
+  border-color: rgba(var(--project-light), 0.62);
+  outline: none;
+  background: rgba(var(--project-light), 0.14);
 }
 </style>

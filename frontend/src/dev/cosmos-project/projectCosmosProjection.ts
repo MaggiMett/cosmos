@@ -79,6 +79,7 @@ export function projectProjectCosmosState(
   snapshot: DeepReadonly<CosmosMapSnapshot> | null,
   error: string | null,
   requestedProjectId: string | null,
+  selectedObjectId: string | null = snapshot?.selectedObjectId ?? null,
 ): ProjectCosmosPresentationState {
   if (phase === "idle" || phase === "loading") {
     return { phase: "loading", projectName: "Project", objectCount: 0, zoomLabel: "--" };
@@ -115,7 +116,7 @@ export function projectProjectCosmosState(
     };
   }
 
-  const presentation = projectProjectCosmosSnapshot(snapshot, project);
+  const presentation = projectProjectCosmosSnapshot(snapshot, project, selectedObjectId);
   const base = {
     projectName: presentation.displayName,
     objectCount: presentation.nodes.length,
@@ -130,10 +131,11 @@ export function projectProjectCosmosState(
 export function projectProjectCosmosSnapshot(
   snapshot: DeepReadonly<CosmosMapSnapshot>,
   project: DeepReadonly<MapProject>,
+  runtimeSelectedObjectId: string | null = snapshot.selectedObjectId,
 ): Readonly<ProjectCosmosPresentation> {
   const nodes = project.nodes.filter((node) => node.objectId !== project.objectId);
-  const selectedObjectId = nodes.some((node) => node.objectId === snapshot.selectedObjectId)
-    ? snapshot.selectedObjectId
+  const selectedObjectId = nodes.some((node) => node.objectId === runtimeSelectedObjectId)
+    ? runtimeSelectedObjectId
     : null;
   const points = projectNodePoints(project, nodes);
   const memberIds = new Set([project.objectId, ...nodes.map((node) => node.objectId)]);
@@ -150,7 +152,7 @@ export function projectProjectCosmosSnapshot(
     displayName: project.displayName,
     description: project.description,
     isFocused: snapshot.focusedProjectId === project.objectId,
-    isCoreSelected: snapshot.selectedObjectId === project.objectId,
+    isCoreSelected: runtimeSelectedObjectId === project.objectId,
     nodes: nodes.map((node) => {
       const point = points.get(node.objectId) ?? CORE_POINT;
       return {
