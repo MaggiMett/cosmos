@@ -14,18 +14,22 @@ const newSource = source("../dev/base-runtime/BaseRuntimeView.vue");
 const roomSource = source("../dev/base-runtime/components/BaseRoomScene.vue");
 const workspaceSource = source("./WorkspaceView.vue");
 
-describe("controlled Base presenter preparation", () => {
-  it("keeps Legacy as the default when the variable is unset", () => {
-    expect(resolveBasePresenter(undefined)).toBe("legacy");
-    expect(configuredBasePresenter).toBe("legacy");
+describe("controlled Base presenter rollout", () => {
+  it("promotes New when the variable is unset", () => {
+    expect(resolveBasePresenter(undefined)).toBe("new");
+    expect(configuredBasePresenter).toBe("new");
   });
 
-  it("enables New only for the exact explicit value", () => {
+  it("keeps New for explicit new and invalid values", () => {
     expect(resolveBasePresenter("new")).toBe("new");
+    expect(resolveBasePresenter("NEW")).toBe("new");
+    expect(resolveBasePresenter("unexpected")).toBe("new");
+    expect(resolveBasePresenter(null)).toBe("new");
+  });
+
+  it("uses Legacy only for the exact rollback value", () => {
     expect(resolveBasePresenter("legacy")).toBe("legacy");
-    expect(resolveBasePresenter("NEW")).toBe("legacy");
-    expect(resolveBasePresenter("unexpected")).toBe("legacy");
-    expect(resolveBasePresenter(null)).toBe("legacy");
+    expect(resolveBasePresenter("LEGACY")).toBe("new");
   });
 
   it("compiles a narrow wrapper that keeps both presenters renderable", () => {
