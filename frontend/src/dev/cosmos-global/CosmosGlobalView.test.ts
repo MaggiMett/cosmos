@@ -1,0 +1,111 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
+import { compileScript, compileTemplate, parse } from "vue/compiler-sfc";
+import { describe, expect, it } from "vitest";
+
+const files = [
+  "./CosmosGlobalView.vue",
+  "./components/GlobalCosmosChrome.vue",
+  "./components/GlobalCosmosControls.vue",
+  "./components/GlobalCosmosUniverse.vue",
+] as const;
+
+function sourceFor(path: (typeof files)[number]): string {
+  return readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8");
+}
+
+describe("Global Cosmos visual slice", () => {
+  it.each(files)("compiles %s without script or template errors", (path) => {
+    const source = sourceFor(path);
+    const descriptor = parse(source, { filename: path }).descriptor;
+    if (descriptor.scriptSetup) compileScript(descriptor, { id: `cosmos-global-${path}` });
+    const template = descriptor.template;
+    expect(template).toBeDefined();
+    if (template === null) throw new Error(`${path} template missing.`);
+    const compiled = compileTemplate({
+      id: `cosmos-global-${path}`,
+      filename: path,
+      source: template.content,
+    });
+    expect(compiled.errors).toEqual([]);
+  });
+
+  it("reuses Runtime chrome and excludes Builder infrastructure", () => {
+    const combined = files.map(sourceFor).join("\n");
+    const chrome = sourceFor("./components/GlobalCosmosChrome.vue");
+
+    expect(chrome).toContain("<CosmosNavigation");
+    expect(chrome).toContain("<CompanionAvatar");
+    expect(combined).not.toContain("ThemeBuilderShell");
+    expect(combined).not.toContain("StudioRail");
+    expect(combined).not.toContain("BuilderTopNavigation");
+    expect(combined).not.toContain("themeBuilder.css");
+  });
+
+  it("renders project regions and Nodes from presentation props without fixture Projects", () => {
+    const universe = sourceFor("./components/GlobalCosmosUniverse.vue");
+
+    expect(universe).toContain('v-for="region in regions"');
+    expect(universe).toContain('v-for="star in region.stars"');
+    expect(universe).toContain(':data-project-id="region.objectId"');
+    expect(universe).toContain(':data-node-id="star.objectId"');
+    for (const name of ["Asteria", "Forge", "Atlas", "Mettventures", "Archive", "Sandbox"]) {
+      expect(universe).not.toContain(name);
+    }
+    expect(universe).toContain("project-region__selection");
+  });
+
+  it("provides the required edge controls and global orientation", () => {
+    const chrome = sourceFor("./components/GlobalCosmosChrome.vue");
+    const controls = sourceFor("./components/GlobalCosmosControls.vue");
+
+    expect(chrome).toContain('current-location="Global View"');
+    expect(chrome).toContain("Local · Synced");
+    expect(chrome).toContain("projectStatus");
+    expect(chrome).toContain(':right-neighbor="null"');
+    for (const label of ["zoomLabel", "Fit", "Search / Focus", "Base", "Companion", "Settings"]) {
+      expect(controls).toContain(label);
+    }
+  });
+
+  it("uses CSS and HTML primitives without graph behavior", () => {
+    const combined = files.map(sourceFor).join("\n");
+
+    expect(combined).not.toContain("<svg");
+    expect(combined).not.toContain("@click");
+    expect(combined).not.toContain("@pointer");
+    expect(combined).not.toContain("contextmenu");
+    expect(combined).not.toContain("drag");
+  });
+
+  it("loads through CosmosMapRuntime while remaining asset-free and read-only", () => {
+    const combined = files.map(sourceFor).join("\n");
+    const view = sourceFor("./CosmosGlobalView.vue");
+
+    expect(combined).not.toContain("fetch(");
+    expect(combined).not.toContain("/api");
+    expect(view).toContain("useCosmosRuntime");
+    expect(view).toContain("loadGlobalCosmosSnapshot(runtime.cosmosMap)");
+    expect(view).not.toContain("persistCamera");
+    expect(view).not.toContain("persistNodePosition");
+    expect(view).not.toContain("persistSelection");
+    expect(view).not.toContain("focusProject");
+    expect(view).not.toContain("focusCosmos");
+    expect(view).not.toContain(".select(");
+    expect(view).not.toContain(".setCamera(");
+    expect(view).not.toContain(".moveNodeLocally(");
+    expect(combined).not.toContain("localStorage");
+    expect(combined).not.toContain("sessionStorage");
+    expect(combined).not.toContain("<img");
+  });
+
+  it("contains quiet loading, error and empty states in the same Runtime experience", () => {
+    const view = sourceFor("./CosmosGlobalView.vue");
+
+    expect(view).toContain("Loading your cosmos");
+    expect(view).toContain("Cosmos is temporarily unavailable");
+    expect(view).toContain("No projects are available yet.");
+    expect(view).toContain("presentation.phase === 'success'");
+  });
+});

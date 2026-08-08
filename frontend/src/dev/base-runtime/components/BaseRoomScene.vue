@@ -1,0 +1,384 @@
+<template>
+  <div class="base-room-scene" aria-label="Base Main Room" data-testid="base-room-scene">
+    <div class="base-room-scene__ceiling" aria-hidden="true" />
+    <div class="base-room-scene__wall base-room-scene__wall--left" aria-hidden="true" />
+    <div class="base-room-scene__wall base-room-scene__wall--right" aria-hidden="true" />
+    <div class="base-room-scene__floor" aria-hidden="true" />
+
+    <div class="base-room-scene__cockpit" aria-label="Integrated cockpit workspace">
+      <div class="base-room-scene__window">
+        <span class="base-room-scene__planet" aria-hidden="true" />
+        <i v-for="index in 20" :key="index" :style="starStyle(index)" aria-hidden="true" />
+      </div>
+      <span class="base-room-scene__window-frame" aria-hidden="true" />
+      <span class="base-room-scene__console" aria-hidden="true" />
+      <span class="base-room-scene__cockpit-seat base-room-scene__cockpit-seat--left" aria-hidden="true" />
+      <span class="base-room-scene__cockpit-seat base-room-scene__cockpit-seat--right" aria-hidden="true" />
+    </div>
+
+    <div class="base-room-scene__door base-room-scene__door--left" aria-label="Closed left room transition"><span /></div>
+    <div class="base-room-scene__door base-room-scene__door--right" aria-label="Closed right room transition"><span /></div>
+
+    <section class="base-room-scene__workspace base-room-scene__workspace--knowledge" aria-label="Knowledge Workspace">
+      <span class="base-room-scene__shelf" aria-hidden="true" />
+      <span class="base-room-scene__desk" aria-hidden="true"><i /><i /></span>
+      <strong>Knowledge Workspace</strong>
+      <small>Library · Research</small>
+    </section>
+
+    <section class="base-room-scene__workspace base-room-scene__workspace--creation" aria-label="Creation and Capture Workspace">
+      <span class="base-room-scene__board" aria-hidden="true" />
+      <span class="base-room-scene__desk" aria-hidden="true"><i /><i /></span>
+      <strong>Creation · Capture</strong>
+      <small>Workbench · Materials</small>
+    </section>
+
+    <div class="base-room-scene__lounge" aria-label="Companion area">
+      <span class="base-room-scene__rug" aria-hidden="true" />
+      <span class="base-room-scene__chair" aria-hidden="true" />
+      <span class="base-room-scene__table" aria-hidden="true" />
+    </div>
+
+    <BaseCompanionPresence />
+  </div>
+</template>
+
+<script setup lang="ts">
+import BaseCompanionPresence from "./BaseCompanionPresence.vue";
+
+function starStyle(index: number) {
+  return {
+    left: `${(index * 47) % 94}%`,
+    top: `${(index * 31) % 82}%`,
+    opacity: 0.3 + (index % 4) * 0.14,
+  };
+}
+</script>
+
+<style scoped>
+.base-room-scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 56%, rgba(94, 69, 44, 0.17), transparent 45%),
+    linear-gradient(180deg, #17191a, #0d1114 58%, #07090b);
+}
+
+.base-room-scene::after {
+  position: absolute;
+  z-index: 30;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 54%, transparent 40%, rgba(0, 0, 0, 0.38) 100%);
+  content: "";
+  pointer-events: none;
+}
+
+.base-room-scene__ceiling,
+.base-room-scene__wall,
+.base-room-scene__floor {
+  position: absolute;
+}
+
+.base-room-scene__ceiling {
+  z-index: 2;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 30%;
+  clip-path: polygon(0 0, 100% 0, 78% 100%, 22% 100%);
+  background:
+    linear-gradient(90deg, transparent 20%, rgba(194, 142, 86, 0.14) 20.2%, transparent 20.5%, transparent 79.5%, rgba(194, 142, 86, 0.14) 79.8%, transparent 80%),
+    linear-gradient(#171818, #23211f);
+  box-shadow: inset 0 -2px rgba(219, 163, 100, 0.13);
+}
+
+.base-room-scene__wall {
+  z-index: 1;
+  top: 0;
+  bottom: 0;
+  width: 29%;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 18%, rgba(215, 183, 145, 0.035) 18.2% 18.4%),
+    linear-gradient(140deg, #262421, #111314 66%);
+}
+
+.base-room-scene__wall--left {
+  left: 0;
+  clip-path: polygon(0 0, 78% 28%, 84% 58%, 100% 100%, 0 100%);
+}
+
+.base-room-scene__wall--right {
+  right: 0;
+  clip-path: polygon(22% 28%, 100% 0, 100% 100%, 0 100%, 16% 58%);
+}
+
+.base-room-scene__floor {
+  z-index: 1;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 53%;
+  clip-path: polygon(21% 0, 79% 0, 100% 100%, 0 100%);
+  background:
+    repeating-linear-gradient(90deg, transparent 0 12.4%, rgba(185, 204, 211, 0.04) 12.5% 12.65%),
+    repeating-linear-gradient(0deg, transparent 0 19%, rgba(218, 166, 105, 0.045) 19.2% 19.4%),
+    linear-gradient(180deg, #272a2b, #151719 68%, #0a0c0e);
+}
+
+.base-room-scene__cockpit {
+  position: absolute;
+  z-index: 4;
+  top: 20%;
+  right: 23%;
+  left: 23%;
+  height: 46%;
+}
+
+.base-room-scene__window {
+  position: absolute;
+  inset: 0 4% 16%;
+  overflow: hidden;
+  border: 7px solid #252b2e;
+  border-radius: 25% 25% 3px 3px / 18% 18% 3px 3px;
+  background:
+    radial-gradient(ellipse at 60% 25%, rgba(76, 66, 123, 0.18), transparent 28%),
+    linear-gradient(180deg, #050a13, #07111e 76%, #020408);
+  box-shadow: inset 0 0 48px #010205, 0 0 0 2px rgba(188, 211, 220, 0.1), 0 14px 28px rgba(0, 0, 0, 0.38);
+}
+
+.base-room-scene__window i {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: #e8f1f5;
+  box-shadow: 0 0 5px rgba(206, 230, 240, 0.7);
+}
+
+.base-room-scene__planet {
+  position: absolute;
+  top: 25%;
+  left: 50%;
+  width: 32%;
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  border: 1px solid rgba(194, 211, 221, 0.24);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 28%, rgba(198, 207, 204, 0.27), transparent 22%),
+    linear-gradient(145deg, #45505a, #1b2530 58%, #080d13);
+  box-shadow: -14px 18px 38px rgba(0, 0, 0, 0.5), 0 0 48px rgba(84, 127, 156, 0.14);
+}
+
+.base-room-scene__window-frame {
+  position: absolute;
+  inset: -3% 0 8%;
+  border: 10px solid rgba(52, 56, 57, 0.84);
+  border-bottom-color: transparent;
+  border-radius: 31% 31% 10% 10%;
+  pointer-events: none;
+}
+
+.base-room-scene__console {
+  position: absolute;
+  right: 16%;
+  bottom: 8%;
+  left: 16%;
+  height: 20%;
+  clip-path: polygon(7% 0, 93% 0, 100% 100%, 0 100%);
+  background:
+    repeating-linear-gradient(90deg, transparent 0 13%, rgba(101, 168, 194, 0.12) 13.4% 17%, transparent 17.4% 24%),
+    linear-gradient(#36434a, #161e23);
+  box-shadow: inset 0 4px rgba(111, 189, 217, 0.12), 0 12px 18px rgba(0, 0, 0, 0.34);
+}
+
+.base-room-scene__cockpit-seat {
+  position: absolute;
+  z-index: 2;
+  bottom: -5%;
+  width: 12%;
+  height: 28%;
+  border: 1px solid rgba(181, 211, 225, 0.12);
+  border-radius: 8px 8px 3px 3px;
+  background: linear-gradient(90deg, #101619, #3a4143 48%, #101619);
+  box-shadow: 0 12px 18px rgba(0, 0, 0, 0.42);
+}
+
+.base-room-scene__cockpit-seat--left { left: 25%; transform: rotate(4deg); }
+.base-room-scene__cockpit-seat--right { right: 25%; transform: rotate(-4deg); }
+
+.base-room-scene__door {
+  position: absolute;
+  z-index: 5;
+  top: 25%;
+  bottom: 8%;
+  width: 7%;
+  border: 1px solid rgba(210, 181, 146, 0.12);
+  border-radius: 44% 44% 4px 4px / 14% 14% 4px 4px;
+  background: linear-gradient(90deg, #0d1011, #272522 50%, #0d1011);
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.58), 0 0 0 5px rgba(28, 28, 27, 0.8);
+}
+
+.base-room-scene__door--left { left: -1%; }
+.base-room-scene__door--right { right: -1%; }
+
+.base-room-scene__door span {
+  position: absolute;
+  top: 50%;
+  width: 4px;
+  height: 72px;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: #dab07d;
+  box-shadow: 0 0 13px rgba(218, 176, 125, 0.36);
+}
+
+.base-room-scene__door--left span { right: 17px; }
+.base-room-scene__door--right span { left: 17px; }
+
+.base-room-scene__workspace {
+  position: absolute;
+  z-index: 8;
+  bottom: 8%;
+  width: 29%;
+  height: 39%;
+  color: #dcd8d0;
+}
+
+.base-room-scene__workspace--knowledge { left: 5%; }
+.base-room-scene__workspace--creation { right: 5%; }
+
+.base-room-scene__workspace > strong,
+.base-room-scene__workspace > small {
+  position: absolute;
+  bottom: 3%;
+  text-shadow: 0 2px 7px #050607;
+}
+
+.base-room-scene__workspace--knowledge > strong,
+.base-room-scene__workspace--knowledge > small { left: 6%; }
+.base-room-scene__workspace--creation > strong,
+.base-room-scene__workspace--creation > small { right: 6%; text-align: right; }
+
+.base-room-scene__workspace > strong {
+  bottom: 7%;
+  font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  font-size: 0.88rem;
+  font-weight: 400;
+}
+
+.base-room-scene__workspace > small {
+  color: rgba(196, 205, 209, 0.58);
+  font-size: 0.52rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.base-room-scene__desk {
+  position: absolute;
+  right: 3%;
+  bottom: 13%;
+  left: 3%;
+  height: 33%;
+  transform: perspective(430px) rotateX(10deg);
+  border: 1px solid rgba(202, 180, 151, 0.14);
+  border-radius: 3px;
+  background: linear-gradient(155deg, #4b4238, #201d1a 70%);
+  box-shadow: 0 18px 25px rgba(0, 0, 0, 0.38);
+}
+
+.base-room-scene__workspace--creation .base-room-scene__desk {
+  background: linear-gradient(155deg, #4d4439, #221d19 70%);
+}
+
+.base-room-scene__desk::before,
+.base-room-scene__desk::after {
+  position: absolute;
+  bottom: 84%;
+  width: 30%;
+  height: 62%;
+  border: 4px solid #15191b;
+  border-bottom-width: 7px;
+  border-radius: 3px;
+  background: linear-gradient(145deg, rgba(105, 167, 190, 0.2), #081116);
+  box-shadow: 0 0 14px rgba(72, 154, 185, 0.11);
+  content: "";
+}
+
+.base-room-scene__desk::before { left: 10%; }
+.base-room-scene__desk::after { right: 10%; }
+
+.base-room-scene__desk i {
+  position: absolute;
+  top: 18%;
+  width: 18%;
+  height: 12%;
+  background: repeating-linear-gradient(90deg, #9b7c58 0 3px, transparent 3px 7px);
+}
+
+.base-room-scene__desk i:first-child { left: 37%; }
+.base-room-scene__desk i:last-child { right: 5%; }
+
+.base-room-scene__shelf,
+.base-room-scene__board {
+  position: absolute;
+  right: 7%;
+  bottom: 45%;
+  left: 7%;
+  height: 42%;
+  border: 1px solid rgba(210, 181, 146, 0.1);
+  background: repeating-linear-gradient(90deg, rgba(150, 115, 76, 0.2) 0 5px, transparent 5px 16px), linear-gradient(180deg, transparent 48%, rgba(189, 146, 95, 0.16) 49% 51%, transparent 52%);
+  opacity: 0.6;
+}
+
+.base-room-scene__board {
+  right: 12%;
+  left: 28%;
+  background: repeating-linear-gradient(135deg, rgba(207, 186, 155, 0.14) 0 13px, transparent 13px 29px);
+}
+
+.base-room-scene__lounge {
+  position: absolute;
+  z-index: 7;
+  right: 34%;
+  bottom: 1%;
+  left: 34%;
+  height: 30%;
+}
+
+.base-room-scene__rug {
+  position: absolute;
+  right: 3%;
+  bottom: 0;
+  left: 3%;
+  height: 62%;
+  border: 1px solid rgba(184, 137, 86, 0.1);
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #252322, #111313 72%);
+}
+
+.base-room-scene__chair {
+  position: absolute;
+  bottom: 18%;
+  left: 13%;
+  width: 29%;
+  height: 56%;
+  transform: rotate(-7deg);
+  border: 1px solid rgba(184, 175, 161, 0.12);
+  border-radius: 42% 44% 18% 18%;
+  background: linear-gradient(145deg, #3c3935, #171818 72%);
+  box-shadow: 0 18px 24px rgba(0, 0, 0, 0.38);
+}
+
+.base-room-scene__table {
+  position: absolute;
+  bottom: 14%;
+  left: 43%;
+  width: 19%;
+  height: 23%;
+  border-top: 7px solid #514336;
+  border-radius: 50%;
+  background: linear-gradient(90deg, transparent 46%, #25211d 47% 53%, transparent 54%);
+}
+</style>

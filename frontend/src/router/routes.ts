@@ -105,6 +105,52 @@ export const routeRecords = [
     },
   },
   {
+    path: "/dev/release-studio",
+    name: "dev-release-studio",
+    component: () => import("../dev/theme-builder/ReleaseStudioView.vue"),
+    meta: {
+      title: "Release Studio Development Preview",
+      environment: "development",
+      developmentPreview: true,
+    },
+  },
+  {
+    path: "/dev/theme-library",
+    name: "dev-theme-library",
+    component: () => import("../dev/theme-library/ThemeLibraryView.vue"),
+    meta: {
+      title: "Theme Library",
+      environment: "cosmos",
+    },
+  },
+  {
+    path: "/dev/base-runtime",
+    name: "dev-base-runtime",
+    component: () => import("../dev/base-runtime/BaseRuntimeView.vue"),
+    meta: {
+      title: "Base · Main Room",
+      environment: "base",
+    },
+  },
+  {
+    path: "/dev/cosmos-project",
+    name: "dev-cosmos-project",
+    component: () => import("../dev/cosmos-project/CosmosProjectView.vue"),
+    meta: {
+      title: "Asteria · Project Cosmos",
+      environment: "cosmos",
+    },
+  },
+  {
+    path: "/dev/cosmos-global",
+    name: "dev-cosmos-global",
+    component: () => import("../dev/cosmos-global/CosmosGlobalView.vue"),
+    meta: {
+      title: "Global Cosmos View",
+      environment: "cosmos",
+    },
+  },
+  {
     path: "/:pathMatch(.*)*",
     redirect: "/",
   },

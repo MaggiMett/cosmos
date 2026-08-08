@@ -165,6 +165,86 @@ describe("Cosmos routing", () => {
     expect(String(previewRecord?.component)).toContain("ShowcaseView.vue");
   });
 
+  it("resolves Release Studio with the shared Builder preview boundary", () => {
+    const router = createCosmosRouter({ history: createMemoryHistory() });
+    const preview = router.resolve("/dev/release-studio");
+    const previewRecord = routeRecords.find(
+      (record) => record.name === "dev-release-studio",
+    );
+
+    expect(preview.name).toBe("dev-release-studio");
+    expect(preview.meta).toMatchObject({
+      title: "Release Studio Development Preview",
+      environment: "development",
+      developmentPreview: true,
+    });
+    expect(String(previewRecord?.component)).toContain("ReleaseStudioView.vue");
+  });
+
+  it("resolves Theme Library inside the normal Cosmos runtime shell", () => {
+    const router = createCosmosRouter({ history: createMemoryHistory() });
+    const library = router.resolve("/dev/theme-library");
+    const libraryRecord = routeRecords.find(
+      (record) => record.name === "dev-theme-library",
+    );
+
+    expect(library.name).toBe("dev-theme-library");
+    expect(library.meta).toMatchObject({
+      title: "Theme Library",
+      environment: "cosmos",
+    });
+    expect(library.meta.developmentPreview).not.toBe(true);
+    expect(String(libraryRecord?.component)).toContain("ThemeLibraryView.vue");
+  });
+
+  it("resolves Base Runtime inside the normal ApplicationShell boundary", () => {
+    const router = createCosmosRouter({ history: createMemoryHistory() });
+    const baseRuntime = router.resolve("/dev/base-runtime");
+    const baseRuntimeRecord = routeRecords.find(
+      (record) => record.name === "dev-base-runtime",
+    );
+
+    expect(baseRuntime.name).toBe("dev-base-runtime");
+    expect(baseRuntime.meta).toMatchObject({
+      title: "Base · Main Room",
+      environment: "base",
+    });
+    expect(baseRuntime.meta.developmentPreview).not.toBe(true);
+    expect(String(baseRuntimeRecord?.component)).toContain("BaseRuntimeView.vue");
+  });
+
+  it("resolves Project Cosmos inside the normal ApplicationShell boundary", () => {
+    const router = createCosmosRouter({ history: createMemoryHistory() });
+    const projectCosmos = router.resolve("/dev/cosmos-project");
+    const projectCosmosRecord = routeRecords.find(
+      (record) => record.name === "dev-cosmos-project",
+    );
+
+    expect(projectCosmos.name).toBe("dev-cosmos-project");
+    expect(projectCosmos.meta).toMatchObject({
+      title: "Asteria · Project Cosmos",
+      environment: "cosmos",
+    });
+    expect(projectCosmos.meta.developmentPreview).not.toBe(true);
+    expect(String(projectCosmosRecord?.component)).toContain("CosmosProjectView.vue");
+  });
+
+  it("resolves Global Cosmos inside the normal ApplicationShell boundary", () => {
+    const router = createCosmosRouter({ history: createMemoryHistory() });
+    const globalCosmos = router.resolve("/dev/cosmos-global");
+    const globalCosmosRecord = routeRecords.find(
+      (record) => record.name === "dev-cosmos-global",
+    );
+
+    expect(globalCosmos.name).toBe("dev-cosmos-global");
+    expect(globalCosmos.meta).toMatchObject({
+      title: "Global Cosmos View",
+      environment: "cosmos",
+    });
+    expect(globalCosmos.meta.developmentPreview).not.toBe(true);
+    expect(String(globalCosmosRecord?.component)).toContain("CosmosGlobalView.vue");
+  });
+
   it("does not enqueue Runtime transitions into or out of the Development Preview", () => {
     expect(
       shouldEnqueueRuntimeTransition(
