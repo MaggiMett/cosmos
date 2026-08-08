@@ -6,24 +6,36 @@
     </div>
 
     <CosmosNavigation
-      current-location="Asteria"
-      :left-neighbor="globalNeighbor"
+      :current-location="projectName"
+      :left-neighbor="null"
       :right-neighbor="null"
       :quick-travel-open="false"
     />
 
     <div class="project-cosmos-chrome__status" aria-label="Project status">
       <span><i class="project-cosmos-chrome__dot project-cosmos-chrome__dot--synced" />Local · Synced</span>
-      <span><i class="project-cosmos-chrome__dot" />32 objects</span>
+      <span><i class="project-cosmos-chrome__dot" />{{ objectStatus }}</span>
       <button type="button" aria-label="Project focus">◎</button>
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
+
 import CosmosNavigation from "../../../components/cosmos/CosmosNavigation.vue";
 
-const globalNeighbor = { objectId: "global", displayName: "Global View" } as const;
+const props = defineProps<{
+  projectName: string;
+  objectCount: number;
+  phase: "loading" | "error" | "not-found" | "empty-project" | "success";
+}>();
+
+const objectStatus = computed(() => {
+  if (props.phase === "loading") return "Loading objects";
+  if (props.phase === "error" || props.phase === "not-found") return "Objects unavailable";
+  return `${props.objectCount} ${props.objectCount === 1 ? "object" : "objects"}`;
+});
 </script>
 
 <style scoped>

@@ -2,7 +2,7 @@
   <div class="project-cosmos-controls" data-testid="project-cosmos-controls">
     <div class="project-cosmos-controls__zoom" aria-label="Zoom controls">
       <button type="button" aria-label="Zoom out">−</button>
-      <span>72%</span>
+      <span>{{ zoomLabel }}</span>
       <button type="button" aria-label="Zoom in">+</button>
     </div>
     <button type="button" class="project-cosmos-controls__fit">Fit</button>
@@ -10,9 +10,16 @@
       <span aria-hidden="true">⌕</span>
       Search / Focus
     </button>
-    <p><span>Cosmos</span><i aria-hidden="true">/</i><strong>Project</strong><i aria-hidden="true">/</i>Asteria</p>
+    <p><span>Cosmos</span><i aria-hidden="true">/</i><strong>Project</strong><i aria-hidden="true">/</i>{{ projectName }}</p>
   </div>
 </template>
+
+<script setup lang="ts">
+defineProps<{
+  projectName: string;
+  zoomLabel: string;
+}>();
+</script>
 
 <style scoped>
 .project-cosmos-controls {

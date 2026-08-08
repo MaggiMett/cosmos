@@ -42,53 +42,77 @@ describe("Project Cosmos visual slice", () => {
     expect(combined).not.toContain("themeBuilder.css");
   });
 
-  it("contains the Asteria project context and edge chrome", () => {
+  it("projects the requested real Project context into the existing edge chrome", () => {
+    const view = sourceFor("./CosmosProjectView.vue");
     const chrome = sourceFor("./components/ProjectCosmosChrome.vue");
     const controls = sourceFor("./components/ProjectCosmosControls.vue");
 
-    expect(chrome).toContain("Asteria");
-    expect(chrome).toContain("Global View");
+    expect(view).toContain("route.query.projectId");
+    expect(view).toContain("projectIdFromQuery");
+    expect(chrome).toContain(":current-location=\"projectName\"");
+    expect(chrome).toContain(':left-neighbor="null"');
     expect(chrome).toContain("Local · Synced");
-    expect(chrome).toContain("32 objects");
-    expect(controls).toContain("72%");
+    expect(chrome).toContain("objectStatus");
+    expect(controls).toContain("zoomLabel");
+    expect(controls).toContain("projectName");
     expect(controls).toContain("Fit");
     expect(controls).toContain("Search / Focus");
   });
 
-  it("presents every requested hierarchy example", () => {
+  it("renders only projected Project, Node and Selection data", () => {
     const constellation = sourceFor("./components/AsteriaConstellation.vue");
 
-    expect(constellation).toContain("selected project core");
-    expect(constellation).toContain("normal node");
-    expect(constellation).toContain("focused node");
-    expect(constellation).toContain("secondary node");
+    expect(constellation).toContain("project.displayName");
+    expect(constellation).toContain('v-for="node in project.nodes"');
+    expect(constellation).toContain("node.isSelected");
+    expect(constellation).toContain("project.isFocused");
     for (const name of ["Research", "Design", "Assets", "Build", "Notes", "Archive"]) {
-      expect(constellation).toContain(name);
+      expect(constellation).not.toContain(name);
     }
   });
 
-  it("uses static SVG connections without introducing graph behavior", () => {
+  it("projects real SVG connection paths without introducing graph behavior", () => {
     const constellation = sourceFor("./components/AsteriaConstellation.vue");
 
     expect(constellation).toContain("<svg");
-    expect(constellation).toContain("asteria-connection--primary");
-    expect(constellation).toContain("asteria-connection--secondary");
-    expect(constellation).not.toContain("v-for");
+    expect(constellation).toContain('v-for="connection in project.connections"');
+    expect(constellation).toContain(":d=\"connection.path\"");
+    expect(constellation).toContain("project-connection--semantic");
+    expect(constellation).toContain("project-connection--structural");
     expect(constellation).not.toContain("@click");
     expect(constellation).not.toContain("@pointer");
   });
 
-  it("remains asset-free and disconnected from application behavior", () => {
+  it("loads through CosmosMapRuntime while remaining asset-free and read-only", () => {
     const combined = files.map(sourceFor).join("\n");
+    const view = sourceFor("./CosmosProjectView.vue");
 
     expect(combined).not.toContain("fetch(");
     expect(combined).not.toContain("/api");
-    expect(combined).not.toContain("useCosmosRuntime");
+    expect(view).toContain("useCosmosRuntime");
+    expect(view).toContain("loadProjectCosmosSnapshot(runtime.cosmosMap)");
+    expect(view).not.toContain("persistCamera");
+    expect(view).not.toContain("persistNodePosition");
+    expect(view).not.toContain("persistSelection");
+    expect(view).not.toContain("focusProject");
+    expect(view).not.toContain("focusCosmos");
+    expect(view).not.toContain(".select(");
+    expect(view).not.toContain(".setCamera(");
+    expect(view).not.toContain(".moveNodeLocally(");
     expect(combined).not.toContain("localStorage");
     expect(combined).not.toContain("sessionStorage");
     expect(combined).not.toContain("<img");
     expect(combined).not.toContain("drag");
     expect(combined).not.toContain("contextmenu");
     expect(combined).not.toContain("Workspace");
+  });
+
+  it("contains quiet Loading, Error, Not Found and Empty Project states", () => {
+    const view = sourceFor("./CosmosProjectView.vue");
+
+    expect(view).toContain("Loading project cosmos");
+    expect(view).toContain("Project cosmos is temporarily unavailable");
+    expect(view).toContain("Project not found");
+    expect(view).toContain("No project nodes are available yet.");
   });
 });
