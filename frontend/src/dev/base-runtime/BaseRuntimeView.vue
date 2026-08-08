@@ -1,17 +1,68 @@
 <template>
   <section class="base-runtime-view environment-view" aria-label="Base Main Room Runtime" data-testid="base-runtime-view">
-    <BaseRoomScene />
-    <BaseRuntimeChrome />
-    <BaseKnowledgeWindow class="base-runtime-view__knowledge" />
-    <BaseCaptureWindow class="base-runtime-view__capture" />
+    <BaseRoomScene v-if="presentation.phase === 'success'" :room="presentation.room" />
+    <div
+      v-else
+      class="base-runtime-view__state"
+      :class="`base-runtime-view__state--${presentation.phase}`"
+      :role="presentation.phase === 'error' ? 'alert' : 'status'"
+      aria-live="polite"
+      data-testid="base-runtime-state"
+    >
+      <span aria-hidden="true" />
+      <small>Base · Runtime</small>
+      <strong v-if="presentation.phase === 'loading'">Loading Base</strong>
+      <template v-else>
+        <strong>{{ presentation.phase === "error" ? "Base is unavailable" : "Base is quiet" }}</strong>
+        <p>{{ presentation.message }}</p>
+      </template>
+    </div>
+    <BaseRuntimeChrome
+      :current-location="presentation.currentLocation"
+      :room-count="presentation.roomCount"
+      :companion="presentation.phase === 'success' ? presentation.room.companion : null"
+      :right-neighbor="rightNeighbor"
+    />
+    <template v-if="presentation.phase === 'success'">
+      <BaseKnowledgeWindow
+        class="base-runtime-view__knowledge"
+        :workspace="presentation.room.knowledgeWorkspace"
+      />
+      <BaseCaptureWindow
+        class="base-runtime-view__capture"
+        :workspace="presentation.room.creationWorkspace"
+      />
+    </template>
   </section>
 </template>
 
 <script setup lang="ts">
+import { computed, onMounted } from "vue";
+
+import { useCosmosRuntime } from "../../runtime/plugin";
 import BaseCaptureWindow from "./components/BaseCaptureWindow.vue";
 import BaseKnowledgeWindow from "./components/BaseKnowledgeWindow.vue";
 import BaseRoomScene from "./components/BaseRoomScene.vue";
 import BaseRuntimeChrome from "./components/BaseRuntimeChrome.vue";
+import { loadBaseRuntimeSnapshot, projectBaseRuntimeState } from "./baseRuntimeProjection";
+
+const runtime = useCosmosRuntime();
+const baseState = runtime.base.state;
+const presentation = computed(() =>
+  projectBaseRuntimeState(baseState.phase, baseState.snapshot, baseState.error),
+);
+const rightNeighbor = computed(() => {
+  const state = presentation.value;
+  if (state.phase !== "success") return null;
+  const target = state.room.doorTargets.find((door) => door.targetRoomId && door.targetRoomName);
+  return target?.targetRoomId && target.targetRoomName
+    ? { objectId: target.targetRoomId, displayName: target.targetRoomName }
+    : null;
+});
+
+onMounted(() => {
+  void loadBaseRuntimeSnapshot(runtime.base).catch(() => undefined);
+});
 </script>
 
 <style scoped>
@@ -39,5 +90,63 @@ import BaseRuntimeChrome from "./components/BaseRuntimeChrome.vue";
   right: clamp(108px, 10.2vw, 164px);
   width: 250px;
   height: 266px;
+}
+
+.base-runtime-view__state {
+  position: absolute;
+  z-index: 8;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: min(380px, calc(100vw - 48px));
+  transform: translate(-50%, -50%);
+  place-items: center;
+  color: var(--cosmos-color-muted);
+  text-align: center;
+  gap: 9px;
+}
+
+.base-runtime-view__state > span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cosmos-color-accent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--cosmos-color-accent) 52%, transparent);
+}
+
+.base-runtime-view__state small {
+  color: var(--cosmos-color-faint);
+  font-size: 0.57rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.base-runtime-view__state strong {
+  color: var(--cosmos-color-text);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.3rem;
+  font-weight: 400;
+}
+
+.base-runtime-view__state p {
+  margin: 0;
+  font-size: 0.68rem;
+  line-height: 1.55;
+}
+
+.base-runtime-view__state--loading > span {
+  animation: base-runtime-pulse 1.8s ease-in-out infinite;
+}
+
+.base-runtime-view__state--error > span {
+  background: #c79578;
+}
+
+@keyframes base-runtime-pulse {
+  50% { opacity: 0.28; transform: scale(0.72); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .base-runtime-view__state--loading > span { animation: none; }
 }
 </style>

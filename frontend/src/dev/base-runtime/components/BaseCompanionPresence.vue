@@ -1,17 +1,26 @@
 <template>
   <div class="base-companion-presence" data-testid="base-companion-presence">
-    <div class="base-companion-presence__avatar">
-      <CompanionAvatar mode="compact" />
-    </div>
-    <div class="base-companion-presence__message">
-      <strong><span aria-hidden="true">✦</span> Companion</strong>
-      <p>Ready when you are</p>
-    </div>
+    <template v-if="companion">
+      <div class="base-companion-presence__avatar" :data-companion-id="companion.objectId">
+        <CompanionAvatar
+          mode="compact"
+          :notification-available="companion.notificationAvailable"
+        />
+      </div>
+      <div class="base-companion-presence__message">
+        <strong><span aria-hidden="true">✦</span> {{ companion.displayName }}</strong>
+        <p>{{ companion.description || "Available in Base" }}</p>
+      </div>
+    </template>
+    <p v-else class="base-companion-presence__unavailable">Companion unavailable</p>
   </div>
 </template>
 
 <script setup lang="ts">
 import CompanionAvatar from "../../../components/entities/CompanionAvatar.vue";
+import type { BaseCompanionPresentation } from "../baseRuntimeProjection";
+
+defineProps<{ companion: Readonly<BaseCompanionPresentation> | null }>();
 </script>
 
 <style scoped>
@@ -69,5 +78,18 @@ import CompanionAvatar from "../../../components/entities/CompanionAvatar.vue";
   margin: 6px 0 0 18px;
   color: var(--cosmos-color-muted);
   font-size: 0.64rem;
+}
+
+.base-companion-presence__unavailable {
+  position: absolute;
+  right: 0;
+  bottom: 10px;
+  margin: 0;
+  padding: 10px 13px;
+  border: 1px solid var(--cosmos-color-border);
+  border-radius: var(--cosmos-radius-window);
+  background: rgba(8, 17, 26, 0.72);
+  color: var(--cosmos-color-muted);
+  font-size: 0.62rem;
 }
 </style>

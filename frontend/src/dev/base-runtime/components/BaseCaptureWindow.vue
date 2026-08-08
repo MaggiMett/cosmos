@@ -1,20 +1,29 @@
 <template>
-  <BaseRuntimeWindow title="Capture">
+  <BaseRuntimeWindow :title="workspace?.displayName ?? 'Creation'">
     <div class="capture-window" data-testid="base-capture-window">
-      <div class="capture-window__visual" role="img" aria-label="Material Study capture preview">
+      <div
+        class="capture-window__visual"
+        role="img"
+        :aria-label="workspace ? `${workspace.displayName} visual placeholder` : 'Creation Workspace unavailable'"
+        :data-workspace-id="workspace?.workspaceObjectId"
+      >
         <span v-for="index in 5" :key="index" :class="`capture-window__sample--${index}`" />
       </div>
-      <div class="capture-window__copy">
-        <strong>Material Study 07</strong>
-        <p><span>Saved</span> to Creation</p>
-        <button type="button">Open</button>
+      <div v-if="workspace" class="capture-window__copy">
+        <strong>{{ workspace.displayName }}</strong>
+        <p>{{ workspace.description || "No Workspace description available." }}</p>
+        <small>{{ workspace.sourceProjectId || "Source Project unavailable" }}</small>
       </div>
+      <p v-else class="capture-window__unavailable">Creation Workspace unavailable</p>
     </div>
   </BaseRuntimeWindow>
 </template>
 
 <script setup lang="ts">
 import BaseRuntimeWindow from "./BaseRuntimeWindow.vue";
+import type { BaseWorkspaceSlotPresentation } from "../baseRuntimeProjection";
+
+defineProps<{ workspace: Readonly<BaseWorkspaceSlotPresentation> | null }>();
 </script>
 
 <style scoped>
@@ -61,15 +70,13 @@ import BaseRuntimeWindow from "./BaseRuntimeWindow.vue";
 
 .capture-window__copy {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 96px;
   align-items: center;
-  gap: 4px 10px;
+  gap: 4px;
 }
 
 .capture-window__copy strong,
-.capture-window__copy p {
-  grid-column: 1;
-}
+.capture-window__copy p,
+.capture-window__copy small { min-width: 0; }
 
 .capture-window__copy strong {
   color: #e4ddd2;
@@ -84,19 +91,18 @@ import BaseRuntimeWindow from "./BaseRuntimeWindow.vue";
   font-size: 0.59rem;
 }
 
-.capture-window__copy p span {
-  color: #b7c5cb;
+.capture-window__copy small {
+  overflow: hidden;
+  color: var(--cosmos-color-faint);
+  font-size: 0.52rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.capture-window__copy button {
-  min-height: 30px;
-  grid-row: 1 / 3;
-  grid-column: 2;
-  border: 1px solid var(--cosmos-color-border-strong);
-  border-radius: var(--cosmos-radius-control);
-  background: rgba(255, 255, 255, 0.02);
-  color: var(--cosmos-color-text);
-  cursor: pointer;
-  font-size: 0.63rem;
+.capture-window__unavailable {
+  margin: 0;
+  place-self: center;
+  color: var(--cosmos-color-muted);
+  font-size: 0.62rem;
 }
 </style>

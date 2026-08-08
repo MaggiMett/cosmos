@@ -2,7 +2,7 @@
   <section class="base-runtime-window" :aria-label="`${title} window`">
     <header>
       <strong>{{ title }}</strong>
-      <button type="button" :aria-label="`Close ${title}`">×</button>
+      <button type="button" :aria-label="`Close ${title}`" disabled>×</button>
     </header>
     <div class="base-runtime-window__content">
       <slot />
@@ -56,6 +56,10 @@ defineProps<{ title: string }>();
   color: var(--cosmos-color-muted);
   cursor: pointer;
   font-size: 1rem;
+}
+
+.base-runtime-window > header button:disabled {
+  cursor: default;
 }
 
 .base-runtime-window__content {

@@ -6,28 +6,43 @@
     </div>
 
     <CosmosNavigation
-      current-location="Base · Main Room"
-      :left-neighbor="leftNeighbor"
+      :current-location="currentLocation"
+      :left-neighbor="null"
       :right-neighbor="rightNeighbor"
       :quick-travel-open="false"
     />
 
     <div class="base-runtime-chrome__status" aria-label="Runtime status">
       <span><i class="base-runtime-chrome__dot base-runtime-chrome__dot--synced" />Local · Synced</span>
-      <span><i class="base-runtime-chrome__dot" />Base · Quiet mode</span>
-      <button type="button" aria-label="Open Companion">
-        <CompanionAvatar mode="compact" />
+      <span><i class="base-runtime-chrome__dot" />{{ roomStatus }}</span>
+      <button type="button" :aria-label="companionLabel" disabled>
+        <CompanionAvatar v-if="companion" mode="compact" />
+        <span v-else aria-hidden="true">○</span>
       </button>
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
+
 import CosmosNavigation from "../../../components/cosmos/CosmosNavigation.vue";
 import CompanionAvatar from "../../../components/entities/CompanionAvatar.vue";
+import type { BaseCompanionPresentation } from "../baseRuntimeProjection";
 
-const leftNeighbor = { objectId: "cosmos", displayName: "Cosmos" } as const;
-const rightNeighbor = { objectId: "workshop", displayName: "Workshop" } as const;
+const props = defineProps<{
+  currentLocation: string;
+  roomCount: number;
+  companion: Readonly<BaseCompanionPresentation> | null;
+  rightNeighbor: Readonly<{ objectId: string; displayName: string }> | null;
+}>();
+
+const roomStatus = computed(
+  () => `${props.roomCount} ${props.roomCount === 1 ? "room" : "rooms"} · Quiet mode`,
+);
+const companionLabel = computed(() =>
+  props.companion ? `${props.companion.displayName} available` : "Companion unavailable",
+);
 </script>
 
 <style scoped>
@@ -107,5 +122,9 @@ const rightNeighbor = { objectId: "workshop", displayName: "Workshop" } as const
   border-radius: 50%;
   background: rgba(5, 10, 16, 0.76);
   cursor: pointer;
+}
+
+.base-runtime-chrome__status button:disabled {
+  cursor: default;
 }
 </style>

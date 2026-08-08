@@ -1,29 +1,28 @@
 <template>
-  <BaseRuntimeWindow title="Knowledge">
+  <BaseRuntimeWindow :title="workspace?.displayName ?? 'Knowledge'">
     <div class="knowledge-window" data-testid="base-knowledge-window">
       <label>
         <span aria-hidden="true">⌕</span>
         <span class="knowledge-window__visually-hidden">Search Knowledge</span>
-        <input type="search" placeholder="Search your knowledge" />
+        <input type="search" placeholder="Search unavailable in read-only preview" readonly />
       </label>
 
-      <article class="knowledge-window__featured">
+      <article v-if="workspace" class="knowledge-window__featured" :data-workspace-id="workspace.workspaceObjectId">
         <div class="knowledge-window__visual" aria-hidden="true"><span /><i /></div>
         <div>
-          <strong>Orbital Architecture</strong>
-          <p>Principles of form, light and structure in orbital habitats.</p>
+          <strong>{{ workspace.displayName }}</strong>
+          <p>{{ workspace.description || "No Workspace description available." }}</p>
         </div>
       </article>
+      <p v-else class="knowledge-window__unavailable">Knowledge Workspace unavailable</p>
 
-      <section>
-        <h2>Recent Research</h2>
-        <article v-for="item in recent" :key="item.title">
-          <div class="knowledge-window__thumb" aria-hidden="true"><span /></div>
-          <div>
-            <strong>{{ item.title }}</strong>
-            <p>{{ item.summary }}</p>
-          </div>
-        </article>
+      <section v-if="workspace">
+        <h2>Workspace Runtime</h2>
+        <dl>
+          <div><dt>Slot</dt><dd>{{ workspace.slotDisplayName }}</dd></div>
+          <div><dt>Source Project</dt><dd>{{ workspace.sourceProjectId || "Unavailable" }}</dd></div>
+          <div><dt>Overlay</dt><dd>{{ workspace.overlay || "Unavailable" }}</dd></div>
+        </dl>
       </section>
     </div>
   </BaseRuntimeWindow>
@@ -31,11 +30,9 @@
 
 <script setup lang="ts">
 import BaseRuntimeWindow from "./BaseRuntimeWindow.vue";
+import type { BaseWorkspaceSlotPresentation } from "../baseRuntimeProjection";
 
-const recent = [
-  { title: "Habitat Materials", summary: "Notes on composite shell systems." },
-  { title: "Celestial Mechanics", summary: "Orbital dynamics and resonance patterns." },
-] as const;
+defineProps<{ workspace: Readonly<BaseWorkspaceSlotPresentation> | null }>();
 </script>
 
 <style scoped>
@@ -134,7 +131,7 @@ const recent = [
 .knowledge-window section {
   display: grid;
   min-height: 0;
-  grid-template-rows: 22px repeat(2, minmax(0, 1fr));
+  grid-template-rows: 22px minmax(0, 1fr);
 }
 
 .knowledge-window h2 {
@@ -146,21 +143,38 @@ const recent = [
   text-transform: uppercase;
 }
 
-.knowledge-window section > article {
-  grid-template-columns: 52px minmax(0, 1fr);
+.knowledge-window dl {
+  display: grid;
+  margin: 0;
+  align-content: start;
   border-top: 1px solid rgba(181, 211, 225, 0.07);
-  gap: 9px;
 }
 
-.knowledge-window__thumb {
-  height: 46px;
+.knowledge-window dl > div {
+  display: grid;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(181, 211, 225, 0.07);
+  grid-template-columns: 82px minmax(0, 1fr);
+  gap: 8px;
 }
 
-.knowledge-window__thumb span {
-  position: absolute;
-  inset: 11px;
-  border: 1px solid rgba(181, 211, 225, 0.15);
-  border-radius: 50%;
+.knowledge-window dt,
+.knowledge-window dd {
+  margin: 0;
+  overflow: hidden;
+  color: var(--cosmos-color-muted);
+  font-size: 0.55rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.knowledge-window dd { color: #bdc8cd; }
+
+.knowledge-window__unavailable {
+  grid-row: 2 / 4;
+  place-self: center;
+  color: var(--cosmos-color-muted);
+  font-size: 0.62rem;
 }
 
 .knowledge-window__visually-hidden {

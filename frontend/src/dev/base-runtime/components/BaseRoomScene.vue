@@ -1,11 +1,21 @@
 <template>
-  <div class="base-room-scene" aria-label="Base Main Room" data-testid="base-room-scene">
+  <div
+    class="base-room-scene"
+    :aria-label="`${room.displayName} in ${room.baseName}`"
+    :data-room-id="room.objectId"
+    data-testid="base-room-scene"
+  >
     <div class="base-room-scene__ceiling" aria-hidden="true" />
     <div class="base-room-scene__wall base-room-scene__wall--left" aria-hidden="true" />
     <div class="base-room-scene__wall base-room-scene__wall--right" aria-hidden="true" />
     <div class="base-room-scene__floor" aria-hidden="true" />
 
-    <div class="base-room-scene__cockpit" aria-label="Integrated cockpit workspace">
+    <div
+      v-if="room.cockpit"
+      class="base-room-scene__cockpit"
+      :aria-label="room.cockpit.displayName"
+      :data-cockpit-id="room.cockpit.objectId"
+    >
       <div class="base-room-scene__window">
         <span class="base-room-scene__planet" aria-hidden="true" />
         <i v-for="index in 20" :key="index" :style="starStyle(index)" aria-hidden="true" />
@@ -16,35 +26,47 @@
       <span class="base-room-scene__cockpit-seat base-room-scene__cockpit-seat--right" aria-hidden="true" />
     </div>
 
-    <div class="base-room-scene__door base-room-scene__door--left" aria-label="Closed left room transition"><span /></div>
-    <div class="base-room-scene__door base-room-scene__door--right" aria-label="Closed right room transition"><span /></div>
+    <div
+      v-for="door in room.doorTargets"
+      :key="door.objectId"
+      class="base-room-scene__door"
+      :class="`base-room-scene__door--${door.side}`"
+      :aria-label="door.targetRoomName ? `${door.displayName} to ${door.targetRoomName}` : `${door.displayName}, destination unavailable`"
+      :data-door-id="door.objectId"
+      :data-target-room-id="door.targetRoomId"
+    ><span /></div>
 
-    <section class="base-room-scene__workspace base-room-scene__workspace--knowledge" aria-label="Knowledge Workspace">
-      <span class="base-room-scene__shelf" aria-hidden="true" />
+    <section
+      v-for="slot in room.workspaceSlots"
+      :key="slot.slotObjectId"
+      class="base-room-scene__workspace"
+      :class="`base-room-scene__workspace--${slot.side}`"
+      :aria-label="slot.displayName"
+      :data-slot-id="slot.slotObjectId"
+      :data-workspace-id="slot.workspaceObjectId"
+    >
+      <span v-if="slot.icon?.toLocaleLowerCase() === 'knowledge'" class="base-room-scene__shelf" aria-hidden="true" />
+      <span v-else class="base-room-scene__board" aria-hidden="true" />
       <span class="base-room-scene__desk" aria-hidden="true"><i /><i /></span>
-      <strong>Knowledge Workspace</strong>
-      <small>Library · Research</small>
+      <strong>{{ slot.displayName }}</strong>
+      <small>{{ slot.occupied ? slot.icon ?? slot.skin : "Available workspace slot" }}</small>
     </section>
 
-    <section class="base-room-scene__workspace base-room-scene__workspace--creation" aria-label="Creation and Capture Workspace">
-      <span class="base-room-scene__board" aria-hidden="true" />
-      <span class="base-room-scene__desk" aria-hidden="true"><i /><i /></span>
-      <strong>Creation · Capture</strong>
-      <small>Workbench · Materials</small>
-    </section>
-
-    <div class="base-room-scene__lounge" aria-label="Companion area">
+    <div v-if="room.companion" class="base-room-scene__lounge" :aria-label="`${room.companion.displayName} area`">
       <span class="base-room-scene__rug" aria-hidden="true" />
       <span class="base-room-scene__chair" aria-hidden="true" />
       <span class="base-room-scene__table" aria-hidden="true" />
     </div>
 
-    <BaseCompanionPresence />
+    <BaseCompanionPresence :companion="room.companion" />
   </div>
 </template>
 
 <script setup lang="ts">
 import BaseCompanionPresence from "./BaseCompanionPresence.vue";
+import type { BaseMainRoomPresentation } from "../baseRuntimeProjection";
+
+defineProps<{ room: Readonly<BaseMainRoomPresentation> }>();
 
 function starStyle(index: number) {
   return {
@@ -246,8 +268,9 @@ function starStyle(index: number) {
   color: #dcd8d0;
 }
 
-.base-room-scene__workspace--knowledge { left: 5%; }
-.base-room-scene__workspace--creation { right: 5%; }
+.base-room-scene__workspace--left { left: 5%; }
+.base-room-scene__workspace--right { right: 5%; }
+.base-room-scene__workspace--center { left: 35.5%; }
 
 .base-room-scene__workspace > strong,
 .base-room-scene__workspace > small {
@@ -256,10 +279,12 @@ function starStyle(index: number) {
   text-shadow: 0 2px 7px #050607;
 }
 
-.base-room-scene__workspace--knowledge > strong,
-.base-room-scene__workspace--knowledge > small { left: 6%; }
-.base-room-scene__workspace--creation > strong,
-.base-room-scene__workspace--creation > small { right: 6%; text-align: right; }
+.base-room-scene__workspace--left > strong,
+.base-room-scene__workspace--left > small { left: 6%; }
+.base-room-scene__workspace--right > strong,
+.base-room-scene__workspace--right > small { right: 6%; text-align: right; }
+.base-room-scene__workspace--center > strong,
+.base-room-scene__workspace--center > small { left: 6%; }
 
 .base-room-scene__workspace > strong {
   bottom: 7%;
@@ -288,7 +313,7 @@ function starStyle(index: number) {
   box-shadow: 0 18px 25px rgba(0, 0, 0, 0.38);
 }
 
-.base-room-scene__workspace--creation .base-room-scene__desk {
+.base-room-scene__workspace--right .base-room-scene__desk {
   background: linear-gradient(155deg, #4d4439, #221d19 70%);
 }
 

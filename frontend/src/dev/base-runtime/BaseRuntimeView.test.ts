@@ -45,61 +45,83 @@ describe("Base Main Room Runtime visual slice", () => {
     expect(combined).not.toContain("themeBuilder.css");
   });
 
-  it("contains the complete edge chrome and Main Room location", () => {
+  it("projects real location, Room target and Companion state into existing edge chrome", () => {
+    const view = sourceFor("./BaseRuntimeView.vue");
     const chrome = sourceFor("./components/BaseRuntimeChrome.vue");
 
-    expect(chrome).toContain("Base · Main Room");
-    expect(chrome).toContain("Workshop");
+    expect(view).toContain(':current-location="presentation.currentLocation"');
+    expect(view).toContain(':right-neighbor="rightNeighbor"');
+    expect(view).toContain("presentation.room.companion");
     expect(chrome).toContain("Local · Synced");
-    expect(chrome).toContain("Base · Quiet mode");
-    expect(chrome).toContain("Open Companion");
+    expect(chrome).toContain("roomStatus");
+    expect(chrome).toContain("Companion unavailable");
+    expect(chrome).toContain("disabled");
   });
 
-  it("keeps the room as the primary composition", () => {
+  it("keeps the room primary while rendering only projected Runtime entities", () => {
     const room = sourceFor("./components/BaseRoomScene.vue");
 
-    expect(room).toContain("Integrated cockpit workspace");
-    expect(room).toContain("Knowledge Workspace");
-    expect(room).toContain("Creation and Capture Workspace");
-    expect(room).toContain("Companion area");
-    expect(room).toContain("Closed left room transition");
-    expect(room).toContain("Closed right room transition");
+    expect(room).toContain(':data-room-id="room.objectId"');
+    expect(room).toContain('v-if="room.cockpit"');
+    expect(room).toContain('v-for="door in room.doorTargets"');
+    expect(room).toContain(':data-door-id="door.objectId"');
+    expect(room).toContain(':data-target-room-id="door.targetRoomId"');
+    expect(room).toContain('v-for="slot in room.workspaceSlots"');
+    expect(room).toContain(':data-slot-id="slot.slotObjectId"');
+    expect(room).toContain(':data-workspace-id="slot.workspaceObjectId"');
+    expect(room).toContain(':companion="room.companion"');
   });
 
-  it("contains the requested Knowledge window structure", () => {
+  it("uses real Workspace summaries in the existing Knowledge and Capture windows", () => {
     const knowledge = sourceFor("./components/BaseKnowledgeWindow.vue");
-
-    expect(knowledge).toContain("Search your knowledge");
-    expect(knowledge).toContain("Orbital Architecture");
-    expect(knowledge).toContain("Recent Research");
-    expect(knowledge).toContain("Habitat Materials");
-    expect(knowledge).toContain("Celestial Mechanics");
-  });
-
-  it("contains the requested Capture and Companion summaries", () => {
     const capture = sourceFor("./components/BaseCaptureWindow.vue");
-    const companion = sourceFor("./components/BaseCompanionPresence.vue");
 
-    expect(capture).toContain("Material Study 07");
-    expect(capture).toContain("Saved");
-    expect(capture).toContain("Open");
-    expect(companion).toContain("Ready when you are");
+    expect(knowledge).toContain("workspace.displayName");
+    expect(knowledge).toContain("workspace.sourceProjectId");
+    expect(knowledge).toContain("Knowledge Workspace unavailable");
+    expect(capture).toContain("workspace.displayName");
+    expect(capture).toContain("workspace.sourceProjectId");
+    expect(capture).toContain("Creation Workspace unavailable");
+    for (const fixture of [
+      "Orbital Architecture",
+      "Recent Research",
+      "Habitat Materials",
+      "Celestial Mechanics",
+      "Material Study 07",
+    ]) {
+      expect(`${knowledge}\n${capture}`).not.toContain(fixture);
+    }
   });
 
-  it("remains static, asset-free and free of window manipulation", () => {
+  it("loads through useCosmosRuntime but remains read-only and asset-free", () => {
     const combined = files.map(sourceFor).join("\n");
+    const view = sourceFor("./BaseRuntimeView.vue");
 
     expect(combined).not.toContain("fetch(");
     expect(combined).not.toContain("/api");
-    expect(combined).not.toContain("useCosmosRuntime");
+    expect(view).toContain("useCosmosRuntime");
+    expect(view).toContain("loadBaseRuntimeSnapshot(runtime.base)");
     expect(combined).not.toContain("localStorage");
     expect(combined).not.toContain("sessionStorage");
     expect(combined).not.toContain("<img");
     expect(combined).not.toContain("@pointerdown");
-    expect(combined).not.toContain("resize");
-    expect(combined).not.toContain("drag");
-    expect(combined).not.toContain("Map");
-    expect(combined).not.toContain("Project");
-    expect(combined).not.toContain("Node");
+    expect(combined).not.toContain("@click");
+    expect(combined).not.toContain("router.push");
+    expect(combined).not.toContain("runtime.base.select");
+    expect(combined).not.toContain("runtime.windows");
+    expect(combined).not.toContain("runtime.workspaces");
+    expect(combined).not.toContain("runtime.transitions");
+    expect(combined).not.toContain("runtime.objectInteractions");
+    expect(combined).not.toContain("CosmosMapRuntime");
+    expect(combined).not.toContain("moveNode");
+  });
+
+  it("contains quiet Loading, Error and Empty states", () => {
+    const view = sourceFor("./BaseRuntimeView.vue");
+
+    expect(view).toContain("Loading Base");
+    expect(view).toContain("Base is unavailable");
+    expect(view).toContain("Base is quiet");
+    expect(view).toContain("presentation.phase === 'success'");
   });
 });
