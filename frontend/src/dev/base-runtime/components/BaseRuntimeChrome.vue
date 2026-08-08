@@ -10,12 +10,18 @@
       :left-neighbor="null"
       :right-neighbor="rightNeighbor"
       :quick-travel-open="false"
+      @travel="$emit('travel-room', $event)"
     />
 
     <div class="base-runtime-chrome__status" aria-label="Runtime status">
       <span><i class="base-runtime-chrome__dot base-runtime-chrome__dot--synced" />Local · Synced</span>
       <span><i class="base-runtime-chrome__dot" />{{ roomStatus }}</span>
-      <button type="button" :aria-label="companionLabel" disabled>
+      <button
+        type="button"
+        :aria-label="companionLabel"
+        :disabled="!companion"
+        @click="$emit('open-companion')"
+      >
         <CompanionAvatar v-if="companion" mode="compact" />
         <span v-else aria-hidden="true">○</span>
       </button>
@@ -35,6 +41,11 @@ const props = defineProps<{
   roomCount: number;
   companion: Readonly<BaseCompanionPresentation> | null;
   rightNeighbor: Readonly<{ objectId: string; displayName: string }> | null;
+}>();
+
+defineEmits<{
+  "travel-room": [roomId: string];
+  "open-companion": [];
 }>();
 
 const roomStatus = computed(
@@ -126,5 +137,11 @@ const companionLabel = computed(() =>
 
 .base-runtime-chrome__status button:disabled {
   cursor: default;
+}
+
+.base-runtime-chrome__status button:focus-visible {
+  border-color: var(--cosmos-color-accent);
+  outline: 2px solid color-mix(in srgb, var(--cosmos-color-accent) 58%, transparent);
+  outline-offset: 2px;
 }
 </style>

@@ -55,7 +55,8 @@ describe("Base Main Room Runtime visual slice", () => {
     expect(chrome).toContain("Local · Synced");
     expect(chrome).toContain("roomStatus");
     expect(chrome).toContain("Companion unavailable");
-    expect(chrome).toContain("disabled");
+    expect(chrome).toContain(':disabled="!companion"');
+    expect(chrome).toContain("@travel=\"$emit('travel-room', $event)\"");
   });
 
   it("keeps the room primary while rendering only projected Runtime entities", () => {
@@ -70,6 +71,10 @@ describe("Base Main Room Runtime visual slice", () => {
     expect(room).toContain(':data-slot-id="slot.slotObjectId"');
     expect(room).toContain(':data-workspace-id="slot.workspaceObjectId"');
     expect(room).toContain(':companion="room.companion"');
+    expect(room).toContain("<button");
+    expect(room).toContain("@click=\"door.targetRoomId && $emit('travel-room', door.targetRoomId)\"");
+    expect(room).toContain("@click=\"$emit('open-workspace', slot)\"");
+    expect(room).toContain(':disabled="!slot.workspaceObjectId"');
   });
 
   it("uses real Workspace summaries in the existing Knowledge and Capture windows", () => {
@@ -93,7 +98,7 @@ describe("Base Main Room Runtime visual slice", () => {
     }
   });
 
-  it("loads through useCosmosRuntime but remains read-only and asset-free", () => {
+  it("uses only existing Router and Runtime interaction paths and remains asset-free", () => {
     const combined = files.map(sourceFor).join("\n");
     const view = sourceFor("./BaseRuntimeView.vue");
 
@@ -101,19 +106,67 @@ describe("Base Main Room Runtime visual slice", () => {
     expect(combined).not.toContain("/api");
     expect(view).toContain("useCosmosRuntime");
     expect(view).toContain("loadBaseRuntimeSnapshot(runtime.base)");
+    expect(view).toContain("navigateToBaseRoom(router, runtime.base");
+    expect(view).toContain("navigateToBaseWorkspace(router, runtime.base");
+    expect(view).toContain("<CompanionWindowHost");
+    expect(view).toContain("companionWindowHost.value?.open()");
+    expect(view).toContain("<ObjectInteractionHost");
+    expect(view).toContain('openObject(objectId, "details")');
     expect(combined).not.toContain("localStorage");
     expect(combined).not.toContain("sessionStorage");
     expect(combined).not.toContain("<img");
     expect(combined).not.toContain("@pointerdown");
-    expect(combined).not.toContain("@click");
-    expect(combined).not.toContain("router.push");
-    expect(combined).not.toContain("runtime.base.select");
-    expect(combined).not.toContain("runtime.windows");
-    expect(combined).not.toContain("runtime.workspaces");
     expect(combined).not.toContain("runtime.transitions");
-    expect(combined).not.toContain("runtime.objectInteractions");
     expect(combined).not.toContain("CosmosMapRuntime");
     expect(combined).not.toContain("moveNode");
+  });
+
+  it("keeps keyboard activation native and visually distinguishes focus", () => {
+    const room = sourceFor("./components/BaseRoomScene.vue");
+    const companion = sourceFor("./components/BaseCompanionPresence.vue");
+    const chrome = sourceFor("./components/BaseRuntimeChrome.vue");
+
+    expect(room).toContain('type="button"');
+    expect(companion).toContain('type="button"');
+    expect(room).toContain(":focus-visible");
+    expect(companion).toContain(":focus-visible");
+    expect(chrome).toContain(":focus-visible");
+    expect(`${room}\n${companion}\n${chrome}`).not.toContain("tabindex");
+    expect(`${room}\n${companion}\n${chrome}`).not.toContain("@keydown");
+  });
+
+  it("reuses the productive Workspace and Window lifecycle rather than duplicating it", () => {
+    const view = sourceFor("./BaseRuntimeView.vue");
+    const workspaceView = readFileSync(
+      fileURLToPath(new URL("../../views/WorkspaceView.vue", import.meta.url)),
+      "utf8",
+    );
+    const companionHost = readFileSync(
+      fileURLToPath(new URL("../../components/cosmos/CompanionWindowHost.vue", import.meta.url)),
+      "utf8",
+    );
+
+    expect(view).toContain("navigateToBaseWorkspace");
+    expect(workspaceView).toContain("runtime.workspaces.open");
+    expect(workspaceView).toContain("runtime.tools.loadDefinitions()");
+    expect(workspaceView).toContain("runtime.tools");
+    expect(companionHost).toContain("runtime.windows.open");
+    expect(companionHost).toContain("runtime.windows.focus");
+    expect(view).not.toContain("runtime.workspaces.open");
+    expect(view).not.toContain("runtime.windows.open");
+    expect(view).not.toContain("runtime.tools.open");
+  });
+
+  it("leaves the productive BaseView interaction contract intact", () => {
+    const baseView = readFileSync(
+      fileURLToPath(new URL("../../views/BaseView.vue", import.meta.url)),
+      "utf8",
+    );
+
+    expect(baseView).toContain("runtime.base.select(objectId)");
+    expect(baseView).toContain('router.push(`/workspaces/${slot.workspace.objectId}`)');
+    expect(baseView).toContain("companionWindowHost.value?.open()");
+    expect(baseView).toContain("travelThroughDoor");
   });
 
   it("contains quiet Loading, Error and Empty states", () => {

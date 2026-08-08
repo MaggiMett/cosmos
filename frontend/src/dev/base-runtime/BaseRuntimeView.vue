@@ -1,6 +1,12 @@
 <template>
   <section class="base-runtime-view environment-view" aria-label="Base Main Room Runtime" data-testid="base-runtime-view">
-    <BaseRoomScene v-if="presentation.phase === 'success'" :room="presentation.room" />
+    <BaseRoomScene
+      v-if="presentation.phase === 'success'"
+      :room="presentation.room"
+      @travel-room="travelToRoom"
+      @open-workspace="openWorkspace"
+      @open-companion="openCompanion"
+    />
     <div
       v-else
       class="base-runtime-view__state"
@@ -22,6 +28,8 @@
       :room-count="presentation.roomCount"
       :companion="presentation.phase === 'success' ? presentation.room.companion : null"
       :right-neighbor="rightNeighbor"
+      @travel-room="travelToRoom"
+      @open-companion="openCompanion"
     />
     <template v-if="presentation.phase === 'success'">
       <BaseKnowledgeWindow
@@ -32,22 +40,37 @@
         class="base-runtime-view__capture"
         :workspace="presentation.room.creationWorkspace"
       />
+      <CompanionWindowHost
+        ref="companionWindowHost"
+        :current-location="presentation.room.displayName"
+        :context="{ roomId: presentation.room.objectId, objectId: baseState.selectedObjectId }"
+        @destination="openObject"
+      />
+      <ObjectInteractionHost ref="objectInteractionHost" />
     </template>
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 
+import CompanionWindowHost from "../../components/cosmos/CompanionWindowHost.vue";
+import ObjectInteractionHost from "../../components/windows/ObjectInteractionHost.vue";
 import { useCosmosRuntime } from "../../runtime/plugin";
 import BaseCaptureWindow from "./components/BaseCaptureWindow.vue";
 import BaseKnowledgeWindow from "./components/BaseKnowledgeWindow.vue";
 import BaseRoomScene from "./components/BaseRoomScene.vue";
 import BaseRuntimeChrome from "./components/BaseRuntimeChrome.vue";
+import type { BaseWorkspaceSlotPresentation } from "./baseRuntimeProjection";
 import { loadBaseRuntimeSnapshot, projectBaseRuntimeState } from "./baseRuntimeProjection";
+import { navigateToBaseRoom, navigateToBaseWorkspace } from "./baseRuntimeInteractions";
 
 const runtime = useCosmosRuntime();
+const router = useRouter();
 const baseState = runtime.base.state;
+const companionWindowHost = ref<InstanceType<typeof CompanionWindowHost> | null>(null);
+const objectInteractionHost = ref<InstanceType<typeof ObjectInteractionHost> | null>(null);
 const presentation = computed(() =>
   projectBaseRuntimeState(baseState.phase, baseState.snapshot, baseState.error),
 );
@@ -59,6 +82,24 @@ const rightNeighbor = computed(() => {
     ? { objectId: target.targetRoomId, displayName: target.targetRoomName }
     : null;
 });
+
+function travelToRoom(targetRoomId: string) {
+  const snapshot = baseState.snapshot;
+  if (!snapshot) return;
+  void navigateToBaseRoom(router, runtime.base, snapshot, targetRoomId);
+}
+
+function openWorkspace(slot: Readonly<BaseWorkspaceSlotPresentation>) {
+  void navigateToBaseWorkspace(router, runtime.base, slot);
+}
+
+function openCompanion() {
+  companionWindowHost.value?.open();
+}
+
+function openObject(objectId: string) {
+  void objectInteractionHost.value?.openObject(objectId, "details").catch(() => undefined);
+}
 
 onMounted(() => {
   void loadBaseRuntimeSnapshot(runtime.base).catch(() => undefined);

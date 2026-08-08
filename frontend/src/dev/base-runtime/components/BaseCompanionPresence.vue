@@ -1,6 +1,12 @@
 <template>
-  <div class="base-companion-presence" data-testid="base-companion-presence">
-    <template v-if="companion">
+  <button
+    v-if="companion"
+    type="button"
+    class="base-companion-presence"
+    data-testid="base-companion-presence"
+    :aria-label="`Open ${companion.displayName}`"
+    @click="$emit('open')"
+  >
       <div class="base-companion-presence__avatar" :data-companion-id="companion.objectId">
         <CompanionAvatar
           mode="compact"
@@ -11,8 +17,9 @@
         <strong><span aria-hidden="true">✦</span> {{ companion.displayName }}</strong>
         <p>{{ companion.description || "Available in Base" }}</p>
       </div>
-    </template>
-    <p v-else class="base-companion-presence__unavailable">Companion unavailable</p>
+  </button>
+  <div v-else class="base-companion-presence" data-testid="base-companion-presence">
+    <p class="base-companion-presence__unavailable">Companion unavailable</p>
   </div>
 </template>
 
@@ -21,6 +28,7 @@ import CompanionAvatar from "../../../components/entities/CompanionAvatar.vue";
 import type { BaseCompanionPresentation } from "../baseRuntimeProjection";
 
 defineProps<{ companion: Readonly<BaseCompanionPresentation> | null }>();
+defineEmits<{ open: [] }>();
 </script>
 
 <style scoped>
@@ -32,7 +40,19 @@ defineProps<{ companion: Readonly<BaseCompanionPresentation> | null }>();
   width: 310px;
   height: 130px;
   transform: translateX(-18%);
-  pointer-events: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: initial;
+}
+
+.base-companion-presence:focus-visible {
+  border-radius: var(--cosmos-radius-window);
+  outline: 2px solid var(--cosmos-color-accent);
+  outline-offset: 4px;
 }
 
 .base-companion-presence__avatar {

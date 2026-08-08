@@ -26,31 +26,37 @@
       <span class="base-room-scene__cockpit-seat base-room-scene__cockpit-seat--right" aria-hidden="true" />
     </div>
 
-    <div
+    <button
       v-for="door in room.doorTargets"
       :key="door.objectId"
+      type="button"
       class="base-room-scene__door"
       :class="`base-room-scene__door--${door.side}`"
       :aria-label="door.targetRoomName ? `${door.displayName} to ${door.targetRoomName}` : `${door.displayName}, destination unavailable`"
       :data-door-id="door.objectId"
       :data-target-room-id="door.targetRoomId"
-    ><span /></div>
+      :disabled="!door.targetRoomId"
+      @click="door.targetRoomId && $emit('travel-room', door.targetRoomId)"
+    ><span /></button>
 
-    <section
+    <button
       v-for="slot in room.workspaceSlots"
       :key="slot.slotObjectId"
+      type="button"
       class="base-room-scene__workspace"
       :class="`base-room-scene__workspace--${slot.side}`"
       :aria-label="slot.displayName"
       :data-slot-id="slot.slotObjectId"
       :data-workspace-id="slot.workspaceObjectId"
+      :disabled="!slot.workspaceObjectId"
+      @click="$emit('open-workspace', slot)"
     >
       <span v-if="slot.icon?.toLocaleLowerCase() === 'knowledge'" class="base-room-scene__shelf" aria-hidden="true" />
       <span v-else class="base-room-scene__board" aria-hidden="true" />
       <span class="base-room-scene__desk" aria-hidden="true"><i /><i /></span>
       <strong>{{ slot.displayName }}</strong>
       <small>{{ slot.occupied ? slot.icon ?? slot.skin : "Available workspace slot" }}</small>
-    </section>
+    </button>
 
     <div v-if="room.companion" class="base-room-scene__lounge" :aria-label="`${room.companion.displayName} area`">
       <span class="base-room-scene__rug" aria-hidden="true" />
@@ -58,7 +64,7 @@
       <span class="base-room-scene__table" aria-hidden="true" />
     </div>
 
-    <BaseCompanionPresence :companion="room.companion" />
+    <BaseCompanionPresence :companion="room.companion" @open="$emit('open-companion')" />
   </div>
 </template>
 
@@ -67,6 +73,12 @@ import BaseCompanionPresence from "./BaseCompanionPresence.vue";
 import type { BaseMainRoomPresentation } from "../baseRuntimeProjection";
 
 defineProps<{ room: Readonly<BaseMainRoomPresentation> }>();
+
+defineEmits<{
+  "travel-room": [roomId: string];
+  "open-workspace": [slot: Readonly<BaseMainRoomPresentation["workspaceSlots"][number]>];
+  "open-companion": [];
+}>();
 
 function starStyle(index: number) {
   return {
@@ -240,6 +252,14 @@ function starStyle(index: number) {
   border-radius: 44% 44% 4px 4px / 14% 14% 4px 4px;
   background: linear-gradient(90deg, #0d1011, #272522 50%, #0d1011);
   box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.58), 0 0 0 5px rgba(28, 28, 27, 0.8);
+  cursor: pointer;
+}
+
+.base-room-scene__door:disabled { cursor: default; }
+.base-room-scene__door:focus-visible,
+.base-room-scene__workspace:focus-visible {
+  outline: 2px solid var(--cosmos-color-accent);
+  outline-offset: 4px;
 }
 
 .base-room-scene__door--left { left: -1%; }
@@ -265,8 +285,16 @@ function starStyle(index: number) {
   bottom: 8%;
   width: 29%;
   height: 39%;
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: #dcd8d0;
+  cursor: pointer;
+  font: inherit;
+  text-align: initial;
 }
+
+.base-room-scene__workspace:disabled { cursor: default; }
 
 .base-room-scene__workspace--left { left: 5%; }
 .base-room-scene__workspace--right { right: 5%; }
