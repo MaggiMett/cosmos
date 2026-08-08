@@ -137,7 +137,7 @@ export const routeRecords = [
     name: "dev-cosmos-project",
     component: () => import("../dev/cosmos-project/CosmosProjectView.vue"),
     meta: {
-      title: "Asteria · Project Cosmos",
+      title: "Project Cosmos",
       environment: "cosmos",
     },
   },

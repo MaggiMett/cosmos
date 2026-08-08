@@ -222,9 +222,10 @@ describe("Cosmos routing", () => {
 
     expect(projectCosmos.name).toBe("dev-cosmos-project");
     expect(projectCosmos.meta).toMatchObject({
-      title: "Asteria · Project Cosmos",
+      title: "Project Cosmos",
       environment: "cosmos",
     });
+    expect(String(projectCosmos.meta.title)).not.toContain("Asteria");
     expect(projectCosmos.meta.developmentPreview).not.toBe(true);
     expect(String(projectCosmosRecord?.component)).toContain("CosmosProjectView.vue");
   });

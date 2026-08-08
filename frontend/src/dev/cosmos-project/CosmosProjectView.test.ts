@@ -50,7 +50,10 @@ describe("Project Cosmos visual slice", () => {
     expect(view).toContain("route.query.projectId");
     expect(view).toContain("projectIdFromQuery");
     expect(chrome).toContain(":current-location=\"projectName\"");
-    expect(chrome).toContain(':left-neighbor="null"');
+    expect(chrome).toContain(':left-neighbor="globalNeighbor"');
+    expect(chrome).toContain("@travel=\"$emit('back-to-global')\"");
+    expect(view).toContain('@back-to-global="backToGlobal"');
+    expect(view).toContain("navigateToGlobal(router)");
     expect(chrome).toContain("Local · Synced");
     expect(chrome).toContain("objectStatus");
     expect(controls).toContain("zoomLabel");

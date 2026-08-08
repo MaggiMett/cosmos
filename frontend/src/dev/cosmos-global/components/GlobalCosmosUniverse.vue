@@ -4,9 +4,10 @@
     :aria-label="`${regions.length} project regions`"
     data-testid="global-cosmos-universe"
   >
-    <article
+    <button
       v-for="region in regions"
       :key="region.objectId"
+      type="button"
       class="project-region"
       :class="{
         'project-region--focused': region.isFocused,
@@ -17,6 +18,7 @@
       :data-project-id="region.objectId"
       :data-node-count="region.nodeCount"
       :data-connection-count="region.connectionCount"
+      @click="$emit('activate-project', region.objectId)"
     >
       <span class="project-region__nebula" aria-hidden="true" />
       <span
@@ -35,11 +37,11 @@
         :aria-label="star.displayName"
         :data-node-id="star.objectId"
       />
-      <div class="project-region__core">
+      <span class="project-region__core">
         <i aria-hidden="true" />
         <strong>{{ region.displayName }}</strong>
-      </div>
-    </article>
+      </span>
+    </button>
   </div>
 </template>
 
@@ -48,6 +50,10 @@ import type { GlobalCosmosRegionPresentation } from "../globalCosmosProjection";
 
 defineProps<{
   regions: readonly Readonly<GlobalCosmosRegionPresentation>[];
+}>();
+
+defineEmits<{
+  "activate-project": [projectId: string];
 }>();
 
 function regionLabel(region: Readonly<GlobalCosmosRegionPresentation>): string {
@@ -66,12 +72,24 @@ function regionLabel(region: Readonly<GlobalCosmosRegionPresentation>): string {
 
 .project-region {
   --region-light: 116, 190, 226;
+  padding: 0;
+  border: 0;
+  appearance: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
   position: absolute;
   top: var(--region-top);
   left: var(--region-left);
   width: var(--region-width);
   height: var(--region-height);
   transform: translate(-50%, -50%);
+  text-align: initial;
+}
+
+.project-region:focus-visible {
+  outline: none;
 }
 
 .project-region__nebula {
@@ -117,6 +135,21 @@ function regionLabel(region: Readonly<GlobalCosmosRegionPresentation>): string {
   display: grid;
   transform: translate(-50%, -50%);
   place-items: center;
+}
+
+.project-region__core::before {
+  position: absolute;
+  inset: -30px;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.project-region:focus-visible .project-region__core::before {
+  border-color: rgba(var(--region-light), 0.58);
+  box-shadow: 0 0 28px rgba(var(--region-light), 0.2), inset 0 0 22px rgba(var(--region-light), 0.08);
 }
 
 .project-region__core i {

@@ -7,9 +7,10 @@
 
     <CosmosNavigation
       :current-location="projectName"
-      :left-neighbor="null"
+      :left-neighbor="globalNeighbor"
       :right-neighbor="null"
       :quick-travel-open="false"
+      @travel="$emit('back-to-global')"
     />
 
     <div class="project-cosmos-chrome__status" aria-label="Project status">
@@ -30,6 +31,12 @@ const props = defineProps<{
   objectCount: number;
   phase: "loading" | "error" | "not-found" | "empty-project" | "success";
 }>();
+
+defineEmits<{
+  "back-to-global": [];
+}>();
+
+const globalNeighbor = { objectId: "dev-cosmos-global", displayName: "Global View" } as const;
 
 const objectStatus = computed(() => {
   if (props.phase === "loading") return "Loading objects";

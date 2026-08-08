@@ -47,9 +47,14 @@ describe("Global Cosmos visual slice", () => {
     const universe = sourceFor("./components/GlobalCosmosUniverse.vue");
 
     expect(universe).toContain('v-for="region in regions"');
+    expect(universe).toContain("<button");
+    expect(universe).toContain('type="button"');
     expect(universe).toContain('v-for="star in region.stars"');
     expect(universe).toContain(':data-project-id="region.objectId"');
     expect(universe).toContain(':data-node-id="star.objectId"');
+    expect(universe).toContain(':aria-label="regionLabel(region)"');
+    expect(universe).toContain("@click=\"$emit('activate-project', region.objectId)\"");
+    expect(universe).toContain(".project-region:focus-visible");
     for (const name of ["Asteria", "Forge", "Atlas", "Mettventures", "Archive", "Sandbox"]) {
       expect(universe).not.toContain(name);
     }
@@ -73,7 +78,7 @@ describe("Global Cosmos visual slice", () => {
     const combined = files.map(sourceFor).join("\n");
 
     expect(combined).not.toContain("<svg");
-    expect(combined).not.toContain("@click");
+    expect(combined).toContain("@click");
     expect(combined).not.toContain("@pointer");
     expect(combined).not.toContain("contextmenu");
     expect(combined).not.toContain("drag");
@@ -87,6 +92,7 @@ describe("Global Cosmos visual slice", () => {
     expect(combined).not.toContain("/api");
     expect(view).toContain("useCosmosRuntime");
     expect(view).toContain("loadGlobalCosmosSnapshot(runtime.cosmosMap)");
+    expect(view).toContain("navigateToProject(router, projectId)");
     expect(view).not.toContain("persistCamera");
     expect(view).not.toContain("persistNodePosition");
     expect(view).not.toContain("persistSelection");

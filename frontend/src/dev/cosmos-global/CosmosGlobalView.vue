@@ -9,6 +9,7 @@
     <GlobalCosmosUniverse
       v-if="presentation.phase === 'success'"
       :regions="presentation.regions"
+      @activate-project="openProject"
     />
 
     <div
@@ -39,7 +40,9 @@
 
 <script setup lang="ts">
 import { computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
 
+import { navigateToProject } from "../cosmosNavigation";
 import { useCosmosRuntime } from "../../runtime/plugin";
 import GlobalCosmosChrome from "./components/GlobalCosmosChrome.vue";
 import GlobalCosmosControls from "./components/GlobalCosmosControls.vue";
@@ -47,10 +50,15 @@ import GlobalCosmosUniverse from "./components/GlobalCosmosUniverse.vue";
 import { loadGlobalCosmosSnapshot, projectGlobalCosmosState } from "./globalCosmosProjection";
 
 const runtime = useCosmosRuntime();
+const router = useRouter();
 const mapState = runtime.cosmosMap.state;
 const presentation = computed(() =>
   projectGlobalCosmosState(mapState.phase, mapState.snapshot, mapState.error),
 );
+
+function openProject(projectId: string): void {
+  void navigateToProject(router, projectId);
+}
 
 onMounted(() => {
   void loadGlobalCosmosSnapshot(runtime.cosmosMap).catch(() => undefined);

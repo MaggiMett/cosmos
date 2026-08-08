@@ -37,6 +37,7 @@
       :project-name="presentation.projectName"
       :object-count="presentation.objectCount"
       :phase="presentation.phase"
+      @back-to-global="backToGlobal"
     />
     <ProjectCosmosControls
       :project-name="presentation.projectName"
@@ -47,8 +48,9 @@
 
 <script setup lang="ts">
 import { computed, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
+import { navigateToGlobal } from "../cosmosNavigation";
 import { useCosmosRuntime } from "../../runtime/plugin";
 import AsteriaConstellation from "./components/AsteriaConstellation.vue";
 import ProjectCosmosChrome from "./components/ProjectCosmosChrome.vue";
@@ -61,6 +63,7 @@ import {
 
 const runtime = useCosmosRuntime();
 const route = useRoute();
+const router = useRouter();
 const mapState = runtime.cosmosMap.state;
 const requestedProjectId = computed(() => projectIdFromQuery(route.query.projectId));
 const presentation = computed(() =>
@@ -75,6 +78,10 @@ const visibleProject = computed(() => {
   const state = presentation.value;
   return state.phase === "success" || state.phase === "empty-project" ? state.project : null;
 });
+
+function backToGlobal(): void {
+  void navigateToGlobal(router);
+}
 
 onMounted(() => {
   void loadProjectCosmosSnapshot(runtime.cosmosMap).catch(() => undefined);
