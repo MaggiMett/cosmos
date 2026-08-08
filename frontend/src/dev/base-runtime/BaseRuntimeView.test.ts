@@ -11,6 +11,7 @@ const files = [
   "./components/BaseKnowledgeWindow.vue",
   "./components/BaseCaptureWindow.vue",
   "./components/BaseCompanionPresence.vue",
+  "./components/BasePetPresence.vue",
   "./components/BaseRoomScene.vue",
 ] as const;
 
@@ -71,10 +72,11 @@ describe("Base Main Room Runtime visual slice", () => {
     expect(room).toContain(':data-slot-id="slot.slotObjectId"');
     expect(room).toContain(':data-workspace-id="slot.workspaceObjectId"');
     expect(room).toContain(':companion="room.companion"');
+    expect(room).toContain(':pet="room.pet"');
     expect(room).toContain("<button");
     expect(room).toContain("@click=\"door.targetRoomId && $emit('travel-room', door.targetRoomId)\"");
     expect(room).toContain("@click=\"$emit('open-workspace', slot)\"");
-    expect(room).toContain(':disabled="!slot.workspaceObjectId"');
+    expect(room).toContain(':aria-pressed="selectedObjectId === slot.slotObjectId"');
   });
 
   it("uses real Workspace summaries in the existing Knowledge and Capture windows", () => {
@@ -108,6 +110,7 @@ describe("Base Main Room Runtime visual slice", () => {
     expect(view).toContain("loadBaseRuntimeSnapshot(runtime.base)");
     expect(view).toContain("navigateToBaseRoom(router, runtime.base");
     expect(view).toContain("navigateToBaseWorkspace(router, runtime.base");
+    expect(view).toContain("navigateFromBase(router)");
     expect(view).toContain("<CompanionWindowHost");
     expect(view).toContain("companionWindowHost.value?.open()");
     expect(view).toContain("<ObjectInteractionHost");
@@ -121,6 +124,47 @@ describe("Base Main Room Runtime visual slice", () => {
     expect(combined).not.toContain("moveNode");
   });
 
+  it("reuses the server-driven Object Context Menu for Base and Workspace objects", () => {
+    const view = sourceFor("./BaseRuntimeView.vue");
+    const room = sourceFor("./components/BaseRoomScene.vue");
+
+    expect(room).toContain("@contextmenu.self.prevent");
+    expect(room).toContain("room.baseObjectId");
+    expect(room).toContain("@contextmenu.prevent.stop");
+    expect(room).toContain("slot.workspaceObjectId ?? slot.slotObjectId");
+    expect(view).toContain("objectInteractionHost.value");
+    expect(view).toContain("?.openContextMenu(objectId");
+    expect(view).toContain("x: event.clientX, y: event.clientY");
+    expect(view).not.toContain("ContextMenuState");
+    expect(view).not.toContain("ObjectAction");
+  });
+
+  it("projects the real Pet and preserves the Legacy greeting behavior", () => {
+    const pet = sourceFor("./components/BasePetPresence.vue");
+
+    expect(pet).toContain(':data-pet-id="pet.objectId"');
+    expect(pet).toContain('`Pet ${pet.displayName}`');
+    expect(pet).toContain("const greeting = ref(false)");
+    expect(pet).toContain("greetingTimer = setTimeout");
+    expect(pet).toContain("}, 1600)");
+    expect(pet).toContain("onBeforeUnmount");
+    expect(pet).not.toContain("cosmos.entity");
+    expect(pet).not.toContain("runtime.");
+  });
+
+  it("retains Legacy retry, return-to-Cosmos and selected empty-Slot feedback", () => {
+    const view = sourceFor("./BaseRuntimeView.vue");
+    const room = sourceFor("./components/BaseRoomScene.vue");
+    const chrome = sourceFor("./components/BaseRuntimeChrome.vue");
+
+    expect(view).toContain('presentation.phase === \'error\'');
+    expect(view).toContain('@click="loadBase"');
+    expect(view).toContain('@close-base="closeBase"');
+    expect(chrome).toContain('aria-label="Return to Cosmos"');
+    expect(room).toContain("selectedSlot");
+    expect(room).toContain("Available for a future Workspace");
+  });
+
   it("keeps keyboard activation native and visually distinguishes focus", () => {
     const room = sourceFor("./components/BaseRoomScene.vue");
     const companion = sourceFor("./components/BaseCompanionPresence.vue");
@@ -128,6 +172,7 @@ describe("Base Main Room Runtime visual slice", () => {
 
     expect(room).toContain('type="button"');
     expect(companion).toContain('type="button"');
+    expect(sourceFor("./components/BasePetPresence.vue")).toContain('type="button"');
     expect(room).toContain(":focus-visible");
     expect(companion).toContain(":focus-visible");
     expect(chrome).toContain(":focus-visible");

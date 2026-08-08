@@ -7,6 +7,10 @@ import type { BaseWorkspaceSlotPresentation } from "./baseRuntimeProjection";
 type BaseSelectionRuntime = Readonly<Pick<BaseRuntime, "select">>;
 type BaseNavigationRouter = Readonly<Pick<Router, "push">>;
 
+export async function navigateFromBase(router: BaseNavigationRouter): Promise<void> {
+  await router.push("/");
+}
+
 export async function navigateToBaseRoom(
   router: BaseNavigationRouter,
   runtime: BaseSelectionRuntime,
@@ -26,9 +30,9 @@ export async function navigateToBaseWorkspace(
   runtime: BaseSelectionRuntime,
   slot: Readonly<BaseWorkspaceSlotPresentation>,
 ): Promise<boolean> {
+  runtime.select(slot.slotObjectId);
   if (!slot.workspaceObjectId) return false;
 
-  runtime.select(slot.slotObjectId);
   await router.push(`/workspaces/${encodeURIComponent(slot.workspaceObjectId)}`);
   return true;
 }

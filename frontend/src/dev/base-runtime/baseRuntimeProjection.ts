@@ -39,6 +39,12 @@ export interface BaseCompanionPresentation {
   notificationAvailable: boolean;
 }
 
+export interface BasePetPresentation {
+  objectId: string;
+  displayName: string;
+  description: string;
+}
+
 export interface BaseMainRoomPresentation {
   baseObjectId: string;
   baseName: string;
@@ -52,6 +58,7 @@ export interface BaseMainRoomPresentation {
   doorTargets: readonly Readonly<BaseDoorPresentation>[];
   cockpit: Readonly<Pick<BaseObjectSummary, "objectId" | "displayName" | "description">> | null;
   companion: Readonly<BaseCompanionPresentation> | null;
+  pet: Readonly<BasePetPresentation> | null;
   rooms: readonly Readonly<Pick<BaseObjectSummary, "objectId" | "displayName" | "description">>[];
 }
 
@@ -127,6 +134,7 @@ export function projectBaseRuntimeState(
         notificationAvailable: snapshot.companion.notificationAvailable,
       }
     : null;
+  const pet = snapshot.pet ? summary(snapshot.pet) : null;
   const cockpit = snapshot.cockpit?.roomId === mainRoom.objectId
     ? summary(snapshot.cockpit)
     : null;
@@ -149,6 +157,7 @@ export function projectBaseRuntimeState(
       doorTargets,
       cockpit,
       companion,
+      pet,
       rooms: snapshot.rooms.map(summary),
     },
   };

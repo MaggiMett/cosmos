@@ -4,6 +4,7 @@
     :aria-label="`${room.displayName} in ${room.baseName}`"
     :data-room-id="room.objectId"
     data-testid="base-room-scene"
+    @contextmenu.self.prevent="$emit('open-object-context-menu', $event, room.baseObjectId)"
   >
     <div class="base-room-scene__ceiling" aria-hidden="true" />
     <div class="base-room-scene__wall base-room-scene__wall--left" aria-hidden="true" />
@@ -48,8 +49,9 @@
       :aria-label="slot.displayName"
       :data-slot-id="slot.slotObjectId"
       :data-workspace-id="slot.workspaceObjectId"
-      :disabled="!slot.workspaceObjectId"
+      :aria-pressed="selectedObjectId === slot.slotObjectId"
       @click="$emit('open-workspace', slot)"
+      @contextmenu.prevent.stop="$emit('open-object-context-menu', $event, slot.workspaceObjectId ?? slot.slotObjectId)"
     >
       <span v-if="slot.icon?.toLocaleLowerCase() === 'knowledge'" class="base-room-scene__shelf" aria-hidden="true" />
       <span v-else class="base-room-scene__board" aria-hidden="true" />
@@ -65,20 +67,36 @@
     </div>
 
     <BaseCompanionPresence :companion="room.companion" @open="$emit('open-companion')" />
+    <BasePetPresence :pet="room.pet" />
+
+    <p v-if="selectedSlot" class="base-room-scene__selection" role="status">
+      <strong>{{ selectedSlot.workspaceObjectId ? selectedSlot.displayName : "Empty Workspace Slot" }}</strong>
+      <span>{{ selectedSlot.workspaceObjectId ? "Opening Workspace" : "Available for a future Workspace" }}</span>
+    </p>
   </div>
 </template>
 
 <script setup lang="ts">
 import BaseCompanionPresence from "./BaseCompanionPresence.vue";
+import BasePetPresence from "./BasePetPresence.vue";
 import type { BaseMainRoomPresentation } from "../baseRuntimeProjection";
+import { computed } from "vue";
 
-defineProps<{ room: Readonly<BaseMainRoomPresentation> }>();
+const props = defineProps<{
+  room: Readonly<BaseMainRoomPresentation>;
+  selectedObjectId: string | null;
+}>();
 
 defineEmits<{
   "travel-room": [roomId: string];
   "open-workspace": [slot: Readonly<BaseMainRoomPresentation["workspaceSlots"][number]>];
   "open-companion": [];
+  "open-object-context-menu": [event: MouseEvent, objectId: string];
 }>();
+
+const selectedSlot = computed(() =>
+  props.room.workspaceSlots.find((slot) => slot.slotObjectId === props.selectedObjectId) ?? null,
+);
 
 function starStyle(index: number) {
   return {
@@ -296,6 +314,20 @@ function starStyle(index: number) {
 
 .base-room-scene__workspace:disabled { cursor: default; }
 
+.base-room-scene__workspace[aria-pressed="true"] {
+  filter: brightness(1.12);
+}
+
+.base-room-scene__workspace[aria-pressed="true"]::after {
+  position: absolute;
+  inset: 0;
+  border: 1px solid color-mix(in srgb, var(--cosmos-color-accent) 48%, transparent);
+  border-radius: var(--cosmos-radius-window);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--cosmos-color-accent) 12%, transparent);
+  content: "";
+  pointer-events: none;
+}
+
 .base-room-scene__workspace--left { left: 5%; }
 .base-room-scene__workspace--right { right: 5%; }
 .base-room-scene__workspace--center { left: 35.5%; }
@@ -434,4 +466,31 @@ function starStyle(index: number) {
   border-radius: 50%;
   background: linear-gradient(90deg, transparent 46%, #25211d 47% 53%, transparent 54%);
 }
+
+.base-room-scene__selection {
+  position: absolute;
+  z-index: 24;
+  bottom: 22px;
+  left: 50%;
+  display: grid;
+  min-width: 230px;
+  margin: 0;
+  padding: 9px 13px;
+  transform: translateX(-50%);
+  border: 1px solid var(--cosmos-color-border);
+  border-radius: var(--cosmos-radius-control);
+  background: rgba(5, 11, 17, 0.84);
+  color: var(--cosmos-color-muted);
+  text-align: center;
+  gap: 2px;
+  backdrop-filter: blur(12px);
+}
+
+.base-room-scene__selection strong {
+  color: var(--cosmos-color-text);
+  font-size: 0.65rem;
+  font-weight: 560;
+}
+
+.base-room-scene__selection span { font-size: 0.54rem; }
 </style>

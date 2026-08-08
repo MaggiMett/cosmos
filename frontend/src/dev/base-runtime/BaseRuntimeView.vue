@@ -3,9 +3,11 @@
     <BaseRoomScene
       v-if="presentation.phase === 'success'"
       :room="presentation.room"
+      :selected-object-id="baseState.selectedObjectId"
       @travel-room="travelToRoom"
       @open-workspace="openWorkspace"
       @open-companion="openCompanion"
+      @open-object-context-menu="openObjectContextMenu"
     />
     <div
       v-else
@@ -21,6 +23,7 @@
       <template v-else>
         <strong>{{ presentation.phase === "error" ? "Base is unavailable" : "Base is quiet" }}</strong>
         <p>{{ presentation.message }}</p>
+        <button v-if="presentation.phase === 'error'" type="button" @click="loadBase">Try again</button>
       </template>
     </div>
     <BaseRuntimeChrome
@@ -30,6 +33,7 @@
       :right-neighbor="rightNeighbor"
       @travel-room="travelToRoom"
       @open-companion="openCompanion"
+      @close-base="closeBase"
     />
     <template v-if="presentation.phase === 'success'">
       <BaseKnowledgeWindow
@@ -64,7 +68,11 @@ import BaseRoomScene from "./components/BaseRoomScene.vue";
 import BaseRuntimeChrome from "./components/BaseRuntimeChrome.vue";
 import type { BaseWorkspaceSlotPresentation } from "./baseRuntimeProjection";
 import { loadBaseRuntimeSnapshot, projectBaseRuntimeState } from "./baseRuntimeProjection";
-import { navigateToBaseRoom, navigateToBaseWorkspace } from "./baseRuntimeInteractions";
+import {
+  navigateFromBase,
+  navigateToBaseRoom,
+  navigateToBaseWorkspace,
+} from "./baseRuntimeInteractions";
 
 const runtime = useCosmosRuntime();
 const router = useRouter();
@@ -89,6 +97,10 @@ function travelToRoom(targetRoomId: string) {
   void navigateToBaseRoom(router, runtime.base, snapshot, targetRoomId);
 }
 
+function closeBase() {
+  void navigateFromBase(router);
+}
+
 function openWorkspace(slot: Readonly<BaseWorkspaceSlotPresentation>) {
   void navigateToBaseWorkspace(router, runtime.base, slot);
 }
@@ -101,8 +113,18 @@ function openObject(objectId: string) {
   void objectInteractionHost.value?.openObject(objectId, "details").catch(() => undefined);
 }
 
-onMounted(() => {
+function openObjectContextMenu(event: MouseEvent, objectId: string) {
+  void objectInteractionHost.value
+    ?.openContextMenu(objectId, { x: event.clientX, y: event.clientY })
+    .catch(() => undefined);
+}
+
+function loadBase() {
   void loadBaseRuntimeSnapshot(runtime.base).catch(() => undefined);
+}
+
+onMounted(() => {
+  loadBase();
 });
 </script>
 
@@ -173,6 +195,22 @@ onMounted(() => {
   margin: 0;
   font-size: 0.68rem;
   line-height: 1.55;
+}
+
+.base-runtime-view__state button {
+  min-height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--cosmos-color-border-strong);
+  border-radius: var(--cosmos-radius-control);
+  background: rgba(10, 18, 26, 0.82);
+  color: var(--cosmos-color-text);
+  cursor: pointer;
+  font: inherit;
+}
+
+.base-runtime-view__state button:focus-visible {
+  outline: 2px solid var(--cosmos-color-accent);
+  outline-offset: 2px;
 }
 
 .base-runtime-view__state--loading > span {

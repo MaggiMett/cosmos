@@ -1,9 +1,14 @@
 <template>
   <header class="base-runtime-chrome" data-testid="base-runtime-chrome">
-    <div class="base-runtime-chrome__brand" aria-label="Cosmos">
+    <button
+      type="button"
+      class="base-runtime-chrome__brand"
+      aria-label="Return to Cosmos"
+      @click="$emit('close-base')"
+    >
       <span aria-hidden="true">✦</span>
       <strong>COSMOS</strong>
-    </div>
+    </button>
 
     <CosmosNavigation
       :current-location="currentLocation"
@@ -46,6 +51,7 @@ const props = defineProps<{
 defineEmits<{
   "travel-room": [roomId: string];
   "open-companion": [];
+  "close-base": [];
 }>();
 
 const roomStatus = computed(
@@ -78,8 +84,19 @@ const companionLabel = computed(() =>
 
 .base-runtime-chrome__brand {
   left: 30px;
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: #e9e3da;
+  cursor: pointer;
+  font: inherit;
   gap: 16px;
+}
+
+.base-runtime-chrome__brand:focus-visible {
+  border-radius: var(--cosmos-radius-control);
+  outline: 2px solid var(--cosmos-color-accent);
+  outline-offset: 5px;
 }
 
 .base-runtime-chrome__brand > span {

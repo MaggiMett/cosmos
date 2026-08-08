@@ -2,9 +2,21 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { BaseRuntime, BaseSnapshot } from "../../runtime/baseRuntime";
 import type { BaseWorkspaceSlotPresentation } from "./baseRuntimeProjection";
-import { navigateToBaseRoom, navigateToBaseWorkspace } from "./baseRuntimeInteractions";
+import {
+  navigateFromBase,
+  navigateToBaseRoom,
+  navigateToBaseWorkspace,
+} from "./baseRuntimeInteractions";
 
 describe("Base Runtime existing interaction adapter", () => {
+  it("returns from Base through the productive Cosmos route", async () => {
+    const { router, push } = interactionHarness();
+
+    await navigateFromBase(router);
+
+    expect(push).toHaveBeenCalledWith("/");
+  });
+
   it("navigates a real Door target through the canonical Base Room route", async () => {
     const { router, runtime, push, select } = interactionHarness();
 
@@ -43,13 +55,13 @@ describe("Base Runtime existing interaction adapter", () => {
     expect(push).toHaveBeenCalledWith("/workspaces/workspace.knowledge.authoritative");
   });
 
-  it("keeps an empty Workspace Slot unavailable", async () => {
+  it("selects an empty Workspace Slot but keeps navigation unavailable like Legacy", async () => {
     const { router, runtime, push, select } = interactionHarness();
     const slot = { ...workspaceSlot(), workspaceObjectId: null, occupied: false };
 
     await expect(navigateToBaseWorkspace(router, runtime, slot)).resolves.toBe(false);
 
-    expect(select).not.toHaveBeenCalled();
+    expect(select).toHaveBeenCalledWith("slot.knowledge.authoritative");
     expect(push).not.toHaveBeenCalled();
   });
 });

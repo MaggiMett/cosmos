@@ -18,6 +18,11 @@ describe("real Base Runtime projection", () => {
     expect(state.room.objectId).toBe("room.central.real");
     expect(state.room.baseObjectId).toBe("base.real");
     expect(state.room.atmosphere).toBe("Calm");
+    expect(state.room.pet).toEqual({
+      objectId: "pet.real",
+      displayName: "Resident",
+      description: "",
+    });
   });
 
   it("projects real occupied and empty Workspace Slots without inventing Workspaces", () => {
@@ -86,6 +91,14 @@ describe("real Base Runtime projection", () => {
     const absent = projectBaseRuntimeState("ready", missing as BaseSnapshot, null);
     if (absent.phase !== "success") throw new Error("Expected Base success.");
     expect(absent.room.companion).toBeNull();
+  });
+
+  it("does not invent a Pet when the authoritative Snapshot has none", () => {
+    const { pet: _pet, ...missing } = snapshot();
+    const state = projectBaseRuntimeState("ready", missing as BaseSnapshot, null);
+
+    if (state.phase !== "success") throw new Error("Expected Base success.");
+    expect(state.room.pet).toBeNull();
   });
 
   it("returns a quiet Empty state for a Base without Rooms or Main Room", () => {
