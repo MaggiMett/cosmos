@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { compileScript, compileTemplate, parse } from "vue/compiler-sfc";
 import { describe, expect, it } from "vitest";
 
-import { resolveCosmosPresenter } from "./cosmosPresenter";
+import { configuredCosmosPresenter, resolveCosmosPresenter } from "./cosmosPresenter";
 
 const presenterPath = "./CosmosPresenterView.vue";
 const presenterSource = readFileSync(
@@ -29,11 +29,23 @@ const projectSource = readFileSync(
 );
 
 describe("controlled Cosmos presenter cutover", () => {
-  it("keeps Legacy as the safe default and accepts only the explicit New value", () => {
-    expect(resolveCosmosPresenter(undefined)).toBe("legacy");
-    expect(resolveCosmosPresenter("legacy")).toBe("legacy");
-    expect(resolveCosmosPresenter("unexpected")).toBe("legacy");
+  it("promotes New when the presenter variable is unset", () => {
+    expect(resolveCosmosPresenter(undefined)).toBe("new");
+    expect(configuredCosmosPresenter).toBe("new");
+  });
+
+  it("accepts the explicit New presenter value", () => {
     expect(resolveCosmosPresenter("new")).toBe("new");
+  });
+
+  it("keeps Legacy explicitly available as the rollback presenter", () => {
+    expect(resolveCosmosPresenter("legacy")).toBe("legacy");
+  });
+
+  it("documents invalid values as New unless Legacy is explicitly requested", () => {
+    expect(resolveCosmosPresenter("unexpected")).toBe("new");
+    expect(resolveCosmosPresenter(42)).toBe("new");
+    expect(resolveCosmosPresenter(null)).toBe("new");
   });
 
   it("compiles a presenter that can render both Legacy and New experiences", () => {
@@ -50,6 +62,8 @@ describe("controlled Cosmos presenter cutover", () => {
     expect(presenterSource).toContain("LegacyCosmosView");
     expect(presenterSource).toContain("CosmosGlobalView");
     expect(presenterSource).toContain("CosmosProjectView");
+    expect(presenterSource).toContain("presenter: configuredCosmosPresenter");
+    expect(presenterSource).toContain("presenter === 'legacy'");
   });
 
   it("uses Product query navigation for Global to Project to Global", () => {
