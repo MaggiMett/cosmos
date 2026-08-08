@@ -7,16 +7,17 @@
 
     <CosmosNavigation
       :current-location="projectName"
-      :left-neighbor="globalNeighbor"
-      :right-neighbor="null"
-      :quick-travel-open="false"
-      @travel="$emit('back-to-global')"
+      :left-neighbor="leftNeighbor"
+      :right-neighbor="rightNeighbor"
+      :quick-travel-open="quickTravelOpen"
+      @travel="$emit('travel-project', $event)"
+      @toggle-quick-travel="$emit('toggle-quick-travel')"
     />
 
     <div class="project-cosmos-chrome__status" aria-label="Project status">
       <span><i class="project-cosmos-chrome__dot project-cosmos-chrome__dot--synced" />Local · Synced</span>
       <span><i class="project-cosmos-chrome__dot" />{{ objectStatus }}</span>
-      <button type="button" aria-label="Project focus">◎</button>
+      <button type="button" aria-label="Back to Global" @click="$emit('back-to-global')">◎</button>
     </div>
   </header>
 </template>
@@ -25,18 +26,22 @@
 import { computed } from "vue";
 
 import CosmosNavigation from "../../../components/cosmos/CosmosNavigation.vue";
+import type { CosmosProjectDestination } from "../../cosmosNavigation";
 
 const props = defineProps<{
   projectName: string;
   objectCount: number;
   phase: "loading" | "error" | "not-found" | "empty-project" | "success";
+  leftNeighbor: Readonly<CosmosProjectDestination> | null;
+  rightNeighbor: Readonly<CosmosProjectDestination> | null;
+  quickTravelOpen: boolean;
 }>();
 
 defineEmits<{
   "back-to-global": [];
+  "travel-project": [projectId: string];
+  "toggle-quick-travel": [];
 }>();
-
-const globalNeighbor = { objectId: "dev-cosmos-global", displayName: "Global View" } as const;
 
 const objectStatus = computed(() => {
   if (props.phase === "loading") return "Loading objects";

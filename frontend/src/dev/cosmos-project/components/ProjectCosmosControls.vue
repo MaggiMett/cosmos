@@ -11,6 +11,10 @@
       Search / Focus
     </button>
     <p><span>Cosmos</span><i aria-hidden="true">/</i><strong>Project</strong><i aria-hidden="true">/</i>{{ projectName }}</p>
+    <nav class="project-cosmos-controls__destinations" aria-label="Runtime destinations">
+      <button type="button" @click="$emit('open-base')"><span aria-hidden="true">⌂</span>Base</button>
+      <button type="button" @click="$emit('open-companion')"><span aria-hidden="true">○</span>Companion</button>
+    </nav>
   </div>
 </template>
 
@@ -24,6 +28,8 @@ defineEmits<{
   "zoom-out": [];
   "zoom-in": [];
   fit: [];
+  "open-base": [];
+  "open-companion": [];
 }>();
 </script>
 
@@ -41,7 +47,8 @@ defineEmits<{
 }
 
 .project-cosmos-controls button,
-.project-cosmos-controls__zoom {
+.project-cosmos-controls__zoom,
+.project-cosmos-controls__destinations {
   pointer-events: auto;
 }
 
@@ -62,6 +69,32 @@ defineEmits<{
   background: transparent;
   color: #c7d2d7;
   cursor: pointer;
+}
+
+.project-cosmos-controls__destinations {
+  display: flex;
+  min-height: 43px;
+  padding: 4px;
+  align-items: center;
+  border: 1px solid var(--cosmos-color-border);
+  border-radius: var(--cosmos-radius-window);
+  background: rgba(3, 8, 14, 0.72);
+  backdrop-filter: blur(12px);
+  gap: 2px;
+}
+
+.project-cosmos-controls__destinations button {
+  display: flex;
+  min-height: 33px;
+  padding: 0 10px;
+  align-items: center;
+  border: 0;
+  border-radius: var(--cosmos-radius-control);
+  background: transparent;
+  color: #c7d2d7;
+  cursor: pointer;
+  font-size: 0.62rem;
+  gap: 7px;
 }
 
 .project-cosmos-controls__zoom button {

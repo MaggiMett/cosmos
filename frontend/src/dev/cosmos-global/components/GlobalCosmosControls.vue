@@ -14,8 +14,8 @@
     <p><span>Cosmos</span><i aria-hidden="true">/</i><strong>Global</strong></p>
 
     <nav class="global-cosmos-controls__destinations" aria-label="Runtime destinations">
-      <button type="button"><span aria-hidden="true">⌂</span>Base</button>
-      <button type="button"><span aria-hidden="true">○</span>Companion</button>
+      <button type="button" @click="$emit('open-base')"><span aria-hidden="true">⌂</span>Base</button>
+      <button type="button" @click="$emit('open-companion')"><span aria-hidden="true">○</span>Companion</button>
       <button type="button" aria-label="Settings"><span aria-hidden="true">⚙</span></button>
     </nav>
   </div>
@@ -30,6 +30,8 @@ defineEmits<{
   "zoom-out": [];
   "zoom-in": [];
   fit: [];
+  "open-base": [];
+  "open-companion": [];
 }>();
 </script>
 

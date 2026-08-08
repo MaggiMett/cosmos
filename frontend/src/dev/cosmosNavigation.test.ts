@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { createCosmosRouter } from "../router";
 import {
+  cosmosProjectNeighbors,
   globalCosmosRoute,
   navigateToGlobal,
   navigateToProject,
@@ -10,6 +11,23 @@ import {
 } from "./cosmosNavigation";
 
 describe("Global to Project Cosmos navigation", () => {
+  it("derives the same ordered Project neighbors as the Legacy presenter", () => {
+    const projects = [
+      { objectId: "project.right", displayName: "Right", x: 500 },
+      { objectId: "project.left", displayName: "Left", x: -500 },
+      { objectId: "project.focused", displayName: "Focused", x: 20 },
+    ];
+
+    expect(cosmosProjectNeighbors(projects, "project.focused", 0)).toEqual({
+      left: projects[1],
+      right: projects[0],
+    });
+    expect(cosmosProjectNeighbors(projects, null, 0)).toEqual({
+      left: projects[1],
+      right: projects[2],
+    });
+  });
+
   it("builds a canonical Project URL from each supplied real Project ID", () => {
     const router = createCosmosRouter({ history: createMemoryHistory() });
 

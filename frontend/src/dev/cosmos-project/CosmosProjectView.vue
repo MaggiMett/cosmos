@@ -23,6 +23,7 @@
         :project="visibleProject"
         @select-node="selectNode"
         @open-node="openNode"
+        @open-node-menu="openNodeContextMenu"
         @start-node-move="startNodeMove"
       />
     </div>
@@ -56,7 +57,20 @@
       :project-name="presentation.projectName"
       :object-count="presentation.objectCount"
       :phase="presentation.phase"
+      :left-neighbor="neighbors.left"
+      :right-neighbor="neighbors.right"
+      :quick-travel-open="quickTravelOpen"
       @back-to-global="backToGlobal"
+      @travel-project="travelToProject"
+      @toggle-quick-travel="quickTravelOpen = !quickTravelOpen"
+    />
+    <CosmosQuickTravel
+      v-if="quickTravelOpen && mapState.snapshot"
+      :projects="mapState.snapshot.projects"
+      :focused-project-id="mapState.snapshot.focusedProjectId"
+      @close="quickTravelOpen = false"
+      @travel-global="travelToCosmos"
+      @travel-project="travelToProject"
     />
     <ProjectCosmosControls
       :project-name="presentation.projectName"
@@ -64,6 +78,13 @@
       @zoom-out="zoomBy(1 / 1.18)"
       @zoom-in="zoomBy(1.18)"
       @fit="fit"
+      @open-base="openBase"
+      @open-companion="openCompanion"
+    />
+    <CompanionWindowHost
+      ref="companionWindowHost"
+      :current-location="presentation.projectName"
+      @destination="openCompanionDestination"
     />
     <ObjectInteractionHost ref="objectInteractionHost" />
   </section>
@@ -73,8 +94,15 @@
 import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { navigateToGlobal, type CosmosNavigationScope } from "../cosmosNavigation";
+import {
+  cosmosProjectNeighbors,
+  navigateToGlobal,
+  navigateToProject,
+  type CosmosNavigationScope,
+} from "../cosmosNavigation";
 import { useCosmosCameraPresenter } from "../useCosmosCameraPresenter";
+import CompanionWindowHost from "../../components/cosmos/CompanionWindowHost.vue";
+import CosmosQuickTravel from "../../components/cosmos/CosmosQuickTravel.vue";
 import ObjectInteractionHost from "../../components/windows/ObjectInteractionHost.vue";
 import { useCosmosRuntime } from "../../runtime/plugin";
 import AsteriaConstellation from "./components/AsteriaConstellation.vue";
@@ -112,9 +140,12 @@ const presentation = computed(() =>
   ),
 );
 const objectInteractionHost = ref<InstanceType<typeof ObjectInteractionHost> | null>(null);
+const companionWindowHost = ref<InstanceType<typeof CompanionWindowHost> | null>(null);
+const quickTravelOpen = ref(false);
 const nodeMove = ref<ProjectNodeMoveGesture | null>(null);
 const {
   viewportElement,
+  viewport,
   worldStyle,
   isPanning,
   startPan,
@@ -124,15 +155,47 @@ const {
   zoomAtPointer,
   zoomBy,
   fit,
+  focusProject,
   persistCameraNow,
 } = useCosmosCameraPresenter(runtime.cosmosMap, requestedProjectId);
 const visibleProject = computed(() => {
   const state = presentation.value;
   return state.phase === "success" || state.phase === "empty-project" ? state.project : null;
 });
+const neighbors = computed(() => {
+  const snapshot = mapState.snapshot;
+  return cosmosProjectNeighbors(
+    snapshot?.projects ?? [],
+    requestedProjectId.value,
+    snapshot?.camera.x ?? 0,
+  );
+});
 
 async function backToGlobal(): Promise<void> {
+  quickTravelOpen.value = false;
   await persistCameraNow().catch(() => undefined);
+  await navigateToGlobal(router, props.navigationScope);
+}
+
+async function travelToProject(projectId: string): Promise<void> {
+  quickTravelOpen.value = false;
+  focusProject(projectId);
+  runtime.cosmosMap.select(projectId);
+  await Promise.all([
+    persistCameraNow(),
+    runtime.cosmosMap.persistSelection(),
+  ]).catch(() => undefined);
+  await navigateToProject(router, projectId, props.navigationScope);
+}
+
+async function travelToCosmos(): Promise<void> {
+  quickTravelOpen.value = false;
+  runtime.cosmosMap.focusCosmos(viewport);
+  runtime.cosmosMap.select(null);
+  await Promise.all([
+    persistCameraNow(),
+    runtime.cosmosMap.persistSelection(),
+  ]).catch(() => undefined);
   await navigateToGlobal(router, props.navigationScope);
 }
 
@@ -147,6 +210,31 @@ function openNode(objectId: string): void {
   const host = objectInteractionHost.value;
   if (!project || !host) return;
   void openSelectedProjectCosmosNode(host, project, objectId).catch(() => undefined);
+}
+
+function openNodeContextMenu(event: MouseEvent, objectId: string): void {
+  const project = visibleProject.value;
+  const host = objectInteractionHost.value;
+  const belongsToProject = project && (
+    project.objectId === objectId || project.nodes.some((node) => node.objectId === objectId)
+  );
+  if (!project || !host || !belongsToProject) return;
+  quickTravelOpen.value = false;
+  runtime.cosmosMap.select(objectId);
+  void runtime.cosmosMap.persistSelection().catch(() => undefined);
+  void host.openContextMenu(objectId, { x: event.clientX, y: event.clientY }).catch(() => undefined);
+}
+
+function openCompanionDestination(objectId: string): void {
+  void objectInteractionHost.value?.openObject(objectId, "details").catch(() => undefined);
+}
+
+function openCompanion(): void {
+  companionWindowHost.value?.open();
+}
+
+function openBase(): void {
+  void router.push("/base");
 }
 
 function startNodeMove(event: PointerEvent, objectId: string): void {

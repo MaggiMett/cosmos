@@ -19,6 +19,7 @@
       :data-node-count="region.nodeCount"
       :data-connection-count="region.connectionCount"
       @click="$emit('activate-project', region.objectId)"
+      @contextmenu.prevent.stop="$emit('open-project-menu', $event, region.objectId)"
     >
       <span class="project-region__nebula" aria-hidden="true" />
       <span
@@ -54,6 +55,7 @@ defineProps<{
 
 defineEmits<{
   "activate-project": [projectId: string];
+  "open-project-menu": [event: MouseEvent, projectId: string];
 }>();
 
 function regionLabel(region: Readonly<GlobalCosmosRegionPresentation>): string {

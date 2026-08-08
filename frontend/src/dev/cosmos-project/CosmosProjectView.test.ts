@@ -52,8 +52,10 @@ describe("Project Cosmos visual slice", () => {
     expect(view).toContain("route.query.projectId");
     expect(view).toContain("projectIdFromQuery");
     expect(chrome).toContain(":current-location=\"projectName\"");
-    expect(chrome).toContain(':left-neighbor="globalNeighbor"');
-    expect(chrome).toContain("@travel=\"$emit('back-to-global')\"");
+    expect(chrome).toContain(':left-neighbor="leftNeighbor"');
+    expect(chrome).toContain(':right-neighbor="rightNeighbor"');
+    expect(chrome).toContain("@travel=\"$emit('travel-project', $event)\"");
+    expect(chrome).toContain('aria-label="Back to Global"');
     expect(view).toContain('@back-to-global="backToGlobal"');
     expect(view).toContain("navigateToGlobal(router, props.navigationScope)");
     expect(chrome).toContain("Local · Synced");
@@ -129,7 +131,11 @@ describe("Project Cosmos visual slice", () => {
     expect(combined).not.toContain("localStorage");
     expect(combined).not.toContain("sessionStorage");
     expect(combined).not.toContain("<img");
-    expect(combined).not.toContain("contextmenu");
+    expect(combined).toContain("@contextmenu.prevent.stop");
+    expect(view).toContain("host.openContextMenu(objectId");
+    expect(view).toContain("<CosmosQuickTravel");
+    expect(view).toContain("<CompanionWindowHost");
+    expect(view).toContain('router.push("/base")');
     expect(view).not.toContain("selectedObjectId = ref");
   });
 

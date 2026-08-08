@@ -7,9 +7,11 @@
 
     <CosmosNavigation
       current-location="Global View"
-      :left-neighbor="null"
-      :right-neighbor="null"
-      :quick-travel-open="false"
+      :left-neighbor="leftNeighbor"
+      :right-neighbor="rightNeighbor"
+      :quick-travel-open="quickTravelOpen"
+      @travel="$emit('travel-project', $event)"
+      @toggle-quick-travel="$emit('toggle-quick-travel')"
     />
 
     <div class="global-cosmos-chrome__status" aria-label="Global status">
@@ -27,10 +29,19 @@ import { computed } from "vue";
 
 import CosmosNavigation from "../../../components/cosmos/CosmosNavigation.vue";
 import CompanionAvatar from "../../../components/entities/CompanionAvatar.vue";
+import type { CosmosProjectDestination } from "../../cosmosNavigation";
 
 const props = defineProps<{
   projectCount: number;
   phase: "loading" | "error" | "empty" | "success";
+  leftNeighbor: Readonly<CosmosProjectDestination> | null;
+  rightNeighbor: Readonly<CosmosProjectDestination> | null;
+  quickTravelOpen: boolean;
+}>();
+
+defineEmits<{
+  "travel-project": [projectId: string];
+  "toggle-quick-travel": [];
 }>();
 
 const projectStatus = computed(() => {

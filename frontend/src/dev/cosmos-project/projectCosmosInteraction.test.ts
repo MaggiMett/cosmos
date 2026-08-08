@@ -47,6 +47,20 @@ describe("Project Cosmos interaction adapter", () => {
     expect(runtime.persistSelection).toHaveBeenCalledOnce();
   });
 
+  it("selects the real Project core through the same ProjectRoot path as Legacy", async () => {
+    const runtime = {
+      select: vi.fn(),
+      persistSelection: vi.fn().mockResolvedValue(undefined),
+    };
+
+    await expect(
+      selectProjectCosmosNode(runtime, project(), "project.real"),
+    ).resolves.toBe(true);
+
+    expect(runtime.select).toHaveBeenCalledWith("project.real");
+    expect(runtime.persistSelection).toHaveBeenCalledOnce();
+  });
+
   it("opens only the selected real Node through the existing Object Interaction host", async () => {
     const host = { openObject: vi.fn().mockResolvedValue(undefined) };
 
@@ -56,6 +70,17 @@ describe("Project Cosmos interaction adapter", () => {
 
     expect(host.openObject).toHaveBeenCalledOnce();
     expect(host.openObject).toHaveBeenCalledWith("node.real", "details");
+  });
+
+  it("opens a selected real Project core through the existing Object Interaction host", async () => {
+    const host = { openObject: vi.fn().mockResolvedValue(undefined) };
+    const selectedProject = { ...project(), isCoreSelected: true };
+
+    await expect(
+      openSelectedProjectCosmosNode(host, selectedProject, "project.real"),
+    ).resolves.toBe(true);
+
+    expect(host.openObject).toHaveBeenCalledWith("project.real", "details");
   });
 
   it("ignores unknown, disappeared, or no-longer-selected Node IDs", async () => {

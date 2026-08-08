@@ -72,7 +72,9 @@ describe("Global Cosmos visual slice", () => {
     expect(chrome).toContain('current-location="Global View"');
     expect(chrome).toContain("Local · Synced");
     expect(chrome).toContain("projectStatus");
-    expect(chrome).toContain(':right-neighbor="null"');
+    expect(chrome).toContain(':left-neighbor="leftNeighbor"');
+    expect(chrome).toContain(':right-neighbor="rightNeighbor"');
+    expect(chrome).toContain('@toggle-quick-travel="$emit(\'toggle-quick-travel\')"');
     for (const label of ["zoomLabel", "Fit", "Search / Focus", "Base", "Companion", "Settings"]) {
       expect(controls).toContain(label);
     }
@@ -81,14 +83,16 @@ describe("Global Cosmos visual slice", () => {
     expect(controls).toContain("$emit('fit')");
   });
 
-  it("uses CSS and HTML primitives with camera gestures but no graph editing", () => {
+  it("uses CSS and HTML primitives with camera gestures and the existing Context Menu host", () => {
     const combined = files.map(sourceFor).join("\n");
 
     expect(combined).not.toContain("<svg");
     expect(combined).toContain("@click");
     expect(combined).toContain('@pointerdown="startPan"');
     expect(combined).toContain('@wheel.prevent="zoomAtPointer"');
-    expect(combined).not.toContain("contextmenu");
+    expect(combined).toContain("@contextmenu.prevent.stop");
+    expect(combined).toContain("openProjectContextMenu");
+    expect(combined).toContain("host.openContextMenu(projectId");
     expect(combined).not.toContain("moveNodeLocally");
   });
 
@@ -105,6 +109,9 @@ describe("Global Cosmos visual slice", () => {
     expect(view).toContain("focusProject(projectId)");
     expect(view).toContain("runtime.cosmosMap.select(projectId)");
     expect(view).toContain("runtime.cosmosMap.persistSelection()");
+    expect(view).toContain("<CosmosQuickTravel");
+    expect(view).toContain("<CompanionWindowHost");
+    expect(view).toContain('router.push("/base")');
     expect(camera).toContain("runtime.setCamera");
     expect(camera).toContain("runtime.persistCamera()");
     expect(camera).toContain("runtime.focusCosmos");

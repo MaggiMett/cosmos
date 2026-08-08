@@ -20,7 +20,7 @@ export async function selectProjectCosmosNode(
   project: Readonly<ProjectCosmosPresentation>,
   objectId: string,
 ): Promise<boolean> {
-  if (!project.nodes.some((node) => node.objectId === objectId)) return false;
+  if (project.objectId !== objectId && !project.nodes.some((node) => node.objectId === objectId)) return false;
   runtime.select(objectId);
   await runtime.persistSelection();
   return true;
@@ -31,8 +31,10 @@ export async function openSelectedProjectCosmosNode(
   project: Readonly<ProjectCosmosPresentation>,
   objectId: string,
 ): Promise<boolean> {
-  const node = project.nodes.find((candidate) => candidate.objectId === objectId);
-  if (!node?.isSelected) return false;
+  const selected = objectId === project.objectId
+    ? project.isCoreSelected
+    : project.nodes.find((candidate) => candidate.objectId === objectId)?.isSelected;
+  if (!selected) return false;
   await host.openObject(objectId, "details");
   return true;
 }

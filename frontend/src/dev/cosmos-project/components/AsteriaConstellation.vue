@@ -21,20 +21,24 @@
       />
     </svg>
 
-    <div
+    <button
+      type="button"
       class="project-node project-node--core"
       :class="{
         'project-node--focused': project.isFocused,
         'project-node--selected': project.isCoreSelected,
       }"
-      role="img"
       :aria-label="coreLabel"
+      :aria-pressed="project.isCoreSelected"
       :data-node-id="project.objectId"
+      @click="$emit('select-node', project.objectId)"
+      @dblclick.stop="$emit('open-node', project.objectId)"
+      @contextmenu.prevent.stop="$emit('open-node-menu', $event, project.objectId)"
     >
       <span v-if="project.isFocused || project.isCoreSelected" class="project-node__focus-ring" aria-hidden="true" />
       <i aria-hidden="true" />
       <strong>{{ project.displayName }}</strong>
-    </div>
+    </button>
 
     <div
       v-for="node in project.nodes"
@@ -52,6 +56,8 @@
         :data-node-id="node.objectId"
         @pointerdown.stop="$emit('start-node-move', $event, node.objectId)"
         @click="$emit('select-node', node.objectId)"
+        @dblclick.stop="$emit('open-node', node.objectId)"
+        @contextmenu.prevent.stop="$emit('open-node-menu', $event, node.objectId)"
       >
         <span v-if="node.isSelected" class="project-node__focus-ring" aria-hidden="true" />
         <i aria-hidden="true" />
@@ -78,6 +84,7 @@ const props = defineProps<{
 defineEmits<{
   "select-node": [objectId: string];
   "open-node": [objectId: string];
+  "open-node-menu": [event: MouseEvent, objectId: string];
   "start-node-move": [event: PointerEvent, objectId: string];
 }>();
 
@@ -217,6 +224,19 @@ const coreLabel = computed(() => {
   left: var(--project-x);
   width: 130px;
   height: 130px;
+  padding: 0;
+  border: 0;
+  appearance: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.project-node--core:focus-visible {
+  outline: 1px dashed rgba(var(--project-light), 0.74);
+  outline-offset: -10px;
+  border-radius: 50%;
 }
 
 .project-node--core > i {
