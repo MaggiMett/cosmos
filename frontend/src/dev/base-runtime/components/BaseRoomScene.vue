@@ -1,6 +1,7 @@
 <template>
   <div
     class="base-room-scene"
+    :class="`base-room-scene--${room.slug}`"
     :aria-label="`${room.displayName} in ${room.baseName}`"
     :data-room-id="room.objectId"
     data-testid="base-room-scene"
@@ -45,7 +46,10 @@
       :key="slot.slotObjectId"
       type="button"
       class="base-room-scene__workspace"
-      :class="`base-room-scene__workspace--${slot.side}`"
+      :class="[
+        `base-room-scene__workspace--${slot.side}`,
+        `base-room-scene__workspace--${placementClass(slot.placement)}`,
+      ]"
       :aria-label="slot.displayName"
       :data-slot-id="slot.slotObjectId"
       :data-workspace-id="slot.workspaceObjectId"
@@ -79,17 +83,17 @@
 <script setup lang="ts">
 import BaseCompanionPresence from "./BaseCompanionPresence.vue";
 import BasePetPresence from "./BasePetPresence.vue";
-import type { BaseMainRoomPresentation } from "../baseRuntimeProjection";
+import type { BaseRoomPresentation } from "../baseRuntimeProjection";
 import { computed } from "vue";
 
 const props = defineProps<{
-  room: Readonly<BaseMainRoomPresentation>;
+  room: Readonly<BaseRoomPresentation>;
   selectedObjectId: string | null;
 }>();
 
 defineEmits<{
   "travel-room": [roomId: string];
-  "open-workspace": [slot: Readonly<BaseMainRoomPresentation["workspaceSlots"][number]>];
+  "open-workspace": [slot: Readonly<BaseRoomPresentation["workspaceSlots"][number]>];
   "open-companion": [];
   "open-object-context-menu": [event: MouseEvent, objectId: string];
 }>();
@@ -104,6 +108,10 @@ function starStyle(index: number) {
     top: `${(index * 31) % 82}%`,
     opacity: 0.3 + (index % 4) * 0.14,
   };
+}
+
+function placementClass(placement: string) {
+  return placement.trim().toLocaleLowerCase().replace(/[^a-z0-9]+/g, "-");
 }
 </script>
 
@@ -124,6 +132,12 @@ function starStyle(index: number) {
   background: radial-gradient(ellipse at 50% 54%, transparent 40%, rgba(0, 0, 0, 0.38) 100%);
   content: "";
   pointer-events: none;
+}
+
+.base-room-scene--workshop {
+  background:
+    radial-gradient(ellipse at 50% 56%, rgba(100, 83, 59, 0.14), transparent 45%),
+    linear-gradient(180deg, #1a1c1d, #111517 58%, #080a0c);
 }
 
 .base-room-scene__ceiling,
@@ -331,6 +345,11 @@ function starStyle(index: number) {
 .base-room-scene__workspace--left { left: 5%; }
 .base-room-scene__workspace--right { right: 5%; }
 .base-room-scene__workspace--center { left: 35.5%; }
+
+.base-room-scene__workspace--left-rear { top: 19%; bottom: auto; left: 4%; }
+.base-room-scene__workspace--left-front { right: auto; bottom: 5%; left: 7%; }
+.base-room-scene__workspace--right-rear { top: 19%; right: 4%; bottom: auto; left: auto; }
+.base-room-scene__workspace--right-front { right: 7%; bottom: 5%; left: auto; }
 
 .base-room-scene__workspace > strong,
 .base-room-scene__workspace > small {

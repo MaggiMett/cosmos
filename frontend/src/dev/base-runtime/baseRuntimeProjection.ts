@@ -2,6 +2,7 @@ import type { DeepReadonly } from "vue";
 
 import type {
   BaseObjectSummary,
+  BaseRoom,
   BaseRuntime,
   BaseSnapshot,
   BaseWorkspace,
@@ -45,13 +46,14 @@ export interface BasePetPresentation {
   description: string;
 }
 
-export interface BaseMainRoomPresentation {
+export interface BaseRoomPresentation {
   baseObjectId: string;
   baseName: string;
   objectId: string;
   displayName: string;
   description: string;
   atmosphere: string;
+  slug: BaseRoom["slug"];
   workspaceSlots: readonly Readonly<BaseWorkspaceSlotPresentation>[];
   knowledgeWorkspace: Readonly<BaseWorkspaceSlotPresentation> | null;
   creationWorkspace: Readonly<BaseWorkspaceSlotPresentation> | null;
@@ -71,9 +73,10 @@ export type BaseRuntimePresentationState =
   | (BasePresentationStateBase & { phase: "loading" })
   | (BasePresentationStateBase & { phase: "error"; message: string })
   | (BasePresentationStateBase & { phase: "empty"; message: string })
+  | (BasePresentationStateBase & { phase: "not-found"; message: string })
   | (BasePresentationStateBase & {
       phase: "success";
-      room: Readonly<BaseMainRoomPresentation>;
+      room: Readonly<BaseRoomPresentation>;
     });
 
 export function loadBaseRuntimeSnapshot(
@@ -86,6 +89,7 @@ export function projectBaseRuntimeState(
   phase: BaseRuntime["state"]["phase"],
   snapshot: DeepReadonly<BaseSnapshot> | null,
   error: string | null,
+  requestedRoomId: string | null = null,
 ): BaseRuntimePresentationState {
   if (phase === "idle" || phase === "loading") {
     return { phase: "loading", roomCount: 0, currentLocation: "Base" };
@@ -115,8 +119,18 @@ export function projectBaseRuntimeState(
     };
   }
 
-  const mainRoom = snapshot.rooms.find((room) => room.slug === "main");
-  if (!mainRoom) {
+  const room = requestedRoomId
+    ? snapshot.rooms.find((candidate) => candidate.objectId === requestedRoomId)
+    : snapshot.rooms.find((candidate) => candidate.slug === "main");
+  if (!room && requestedRoomId) {
+    return {
+      phase: "not-found",
+      roomCount: snapshot.rooms.length,
+      currentLocation: snapshot.base.displayName,
+      message: "The requested Base Room is unavailable.",
+    };
+  }
+  if (!room) {
     return {
       phase: "empty",
       roomCount: snapshot.rooms.length,
@@ -125,8 +139,8 @@ export function projectBaseRuntimeState(
     };
   }
 
-  const workspaceSlots = mainRoom.workspaceSlots.map(projectWorkspaceSlot);
-  const companion = snapshot.companion
+  const workspaceSlots = room.workspaceSlots.map(projectWorkspaceSlot);
+  const companion = room.slug === "main" && snapshot.companion
     ? {
         objectId: snapshot.companion.objectId,
         displayName: snapshot.companion.displayName,
@@ -134,23 +148,24 @@ export function projectBaseRuntimeState(
         notificationAvailable: snapshot.companion.notificationAvailable,
       }
     : null;
-  const pet = snapshot.pet ? summary(snapshot.pet) : null;
-  const cockpit = snapshot.cockpit?.roomId === mainRoom.objectId
+  const pet = room.slug === "main" && snapshot.pet ? summary(snapshot.pet) : null;
+  const cockpit = snapshot.cockpit?.roomId === room.objectId
     ? summary(snapshot.cockpit)
     : null;
-  const doorTargets = projectDoorTargets(snapshot, mainRoom.objectId);
+  const doorTargets = projectDoorTargets(snapshot, room.objectId);
 
   return {
     phase: "success",
     roomCount: snapshot.rooms.length,
-    currentLocation: `${snapshot.base.displayName} · ${mainRoom.displayName}`,
+    currentLocation: `${snapshot.base.displayName} · ${room.displayName}`,
     room: {
       baseObjectId: snapshot.base.objectId,
       baseName: snapshot.base.displayName,
-      objectId: mainRoom.objectId,
-      displayName: mainRoom.displayName,
-      description: mainRoom.description,
-      atmosphere: mainRoom.atmosphere,
+      objectId: room.objectId,
+      displayName: room.displayName,
+      description: room.description,
+      atmosphere: room.atmosphere,
+      slug: room.slug,
       workspaceSlots,
       knowledgeWorkspace: workspaceByIcon(workspaceSlots, "knowledge"),
       creationWorkspace: workspaceByIcon(workspaceSlots, "creation"),
@@ -185,11 +200,11 @@ function projectWorkspaceSlot(
 
 function projectDoorTargets(
   snapshot: DeepReadonly<BaseSnapshot>,
-  mainRoomId: string,
+  roomId: string,
 ): readonly Readonly<BaseDoorPresentation>[] {
   const door = snapshot.door;
-  if (!door || (door.roomAId !== mainRoomId && door.roomBId !== mainRoomId)) return [];
-  const targetRoomId = door.roomAId === mainRoomId ? door.roomBId : door.roomAId;
+  if (!door || (door.roomAId !== roomId && door.roomBId !== roomId)) return [];
+  const targetRoomId = door.roomAId === roomId ? door.roomBId : door.roomAId;
   const targetRoom = snapshot.rooms.find((room) => room.objectId === targetRoomId) ?? null;
   return [{
     objectId: door.objectId,

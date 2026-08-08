@@ -19,7 +19,7 @@ function sourceFor(path: (typeof files)[number]): string {
   return readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8");
 }
 
-describe("Base Main Room Runtime visual slice", () => {
+describe("Base Room Runtime visual slice", () => {
   it.each(files)("compiles %s without script or template errors", (path) => {
     const source = sourceFor(path);
     const descriptor = parse(source, { filename: path }).descriptor;
@@ -60,10 +60,36 @@ describe("Base Main Room Runtime visual slice", () => {
     expect(chrome).toContain("@travel=\"$emit('travel-room', $event)\"");
   });
 
+  it("resolves Main and Workshop exclusively from the route query and Base projection", () => {
+    const view = sourceFor("./BaseRuntimeView.vue");
+
+    expect(view).toContain("useRoute()");
+    expect(view).toContain("route.query.roomId");
+    expect(view).toContain("requestedRoomId.value");
+    expect(view).toContain('presentation.value.phase === "not-found"');
+    expect(view).toContain('return "Room not found"');
+    expect(view).not.toContain("ref<string");
+    expect(view).not.toContain("selectedRoomId");
+  });
+
+  it("keeps Door travel inside the development presenter", () => {
+    const view = sourceFor("./BaseRuntimeView.vue");
+    const interactions = readFileSync(
+      fileURLToPath(new URL("./baseRuntimeInteractions.ts", import.meta.url)),
+      "utf8",
+    );
+
+    expect(view).toContain('targetRoomId, "development"');
+    expect(interactions).toContain('path: "/dev/base-runtime"');
+    expect(interactions).toContain("roomId: targetRoom.objectId");
+    expect(interactions).not.toContain("room.workshop");
+  });
+
   it("keeps the room primary while rendering only projected Runtime entities", () => {
     const room = sourceFor("./components/BaseRoomScene.vue");
 
     expect(room).toContain(':data-room-id="room.objectId"');
+    expect(room).toContain(':class="`base-room-scene--${room.slug}`"');
     expect(room).toContain('v-if="room.cockpit"');
     expect(room).toContain('v-for="door in room.doorTargets"');
     expect(room).toContain(':data-door-id="door.objectId"');
@@ -77,9 +103,11 @@ describe("Base Main Room Runtime visual slice", () => {
     expect(room).toContain("@click=\"door.targetRoomId && $emit('travel-room', door.targetRoomId)\"");
     expect(room).toContain("@click=\"$emit('open-workspace', slot)\"");
     expect(room).toContain(':aria-pressed="selectedObjectId === slot.slotObjectId"');
+    expect(room).toContain("placementClass(slot.placement)");
   });
 
   it("uses real Workspace summaries in the existing Knowledge and Capture windows", () => {
+    const view = sourceFor("./BaseRuntimeView.vue");
     const knowledge = sourceFor("./components/BaseKnowledgeWindow.vue");
     const capture = sourceFor("./components/BaseCaptureWindow.vue");
 
@@ -89,6 +117,7 @@ describe("Base Main Room Runtime visual slice", () => {
     expect(capture).toContain("workspace.displayName");
     expect(capture).toContain("workspace.sourceProjectId");
     expect(capture).toContain("Creation Workspace unavailable");
+    expect(view.match(/v-if="presentation\.room\.slug === 'main'"/g)).toHaveLength(2);
     for (const fixture of [
       "Orbital Architecture",
       "Recent Research",
@@ -220,6 +249,7 @@ describe("Base Main Room Runtime visual slice", () => {
     expect(view).toContain("Loading Base");
     expect(view).toContain("Base is unavailable");
     expect(view).toContain("Base is quiet");
+    expect(view).toContain("Room not found");
     expect(view).toContain("presentation.phase === 'success'");
   });
 });

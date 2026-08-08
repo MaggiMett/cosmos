@@ -206,7 +206,7 @@ describe("Cosmos routing", () => {
 
     expect(baseRuntime.name).toBe("dev-base-runtime");
     expect(baseRuntime.meta).toMatchObject({
-      title: "Base · Main Room",
+      title: "Base Runtime",
       environment: "base",
     });
     expect(baseRuntime.meta.developmentPreview).not.toBe(true);

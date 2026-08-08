@@ -128,7 +128,7 @@ export const routeRecords = [
     name: "dev-base-runtime",
     component: () => import("../dev/base-runtime/BaseRuntimeView.vue"),
     meta: {
-      title: "Base · Main Room",
+      title: "Base Runtime",
       environment: "base",
     },
   },

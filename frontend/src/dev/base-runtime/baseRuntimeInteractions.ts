@@ -6,6 +6,7 @@ import type { BaseWorkspaceSlotPresentation } from "./baseRuntimeProjection";
 
 type BaseSelectionRuntime = Readonly<Pick<BaseRuntime, "select">>;
 type BaseNavigationRouter = Readonly<Pick<Router, "push">>;
+export type BaseNavigationScope = "production" | "development";
 
 export async function navigateFromBase(router: BaseNavigationRouter): Promise<void> {
   await router.push("/");
@@ -16,11 +17,16 @@ export async function navigateToBaseRoom(
   runtime: BaseSelectionRuntime,
   snapshot: DeepReadonly<BaseSnapshot>,
   targetRoomId: string,
+  scope: BaseNavigationScope = "production",
 ): Promise<boolean> {
   const targetRoom = snapshot.rooms.find((room) => room.objectId === targetRoomId);
   if (!targetRoom) return false;
 
   runtime.select(null);
+  if (scope === "development") {
+    await router.push({ path: "/dev/base-runtime", query: { roomId: targetRoom.objectId } });
+    return true;
+  }
   await router.push(targetRoom.slug === "main" ? "/base" : `/base/rooms/${targetRoom.slug}`);
   return true;
 }

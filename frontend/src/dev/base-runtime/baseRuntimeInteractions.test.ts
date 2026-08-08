@@ -36,6 +36,41 @@ describe("Base Runtime existing interaction adapter", () => {
     expect(push).toHaveBeenCalledWith("/base");
   });
 
+  it("navigates Main to Workshop inside the development presenter using the real Room ID", async () => {
+    const { router, runtime, push, select } = interactionHarness();
+
+    await navigateToBaseRoom(
+      router,
+      runtime,
+      snapshot(),
+      "room.workshop.authoritative",
+      "development",
+    );
+
+    expect(select).toHaveBeenCalledWith(null);
+    expect(push).toHaveBeenCalledWith({
+      path: "/dev/base-runtime",
+      query: { roomId: "room.workshop.authoritative" },
+    });
+  });
+
+  it("navigates Workshop to Main inside the same presenter using the real Room ID", async () => {
+    const { router, runtime, push } = interactionHarness();
+
+    await navigateToBaseRoom(
+      router,
+      runtime,
+      snapshot(),
+      "room.main.authoritative",
+      "development",
+    );
+
+    expect(push).toHaveBeenCalledWith({
+      path: "/dev/base-runtime",
+      query: { roomId: "room.main.authoritative" },
+    });
+  });
+
   it("does not navigate or mutate selection for an unavailable Room target", async () => {
     const { router, runtime, push, select } = interactionHarness();
 

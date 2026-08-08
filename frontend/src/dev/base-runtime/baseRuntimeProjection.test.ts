@@ -46,6 +46,72 @@ describe("real Base Runtime projection", () => {
     });
   });
 
+  it("resolves the real Workshop by its authoritative Room ID", () => {
+    const state = projectBaseRuntimeState("ready", snapshot(), null, "room.studio.real");
+
+    expect(state.phase).toBe("success");
+    if (state.phase !== "success") throw new Error("Expected Workshop success.");
+    expect(state.currentLocation).toBe("Home Base · Studio");
+    expect(state.room).toMatchObject({
+      objectId: "room.studio.real",
+      displayName: "Studio",
+      slug: "workshop",
+      atmosphere: "Focused",
+    });
+    expect(state.room.workspaceSlots).toEqual([
+      expect.objectContaining({
+        slotObjectId: "slot.studio.real",
+        workspaceObjectId: "workspace.studio.real",
+        occupied: true,
+      }),
+    ]);
+    expect(state.room.cockpit).toBeNull();
+    expect(state.room.companion).toBeNull();
+    expect(state.room.pet).toBeNull();
+  });
+
+  it("renders a real Workshop without Workspace Slots as an empty Room composition", () => {
+    const value = snapshot();
+    value.rooms[1] = room("room.studio.real", "Studio", "workshop", []);
+
+    const state = projectBaseRuntimeState("ready", value, null, "room.studio.real");
+
+    if (state.phase !== "success") throw new Error("Expected Workshop success.");
+    expect(state.room.workspaceSlots).toEqual([]);
+    expect(state.room.knowledgeWorkspace).toBeNull();
+    expect(state.room.creationWorkspace).toBeNull();
+  });
+
+  it("returns a quiet Not Found state for an unknown Room ID", () => {
+    expect(projectBaseRuntimeState("ready", snapshot(), null, "room.unknown")).toEqual({
+      phase: "not-found",
+      roomCount: 2,
+      currentLocation: "Home Base",
+      message: "The requested Base Room is unavailable.",
+    });
+  });
+
+  it("projects a missing Door target as unavailable without inventing a Room", () => {
+    const value = snapshot();
+    value.door.roomAId = "room.central.real";
+    value.door.roomBId = "room.removed.real";
+
+    const state = projectBaseRuntimeState("ready", value, null);
+
+    if (state.phase !== "success") throw new Error("Expected Base success.");
+    expect(state.room.doorTargets).toEqual([
+      expect.objectContaining({ targetRoomId: null, targetRoomName: null }),
+    ]);
+  });
+
+  it("resolves the same Workshop again for a repeated deep-link projection", () => {
+    const value = snapshot();
+    const first = projectBaseRuntimeState("ready", value, null, "room.studio.real");
+    const reloaded = projectBaseRuntimeState("ready", value, null, "room.studio.real");
+
+    expect(reloaded).toEqual(first);
+  });
+
   it("supports a real Main Room without Workspace Slots", () => {
     const value = snapshot();
     value.rooms[0] = room("room.central.real", "Central Room", "main", []);
@@ -159,11 +225,22 @@ function snapshot(): BaseSnapshot {
     skin: "EmptySurface",
     workspace: null,
   };
+  const studioSlot: WorkspaceSlot = {
+    ...summary("slot.studio.real", "Studio Slot", ["WorkspaceSlot"]),
+    placement: "left_rear",
+    skin: "StudioBench",
+    workspace: {
+      ...summary("workspace.studio.real", "Studio Workspace", ["Workspace"]),
+      icon: "Studio",
+      overlay: "StudioBench",
+      sourceProjectId: "project.studio.real",
+    },
+  };
   return {
     base: summary("base.real", "Home Base", ["Base"]),
     rooms: [
       room("room.central.real", "Central Room", "main", [researchSlot, emptySlot]),
-      room("room.studio.real", "Studio", "workshop", []),
+      room("room.studio.real", "Studio", "workshop", [studioSlot]),
     ],
     door: {
       ...summary("door.real", "Studio Door", ["Door"]),

@@ -1,5 +1,5 @@
 <template>
-  <section class="base-runtime-view environment-view" aria-label="Base Main Room Runtime" data-testid="base-runtime-view">
+  <section class="base-runtime-view environment-view" :aria-label="viewLabel" data-testid="base-runtime-view">
     <BaseRoomScene
       v-if="presentation.phase === 'success'"
       :room="presentation.room"
@@ -21,7 +21,7 @@
       <small>Base · Runtime</small>
       <strong v-if="presentation.phase === 'loading'">Loading Base</strong>
       <template v-else>
-        <strong>{{ presentation.phase === "error" ? "Base is unavailable" : "Base is quiet" }}</strong>
+        <strong>{{ stateTitle }}</strong>
         <p>{{ presentation.message }}</p>
         <button v-if="presentation.phase === 'error'" type="button" @click="loadBase">Try again</button>
       </template>
@@ -37,10 +37,12 @@
     />
     <template v-if="presentation.phase === 'success'">
       <BaseKnowledgeWindow
+        v-if="presentation.room.slug === 'main'"
         class="base-runtime-view__knowledge"
         :workspace="presentation.room.knowledgeWorkspace"
       />
       <BaseCaptureWindow
+        v-if="presentation.room.slug === 'main'"
         class="base-runtime-view__capture"
         :workspace="presentation.room.creationWorkspace"
       />
@@ -57,7 +59,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 import CompanionWindowHost from "../../components/cosmos/CompanionWindowHost.vue";
 import ObjectInteractionHost from "../../components/windows/ObjectInteractionHost.vue";
@@ -75,13 +77,33 @@ import {
 } from "./baseRuntimeInteractions";
 
 const runtime = useCosmosRuntime();
+const route = useRoute();
 const router = useRouter();
 const baseState = runtime.base.state;
 const companionWindowHost = ref<InstanceType<typeof CompanionWindowHost> | null>(null);
 const objectInteractionHost = ref<InstanceType<typeof ObjectInteractionHost> | null>(null);
+const requestedRoomId = computed(() => {
+  const value = route.query.roomId;
+  return typeof value === "string" && value.length > 0 ? value : null;
+});
 const presentation = computed(() =>
-  projectBaseRuntimeState(baseState.phase, baseState.snapshot, baseState.error),
+  projectBaseRuntimeState(
+    baseState.phase,
+    baseState.snapshot,
+    baseState.error,
+    requestedRoomId.value,
+  ),
 );
+const viewLabel = computed(() =>
+  presentation.value.phase === "success"
+    ? `${presentation.value.room.displayName} Runtime`
+    : "Base Runtime",
+);
+const stateTitle = computed(() => {
+  if (presentation.value.phase === "error") return "Base is unavailable";
+  if (presentation.value.phase === "not-found") return "Room not found";
+  return "Base is quiet";
+});
 const rightNeighbor = computed(() => {
   const state = presentation.value;
   if (state.phase !== "success") return null;
@@ -94,7 +116,7 @@ const rightNeighbor = computed(() => {
 function travelToRoom(targetRoomId: string) {
   const snapshot = baseState.snapshot;
   if (!snapshot) return;
-  void navigateToBaseRoom(router, runtime.base, snapshot, targetRoomId);
+  void navigateToBaseRoom(router, runtime.base, snapshot, targetRoomId, "development");
 }
 
 function closeBase() {
