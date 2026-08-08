@@ -52,6 +52,7 @@ export function projectGlobalCosmosState(
   phase: CosmosMapRuntime["state"]["phase"],
   snapshot: DeepReadonly<CosmosMapSnapshot> | null,
   error: string | null,
+  selectedObjectId: string | null = snapshot?.selectedObjectId ?? null,
 ): GlobalCosmosPresentationState {
   if (phase === "idle" || phase === "loading") {
     return { phase: "loading", projectCount: 0, zoomLabel: "--" };
@@ -84,17 +85,16 @@ export function projectGlobalCosmosState(
     phase: "success",
     projectCount: snapshot.projects.length,
     zoomLabel: zoomLabel(snapshot.camera.zoom),
-    regions: projectGlobalCosmosSnapshot(snapshot),
+    regions: projectGlobalCosmosSnapshot(snapshot, selectedObjectId),
   };
 }
 
 export function projectGlobalCosmosSnapshot(
   snapshot: DeepReadonly<CosmosMapSnapshot>,
+  runtimeSelectedObjectId: string | null = snapshot.selectedObjectId,
 ): readonly Readonly<GlobalCosmosRegionPresentation>[] {
   const projects = snapshot.projects;
-  const xRange = valueRange(projects.map((project) => project.x));
-  const yRange = valueRange(projects.map((project) => project.y));
-  const selectedProjectId = uniquelyOwningProjectId(projects, snapshot.selectedObjectId);
+  const selectedProjectId = uniquelyOwningProjectId(projects, runtimeSelectedObjectId);
 
   return projects.map((project) => {
     const memberIds = new Set([project.objectId, ...project.nodes.map((node) => node.objectId)]);
@@ -115,10 +115,10 @@ export function projectGlobalCosmosSnapshot(
       connectionCount: internalConnections.length,
       isFocused: snapshot.focusedProjectId === project.objectId,
       isSelected: selectedProjectId === project.objectId,
-      stars: projectStars(project, stars, selectedProjectId === project.objectId ? snapshot.selectedObjectId : null),
+      stars: projectStars(project, stars, selectedProjectId === project.objectId ? runtimeSelectedObjectId : null),
       style: {
-        "--region-left": `${projectPosition(project.x, xRange, 13, 87)}%`,
-        "--region-top": `${projectPosition(project.y, yRange, 22, 78)}%`,
+        "--region-left": `${project.x}px`,
+        "--region-top": `${project.y}px`,
         "--region-width": `${width}px`,
         "--region-height": `${height}px`,
         "--region-light": light.join(", "),
@@ -170,16 +170,6 @@ function valueRange(values: readonly number[]): Readonly<{ minimum: number; maxi
     minimum: Math.min(...values),
     maximum: Math.max(...values),
   };
-}
-
-function projectPosition(
-  value: number,
-  range: Readonly<{ minimum: number; maximum: number }>,
-  minimum: number,
-  maximum: number,
-): number {
-  if (range.minimum === range.maximum) return 50;
-  return round(minimum + ((value - range.minimum) / (range.maximum - range.minimum)) * (maximum - minimum));
 }
 
 function nodePosition(

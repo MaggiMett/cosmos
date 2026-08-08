@@ -1,14 +1,23 @@
 <template>
   <section
+    ref="viewportElement"
     class="cosmos-global-view environment-view"
+    :class="{ 'cosmos-global-view--interacting': isPanning }"
     aria-label="Global Cosmos View"
     data-testid="cosmos-global-view"
+    @pointerdown="startPan"
+    @pointermove="continuePan"
+    @pointerup="finishPan"
+    @pointercancel="cancelPan"
+    @wheel.prevent="zoomAtPointer"
   >
     <div class="cosmos-global-view__stars cosmos-global-view__stars--distant" aria-hidden="true" />
     <div class="cosmos-global-view__stars cosmos-global-view__stars--near" aria-hidden="true" />
     <GlobalCosmosUniverse
       v-if="presentation.phase === 'success'"
       :regions="presentation.regions"
+      :style="worldStyle"
+      :class="{ 'global-universe--interacting': isPanning }"
       @activate-project="openProject"
     />
 
@@ -34,7 +43,12 @@
     </div>
 
     <GlobalCosmosChrome :project-count="presentation.projectCount" :phase="presentation.phase" />
-    <GlobalCosmosControls :zoom-label="presentation.zoomLabel" />
+    <GlobalCosmosControls
+      :zoom-label="presentation.zoomLabel"
+      @zoom-out="zoomBy(1 / 1.18)"
+      @zoom-in="zoomBy(1.18)"
+      @fit="fit"
+    />
   </section>
 </template>
 
@@ -42,7 +56,8 @@
 import { computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 
-import { navigateToProject } from "../cosmosNavigation";
+import { navigateToProject, type CosmosNavigationScope } from "../cosmosNavigation";
+import { useCosmosCameraPresenter } from "../useCosmosCameraPresenter";
 import { useCosmosRuntime } from "../../runtime/plugin";
 import GlobalCosmosChrome from "./components/GlobalCosmosChrome.vue";
 import GlobalCosmosControls from "./components/GlobalCosmosControls.vue";
@@ -51,13 +66,41 @@ import { loadGlobalCosmosSnapshot, projectGlobalCosmosState } from "./globalCosm
 
 const runtime = useCosmosRuntime();
 const router = useRouter();
+const props = withDefaults(defineProps<{ navigationScope?: CosmosNavigationScope }>(), {
+  navigationScope: "development",
+});
 const mapState = runtime.cosmosMap.state;
 const presentation = computed(() =>
-  projectGlobalCosmosState(mapState.phase, mapState.snapshot, mapState.error),
+  projectGlobalCosmosState(
+    mapState.phase,
+    mapState.snapshot,
+    mapState.error,
+    mapState.selectedObjectId,
+  ),
 );
+const {
+  viewportElement,
+  worldStyle,
+  isPanning,
+  startPan,
+  continuePan,
+  finishPan,
+  cancelPan,
+  zoomAtPointer,
+  zoomBy,
+  fit,
+  focusProject,
+  persistCameraNow,
+} = useCosmosCameraPresenter(runtime.cosmosMap);
 
-function openProject(projectId: string): void {
-  void navigateToProject(router, projectId);
+async function openProject(projectId: string): Promise<void> {
+  focusProject(projectId);
+  runtime.cosmosMap.select(projectId);
+  await Promise.all([
+    persistCameraNow(),
+    runtime.cosmosMap.persistSelection(),
+  ]).catch(() => undefined);
+  await navigateToProject(router, projectId, props.navigationScope);
 }
 
 onMounted(() => {
@@ -68,11 +111,16 @@ onMounted(() => {
 <style scoped>
 .cosmos-global-view {
   overflow: hidden;
+  touch-action: none;
   background:
     radial-gradient(ellipse at 38% 48%, rgba(30, 72, 95, 0.08), transparent 35%),
     radial-gradient(ellipse at 73% 68%, rgba(23, 80, 79, 0.06), transparent 28%),
     linear-gradient(145deg, #010308, #030711 53%, #010207);
   color: var(--cosmos-color-text);
+}
+
+.cosmos-global-view--interacting {
+  cursor: grabbing;
 }
 
 .cosmos-global-view::after {

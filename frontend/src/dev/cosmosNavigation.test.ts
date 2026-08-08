@@ -41,6 +41,25 @@ describe("Global to Project Cosmos navigation", () => {
     expect(push).toHaveBeenLastCalledWith({ name: "dev-cosmos-global" });
   });
 
+  it("uses the productive Cosmos route without Dev URLs for the New presenter", async () => {
+    const router = createCosmosRouter({ history: createMemoryHistory() });
+    const push = vi.fn().mockResolvedValue(undefined);
+    const navigationRouter = { push } as unknown as Pick<Router, "push">;
+
+    expect(router.resolve(projectCosmosRoute("project.real", "production")).fullPath).toBe(
+      "/?projectId=project.real",
+    );
+    expect(router.resolve(globalCosmosRoute("production")).fullPath).toBe("/");
+
+    await navigateToProject(navigationRouter, "project.real", "production");
+    expect(push).toHaveBeenLastCalledWith({
+      name: "cosmos",
+      query: { projectId: "project.real" },
+    });
+    await navigateToGlobal(navigationRouter, "production");
+    expect(push).toHaveBeenLastCalledWith({ name: "cosmos" });
+  });
+
   it("preserves valid and unknown Project IDs in direct deep links", () => {
     const router = createCosmosRouter({ history: createMemoryHistory() });
     const valid = router.resolve(

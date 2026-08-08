@@ -112,6 +112,10 @@ describe("Project Cosmos presentation projection", () => {
       "node.alpha.research",
       "node.alpha.build",
     ]);
+    expect(state.project.nodes[0]?.style).toMatchObject({
+      "--node-left": "-180px",
+      "--node-top": "-90px",
+    });
     expect(JSON.stringify(source)).toBe(before);
   });
 
@@ -140,6 +144,21 @@ describe("Project Cosmos presentation projection", () => {
     expect(presentation.connections).not.toContainEqual(
       expect.objectContaining({ objectId: "connection.cross-project" }),
     );
+  });
+
+  it("reprojects a Runtime-moved Node directly from authoritative world coordinates", () => {
+    const source = snapshot();
+    const alpha = source.projects.find((item) => item.objectId === "project.alpha");
+    const moved = alpha?.nodes.find((item) => item.objectId === "node.alpha.build");
+    if (!alpha || !moved) throw new Error("Expected the real test Node.");
+    moved.x = 310;
+    moved.y = 170;
+
+    const presentation = projectProjectCosmosSnapshot(source, alpha);
+    expect(presentation.nodes.find((item) => item.objectId === moved.objectId)?.style).toMatchObject({
+      "--node-left": "310px",
+      "--node-top": "170px",
+    });
   });
 
   it("presents focusedProjectId only on the requested Project core", () => {

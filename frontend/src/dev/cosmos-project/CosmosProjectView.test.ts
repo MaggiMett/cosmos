@@ -55,13 +55,16 @@ describe("Project Cosmos visual slice", () => {
     expect(chrome).toContain(':left-neighbor="globalNeighbor"');
     expect(chrome).toContain("@travel=\"$emit('back-to-global')\"");
     expect(view).toContain('@back-to-global="backToGlobal"');
-    expect(view).toContain("navigateToGlobal(router)");
+    expect(view).toContain("navigateToGlobal(router, props.navigationScope)");
     expect(chrome).toContain("Local · Synced");
     expect(chrome).toContain("objectStatus");
     expect(controls).toContain("zoomLabel");
     expect(controls).toContain("projectName");
     expect(controls).toContain("Fit");
     expect(controls).toContain("Search / Focus");
+    expect(controls).toContain("$emit('zoom-out')");
+    expect(controls).toContain("$emit('zoom-in')");
+    expect(controls).toContain("$emit('fit')");
   });
 
   it("renders only projected Project, Node and Selection data", () => {
@@ -94,7 +97,7 @@ describe("Project Cosmos visual slice", () => {
     expect(constellation).toContain(".project-node--selected > i");
   });
 
-  it("projects real SVG connection paths without introducing graph editing", () => {
+  it("projects real SVG connection paths and Node move gestures without connection editing", () => {
     const constellation = sourceFor("./components/AsteriaConstellation.vue");
 
     expect(constellation).toContain("<svg");
@@ -103,10 +106,11 @@ describe("Project Cosmos visual slice", () => {
     expect(constellation).toContain("project-connection--semantic");
     expect(constellation).toContain("project-connection--structural");
     expect(constellation).toContain("@click");
-    expect(constellation).not.toContain("@pointer");
+    expect(constellation).toContain("@pointerdown.stop");
+    expect(constellation).not.toContain("connection-edit");
   });
 
-  it("loads and selects through existing Runtime paths without graph or camera writes", () => {
+  it("loads, selects, moves and opens through existing Runtime paths", () => {
     const combined = files.map(sourceFor).join("\n");
     const view = sourceFor("./CosmosProjectView.vue");
 
@@ -116,17 +120,15 @@ describe("Project Cosmos visual slice", () => {
     expect(view).toContain("loadProjectCosmosSnapshot(runtime.cosmosMap)");
     expect(view).toContain("selectProjectCosmosNode(runtime.cosmosMap, project, objectId)");
     expect(view).toContain("openSelectedProjectCosmosNode(host, project, objectId)");
+    expect(view).toContain("moveProjectNode(");
+    expect(view).toContain("persistProjectNodeMove(runtime.cosmosMap, gesture)");
+    expect(view).toContain("useCosmosCameraPresenter(runtime.cosmosMap, requestedProjectId)");
     expect(view).toContain("mapState.selectedObjectId");
-    expect(view).not.toContain("persistCamera");
-    expect(view).not.toContain("persistNodePosition");
-    expect(view).not.toContain("focusProject");
-    expect(view).not.toContain("focusCosmos");
     expect(view).not.toContain(".setCamera(");
     expect(view).not.toContain(".moveNodeLocally(");
     expect(combined).not.toContain("localStorage");
     expect(combined).not.toContain("sessionStorage");
     expect(combined).not.toContain("<img");
-    expect(combined).not.toContain("drag");
     expect(combined).not.toContain("contextmenu");
     expect(view).not.toContain("selectedObjectId = ref");
   });

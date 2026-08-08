@@ -1,17 +1,31 @@
 <template>
   <section
+    ref="viewportElement"
     class="cosmos-project-view environment-view"
+    :class="{ 'cosmos-project-view--interacting': isPanning || nodeMove !== null }"
     :aria-label="`${presentation.projectName} Project Cosmos`"
     data-testid="cosmos-project-view"
+    @pointerdown="startPan"
+    @pointermove="continuePointerInteraction"
+    @pointerup="finishPointerInteraction"
+    @pointercancel="cancelPointerInteraction"
+    @wheel.prevent="zoomAtPointer"
   >
     <div class="cosmos-project-view__stars cosmos-project-view__stars--distant" aria-hidden="true" />
     <div class="cosmos-project-view__stars cosmos-project-view__stars--near" aria-hidden="true" />
-    <AsteriaConstellation
+    <div
       v-if="visibleProject"
-      :project="visibleProject"
-      @select-node="selectNode"
-      @open-node="openNode"
-    />
+      class="cosmos-project-view__world"
+      :class="{ 'cosmos-project-view__world--interacting': isPanning || nodeMove !== null }"
+      :style="worldStyle"
+    >
+      <AsteriaConstellation
+        :project="visibleProject"
+        @select-node="selectNode"
+        @open-node="openNode"
+        @start-node-move="startNodeMove"
+      />
+    </div>
 
     <div
       v-if="presentation.phase !== 'success'"
@@ -47,6 +61,9 @@
     <ProjectCosmosControls
       :project-name="presentation.projectName"
       :zoom-label="presentation.zoomLabel"
+      @zoom-out="zoomBy(1 / 1.18)"
+      @zoom-in="zoomBy(1.18)"
+      @fit="fit"
     />
     <ObjectInteractionHost ref="objectInteractionHost" />
   </section>
@@ -56,14 +73,19 @@
 import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { navigateToGlobal } from "../cosmosNavigation";
+import { navigateToGlobal, type CosmosNavigationScope } from "../cosmosNavigation";
+import { useCosmosCameraPresenter } from "../useCosmosCameraPresenter";
 import ObjectInteractionHost from "../../components/windows/ObjectInteractionHost.vue";
 import { useCosmosRuntime } from "../../runtime/plugin";
 import AsteriaConstellation from "./components/AsteriaConstellation.vue";
 import ProjectCosmosChrome from "./components/ProjectCosmosChrome.vue";
 import ProjectCosmosControls from "./components/ProjectCosmosControls.vue";
 import {
+  beginProjectNodeMove,
+  moveProjectNode,
   openSelectedProjectCosmosNode,
+  persistProjectNodeMove,
+  type ProjectNodeMoveGesture,
   selectProjectCosmosNode,
 } from "./projectCosmosInteraction";
 import {
@@ -75,6 +97,9 @@ import {
 const runtime = useCosmosRuntime();
 const route = useRoute();
 const router = useRouter();
+const props = withDefaults(defineProps<{ navigationScope?: CosmosNavigationScope }>(), {
+  navigationScope: "development",
+});
 const mapState = runtime.cosmosMap.state;
 const requestedProjectId = computed(() => projectIdFromQuery(route.query.projectId));
 const presentation = computed(() =>
@@ -87,18 +112,33 @@ const presentation = computed(() =>
   ),
 );
 const objectInteractionHost = ref<InstanceType<typeof ObjectInteractionHost> | null>(null);
+const nodeMove = ref<ProjectNodeMoveGesture | null>(null);
+const {
+  viewportElement,
+  worldStyle,
+  isPanning,
+  startPan,
+  continuePan,
+  finishPan,
+  cancelPan,
+  zoomAtPointer,
+  zoomBy,
+  fit,
+  persistCameraNow,
+} = useCosmosCameraPresenter(runtime.cosmosMap, requestedProjectId);
 const visibleProject = computed(() => {
   const state = presentation.value;
   return state.phase === "success" || state.phase === "empty-project" ? state.project : null;
 });
 
-function backToGlobal(): void {
-  void navigateToGlobal(router);
+async function backToGlobal(): Promise<void> {
+  await persistCameraNow().catch(() => undefined);
+  await navigateToGlobal(router, props.navigationScope);
 }
 
 function selectNode(objectId: string): void {
   const project = visibleProject.value;
-  if (!project) return;
+  if (!project || mapState.selectedObjectId === objectId) return;
   void selectProjectCosmosNode(runtime.cosmosMap, project, objectId).catch(() => undefined);
 }
 
@@ -109,6 +149,60 @@ function openNode(objectId: string): void {
   void openSelectedProjectCosmosNode(host, project, objectId).catch(() => undefined);
 }
 
+function startNodeMove(event: PointerEvent, objectId: string): void {
+  const project = visibleProject.value;
+  if (event.button !== 0 || !project) return;
+  const gesture = beginProjectNodeMove(project, objectId, event);
+  if (!gesture) return;
+  event.preventDefault();
+  nodeMove.value = gesture;
+  viewportElement.value?.setPointerCapture(event.pointerId);
+  selectNode(objectId);
+}
+
+function continuePointerInteraction(event: PointerEvent): void {
+  const gesture = nodeMove.value;
+  if (gesture?.pointerId === event.pointerId) {
+    moveProjectNode(
+      runtime.cosmosMap,
+      gesture,
+      event,
+      mapState.snapshot?.camera.zoom ?? 1,
+    );
+    return;
+  }
+  continuePan(event);
+}
+
+function finishPointerInteraction(event: PointerEvent): void {
+  const gesture = nodeMove.value;
+  if (gesture?.pointerId === event.pointerId) {
+    nodeMove.value = null;
+    releasePointer(event.pointerId);
+    void persistProjectNodeMove(runtime.cosmosMap, gesture).catch(() => {
+      void loadProjectCosmosSnapshot(runtime.cosmosMap).catch(() => undefined);
+    });
+    return;
+  }
+  finishPan(event);
+}
+
+function cancelPointerInteraction(event: PointerEvent): void {
+  if (nodeMove.value?.pointerId === event.pointerId) {
+    nodeMove.value = null;
+    releasePointer(event.pointerId);
+    void loadProjectCosmosSnapshot(runtime.cosmosMap).catch(() => undefined);
+    return;
+  }
+  cancelPan(event);
+}
+
+function releasePointer(pointerId: number): void {
+  if (viewportElement.value?.hasPointerCapture(pointerId)) {
+    viewportElement.value.releasePointerCapture(pointerId);
+  }
+}
+
 onMounted(() => {
   void loadProjectCosmosSnapshot(runtime.cosmosMap).catch(() => undefined);
 });
@@ -117,11 +211,31 @@ onMounted(() => {
 <style scoped>
 .cosmos-project-view {
   overflow: hidden;
+  touch-action: none;
   background:
     radial-gradient(ellipse at 50% 49%, rgba(33, 80, 103, 0.13), transparent 39%),
     radial-gradient(ellipse at 68% 28%, rgba(47, 62, 101, 0.08), transparent 30%),
     linear-gradient(145deg, #010309, #030811 54%, #010308);
   color: var(--cosmos-color-text);
+}
+
+.cosmos-project-view--interacting {
+  cursor: grabbing;
+}
+
+.cosmos-project-view__world {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  transform-origin: 0 0;
+  transition: transform 220ms ease;
+}
+
+.cosmos-project-view__world--interacting {
+  transition: none;
 }
 
 .cosmos-project-view::after {
@@ -223,5 +337,6 @@ onMounted(() => {
 
 @media (prefers-reduced-motion: reduce) {
   .cosmos-project-view__state--loading > span { animation: none; }
+  .cosmos-project-view__world { transition: none; }
 }
 </style>

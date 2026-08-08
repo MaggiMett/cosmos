@@ -9,8 +9,6 @@
 
     <svg
       class="project-connections"
-      viewBox="0 0 1200 760"
-      preserveAspectRatio="none"
       aria-label="Project connections"
     >
       <path
@@ -52,6 +50,7 @@
         :aria-label="`${node.displayName} node`"
         :aria-pressed="node.isSelected"
         :data-node-id="node.objectId"
+        @pointerdown.stop="$emit('start-node-move', $event, node.objectId)"
         @click="$emit('select-node', node.objectId)"
       >
         <span v-if="node.isSelected" class="project-node__focus-ring" aria-hidden="true" />
@@ -79,6 +78,7 @@ const props = defineProps<{
 defineEmits<{
   "select-node": [objectId: string];
   "open-node": [objectId: string];
+  "start-node-move": [event: PointerEvent, objectId: string];
 }>();
 
 const coreLabel = computed(() => {
@@ -95,17 +95,18 @@ const coreLabel = computed(() => {
 .project-constellation {
   position: absolute;
   z-index: 2;
-  top: 88px;
-  left: 50%;
-  width: min(1200px, calc(100vw - 160px));
-  height: calc(100vh - 170px);
-  min-height: 650px;
-  transform: translateX(-50%);
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
 }
 
 .project-constellation__nebula {
   position: absolute;
-  inset: 4% 9% 2%;
+  top: calc(var(--project-y) - 320px);
+  left: calc(var(--project-x) - 500px);
+  width: 1000px;
+  height: 640px;
   transform: rotate(-7deg);
   border-radius: 62% 38% 58% 42% / 43% 57% 43% 57%;
   background:
@@ -176,7 +177,12 @@ const coreLabel = computed(() => {
   color: inherit;
   cursor: pointer;
   font: inherit;
+  touch-action: none;
   transform: none;
+}
+
+.project-node-anchor > .project-node:active {
+  cursor: grabbing;
 }
 
 .project-node-anchor > .project-node:focus-visible {
@@ -207,6 +213,8 @@ const coreLabel = computed(() => {
   --node-left: 50%;
   --node-top: 50%;
   --node-size: 40px;
+  top: var(--project-y);
+  left: var(--project-x);
   width: 130px;
   height: 130px;
 }

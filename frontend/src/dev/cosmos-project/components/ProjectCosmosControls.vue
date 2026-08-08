@@ -1,11 +1,11 @@
 <template>
   <div class="project-cosmos-controls" data-testid="project-cosmos-controls">
     <div class="project-cosmos-controls__zoom" aria-label="Zoom controls">
-      <button type="button" aria-label="Zoom out">−</button>
+      <button type="button" aria-label="Zoom out" @click="$emit('zoom-out')">−</button>
       <span>{{ zoomLabel }}</span>
-      <button type="button" aria-label="Zoom in">+</button>
+      <button type="button" aria-label="Zoom in" @click="$emit('zoom-in')">+</button>
     </div>
-    <button type="button" class="project-cosmos-controls__fit">Fit</button>
+    <button type="button" class="project-cosmos-controls__fit" @click="$emit('fit')">Fit</button>
     <button type="button" class="project-cosmos-controls__search">
       <span aria-hidden="true">⌕</span>
       Search / Focus
@@ -18,6 +18,12 @@
 defineProps<{
   projectName: string;
   zoomLabel: string;
+}>();
+
+defineEmits<{
+  "zoom-out": [];
+  "zoom-in": [];
+  fit: [];
 }>();
 </script>
 

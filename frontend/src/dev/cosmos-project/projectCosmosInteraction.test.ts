@@ -2,7 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { ProjectCosmosPresentation } from "./projectCosmosProjection";
 import {
+  beginProjectNodeMove,
+  moveProjectNode,
   openSelectedProjectCosmosNode,
+  persistProjectNodeMove,
   selectProjectCosmosNode,
 } from "./projectCosmosInteraction";
 
@@ -19,6 +22,8 @@ function project(selectedObjectId: string | null = null): ProjectCosmosPresentat
         displayName: "Real Node",
         description: "",
         typeLabel: "Object",
+        x: 120,
+        y: 80,
         isSelected: selectedObjectId === "node.real",
         style: {},
       },
@@ -73,8 +78,46 @@ describe("Project Cosmos interaction adapter", () => {
     expect(host.openObject).not.toHaveBeenCalled();
   });
 
+  it("moves and persists a real Node through the existing Runtime position path", async () => {
+    const gesture = beginProjectNodeMove(project(), "node.real", {
+      pointerId: 7,
+      clientX: 100,
+      clientY: 120,
+    });
+    if (!gesture) throw new Error("Expected a Node move gesture.");
+    const runtime = {
+      moveNodeLocally: vi.fn().mockReturnValue(true),
+      persistNodePosition: vi.fn().mockResolvedValue(undefined),
+    };
+
+    expect(moveProjectNode(runtime, gesture, { clientX: 140, clientY: 100 }, 2)).toBe(true);
+    expect(runtime.moveNodeLocally).toHaveBeenCalledWith("node.real", 140, 70);
+    expect(gesture.moved).toBe(true);
+    await expect(persistProjectNodeMove(runtime, gesture)).resolves.toBe(true);
+    expect(runtime.persistNodePosition).toHaveBeenCalledWith("node.real");
+  });
+
+  it("does not persist a click without Node movement", async () => {
+    const gesture = beginProjectNodeMove(project(), "node.real", {
+      pointerId: 8,
+      clientX: 10,
+      clientY: 10,
+    });
+    if (!gesture) throw new Error("Expected a Node move gesture.");
+    const runtime = { persistNodePosition: vi.fn().mockResolvedValue(undefined) };
+
+    await expect(persistProjectNodeMove(runtime, gesture)).resolves.toBe(false);
+    expect(runtime.persistNodePosition).not.toHaveBeenCalled();
+  });
+
   it("contains no fixture defaults, new backend calls, or parallel state", () => {
-    const combined = [selectProjectCosmosNode, openSelectedProjectCosmosNode]
+    const combined = [
+      selectProjectCosmosNode,
+      openSelectedProjectCosmosNode,
+      beginProjectNodeMove,
+      moveProjectNode,
+      persistProjectNodeMove,
+    ]
       .map((value) => value.toString())
       .join("\n");
 

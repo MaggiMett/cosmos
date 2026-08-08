@@ -66,8 +66,17 @@ function regionLabel(region: Readonly<GlobalCosmosRegionPresentation>): string {
 .global-universe {
   position: absolute;
   z-index: 5;
-  inset: 76px 26px 72px;
-  overflow: hidden;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  overflow: visible;
+  transform-origin: 0 0;
+  transition: transform 220ms ease;
+}
+
+.global-universe--interacting {
+  transition: none;
 }
 
 .project-region {
@@ -199,7 +208,7 @@ function regionLabel(region: Readonly<GlobalCosmosRegionPresentation>): string {
   box-shadow: 0 0 9px rgba(var(--region-light), 0.95), 0 0 24px rgba(var(--region-light), 0.45);
 }
 
-@media (max-width: 1100px) {
-  .global-universe { transform: scale(0.82); transform-origin: center; }
+@media (prefers-reduced-motion: reduce) {
+  .global-universe { transition: none; }
 }
 </style>

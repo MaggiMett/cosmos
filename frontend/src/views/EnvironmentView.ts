@@ -1,7 +1,8 @@
 import { defineAsyncComponent, defineComponent, h } from "vue";
 import { useRoute } from "vue-router";
 
-const CosmosView = defineAsyncComponent(() => import("./CosmosView.vue"));
+const LegacyCosmosView = defineAsyncComponent(() => import("./CosmosView.vue"));
+const CosmosPresenterView = defineAsyncComponent(() => import("./CosmosPresenterView.vue"));
 const BaseView = defineAsyncComponent(() => import("./BaseView.vue"));
 const WorkspaceView = defineAsyncComponent(() => import("./WorkspaceView.vue"));
 
@@ -10,16 +11,16 @@ export default defineComponent({
   setup() {
     const route = useRoute();
     return () => {
-      if (route.meta.environment === "cosmos") return h(CosmosView);
+      if (route.meta.environment === "cosmos") return h(CosmosPresenterView);
       if (route.meta.environment === "base" || route.meta.environment === "room") {
         return h("div", { class: "environment-view" }, [
-          h(CosmosView, { backgroundOnly: true, inert: true, "aria-hidden": "true" }),
+          h(LegacyCosmosView, { backgroundOnly: true, inert: true, "aria-hidden": "true" }),
           h(BaseView),
         ]);
       }
       if (route.meta.environment === "workspace") {
         return h("div", { class: "environment-view" }, [
-          h(CosmosView, { backgroundOnly: true, inert: true, "aria-hidden": "true" }),
+          h(LegacyCosmosView, { backgroundOnly: true, inert: true, "aria-hidden": "true" }),
           h(BaseView, { backgroundOnly: true, inert: true, "aria-hidden": "true" }),
           h(WorkspaceView),
         ]);

@@ -13,6 +13,8 @@ export interface ProjectCosmosNodePresentation {
   displayName: string;
   description: string;
   typeLabel: string;
+  x: number;
+  y: number;
   isSelected: boolean;
   style: Readonly<Record<string, string>>;
 }
@@ -58,9 +60,6 @@ interface CanvasPoint {
   y: number;
 }
 
-const CANVAS_WIDTH = 1200;
-const CANVAS_HEIGHT = 760;
-const CORE_POINT: Readonly<CanvasPoint> = { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2 };
 const DEFAULT_LIGHT = [116, 190, 226] as const;
 
 export function loadProjectCosmosSnapshot(
@@ -137,7 +136,10 @@ export function projectProjectCosmosSnapshot(
   const selectedObjectId = nodes.some((node) => node.objectId === runtimeSelectedObjectId)
     ? runtimeSelectedObjectId
     : null;
-  const points = projectNodePoints(project, nodes);
+  const points = new Map<string, Readonly<CanvasPoint>>([
+    [project.objectId, { x: project.x, y: project.y }],
+    ...nodes.map((node) => [node.objectId, { x: node.x, y: node.y }] as const),
+  ]);
   const memberIds = new Set([project.objectId, ...nodes.map((node) => node.objectId)]);
   const connections = snapshot.connections
     .filter(
@@ -154,44 +156,28 @@ export function projectProjectCosmosSnapshot(
     isFocused: snapshot.focusedProjectId === project.objectId,
     isCoreSelected: runtimeSelectedObjectId === project.objectId,
     nodes: nodes.map((node) => {
-      const point = points.get(node.objectId) ?? CORE_POINT;
       return {
         objectId: node.objectId,
         displayName: node.displayName,
         description: node.description,
         typeLabel: nodeTypeLabel(node),
+        x: node.x,
+        y: node.y,
         isSelected: selectedObjectId === node.objectId,
         style: {
-          "--node-left": `${round((point.x / CANVAS_WIDTH) * 100)}%`,
-          "--node-top": `${round((point.y / CANVAS_HEIGHT) * 100)}%`,
+          "--node-left": `${node.x}px`,
+          "--node-top": `${node.y}px`,
           "--node-size": `${nodeSize(node.hierarchyLevel)}px`,
         },
       };
     }),
     connections,
-    style: { "--project-light": light.join(", ") },
+    style: {
+      "--project-light": light.join(", "),
+      "--project-x": `${project.x}px`,
+      "--project-y": `${project.y}px`,
+    },
   };
-}
-
-function projectNodePoints(
-  project: DeepReadonly<MapProject>,
-  nodes: readonly DeepReadonly<MapNode>[],
-): ReadonlyMap<string, Readonly<CanvasPoint>> {
-  const points = new Map<string, Readonly<CanvasPoint>>([[project.objectId, CORE_POINT]]);
-  const maxDeltaX = Math.max(...nodes.map((node) => Math.abs(node.x - project.x)), 0);
-  const maxDeltaY = Math.max(...nodes.map((node) => Math.abs(node.y - project.y)), 0);
-
-  nodes.forEach((node, index) => {
-    const angle = nodes.length === 0 ? 0 : (index / nodes.length) * Math.PI * 2 - Math.PI / 2;
-    const x = maxDeltaX === 0
-      ? CORE_POINT.x + Math.cos(angle) * 350
-      : CORE_POINT.x + ((node.x - project.x) / maxDeltaX) * 390;
-    const y = maxDeltaY === 0
-      ? CORE_POINT.y + Math.sin(angle) * 245
-      : CORE_POINT.y + ((node.y - project.y) / maxDeltaY) * 255;
-    points.set(node.objectId, { x: clamp(x, 140, 1060), y: clamp(y, 90, 670) });
-  });
-  return points;
 }
 
 function projectConnection(
@@ -251,10 +237,6 @@ function colorChannels(value: string): readonly [number, number, number] {
 
 function zoomLabel(zoom: number): string {
   return Number.isFinite(zoom) ? `${Math.round(zoom * 100)}%` : "--";
-}
-
-function clamp(value: number, minimum: number, maximum: number): number {
-  return Math.min(Math.max(value, minimum), maximum);
 }
 
 function round(value: number): number {

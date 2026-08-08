@@ -15,6 +15,10 @@ function sourceFor(path: (typeof files)[number]): string {
   return readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8");
 }
 
+function cameraSource(): string {
+  return readFileSync(fileURLToPath(new URL("../useCosmosCameraPresenter.ts", import.meta.url)), "utf8");
+}
+
 describe("Global Cosmos visual slice", () => {
   it.each(files)("compiles %s without script or template errors", (path) => {
     const source = sourceFor(path);
@@ -72,34 +76,40 @@ describe("Global Cosmos visual slice", () => {
     for (const label of ["zoomLabel", "Fit", "Search / Focus", "Base", "Companion", "Settings"]) {
       expect(controls).toContain(label);
     }
+    expect(controls).toContain("$emit('zoom-out')");
+    expect(controls).toContain("$emit('zoom-in')");
+    expect(controls).toContain("$emit('fit')");
   });
 
-  it("uses CSS and HTML primitives without graph behavior", () => {
+  it("uses CSS and HTML primitives with camera gestures but no graph editing", () => {
     const combined = files.map(sourceFor).join("\n");
 
     expect(combined).not.toContain("<svg");
     expect(combined).toContain("@click");
-    expect(combined).not.toContain("@pointer");
+    expect(combined).toContain('@pointerdown="startPan"');
+    expect(combined).toContain('@wheel.prevent="zoomAtPointer"');
     expect(combined).not.toContain("contextmenu");
-    expect(combined).not.toContain("drag");
+    expect(combined).not.toContain("moveNodeLocally");
   });
 
-  it("loads through CosmosMapRuntime while remaining asset-free and read-only", () => {
+  it("loads and applies only existing camera, focus and selection Runtime paths", () => {
     const combined = files.map(sourceFor).join("\n");
     const view = sourceFor("./CosmosGlobalView.vue");
+    const camera = cameraSource();
 
     expect(combined).not.toContain("fetch(");
     expect(combined).not.toContain("/api");
     expect(view).toContain("useCosmosRuntime");
     expect(view).toContain("loadGlobalCosmosSnapshot(runtime.cosmosMap)");
-    expect(view).toContain("navigateToProject(router, projectId)");
-    expect(view).not.toContain("persistCamera");
+    expect(view).toContain("navigateToProject(router, projectId, props.navigationScope)");
+    expect(view).toContain("focusProject(projectId)");
+    expect(view).toContain("runtime.cosmosMap.select(projectId)");
+    expect(view).toContain("runtime.cosmosMap.persistSelection()");
+    expect(camera).toContain("runtime.setCamera");
+    expect(camera).toContain("runtime.persistCamera()");
+    expect(camera).toContain("runtime.focusCosmos");
+    expect(camera).toContain("runtime.focusProject");
     expect(view).not.toContain("persistNodePosition");
-    expect(view).not.toContain("persistSelection");
-    expect(view).not.toContain("focusProject");
-    expect(view).not.toContain("focusCosmos");
-    expect(view).not.toContain(".select(");
-    expect(view).not.toContain(".setCamera(");
     expect(view).not.toContain(".moveNodeLocally(");
     expect(combined).not.toContain("localStorage");
     expect(combined).not.toContain("sessionStorage");

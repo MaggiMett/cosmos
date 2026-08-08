@@ -110,6 +110,10 @@ describe("Global Cosmos presentation projection", () => {
     expect(regions[0]).toMatchObject({ nodeCount: 1, connectionCount: 1 });
     expect(regions[1]).toMatchObject({ nodeCount: 1, connectionCount: 0 });
     expect(regions[2]).toMatchObject({ nodeCount: 0, connectionCount: 0, stars: [] });
+    expect(regions[0]?.style).toMatchObject({
+      "--region-left": "-500px",
+      "--region-top": "-100px",
+    });
     expect(JSON.stringify(source)).toBe(before);
   });
 
@@ -134,6 +138,21 @@ describe("Global Cosmos presentation projection", () => {
     expect(beta?.isSelected).toBe(true);
     expect(beta?.stars.find((star) => star.objectId === "node.beta.build")?.isSelected).toBe(true);
     expect(regions.filter((region) => region.isSelected)).toHaveLength(1);
+  });
+
+  it("uses the current Runtime selection without mutating the loaded snapshot", () => {
+    const source = snapshot({ selectedObjectId: null });
+    const state = projectGlobalCosmosState(
+      "ready",
+      source,
+      null,
+      "node.beta.build",
+    );
+
+    expect(state.phase).toBe("success");
+    if (state.phase !== "success") throw new Error("Expected a successful Global projection.");
+    expect(state.regions.find((region) => region.objectId === "project.beta")?.isSelected).toBe(true);
+    expect(source.selectedObjectId).toBeNull();
   });
 
   it("does not assign selection when no focus or selection exists", () => {
