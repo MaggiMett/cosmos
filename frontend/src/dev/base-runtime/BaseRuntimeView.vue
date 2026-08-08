@@ -1,5 +1,11 @@
 <template>
-  <section class="base-runtime-view environment-view" :aria-label="viewLabel" data-testid="base-runtime-view">
+  <section
+    class="base-runtime-view environment-view"
+    :aria-label="viewLabel"
+    :aria-hidden="backgroundOnly ? 'true' : undefined"
+    :inert="backgroundOnly || undefined"
+    data-testid="base-runtime-view"
+  >
     <BaseRoomScene
       v-if="presentation.phase === 'success'"
       :room="presentation.room"
@@ -27,6 +33,7 @@
       </template>
     </div>
     <BaseRuntimeChrome
+      v-if="!backgroundOnly"
       :current-location="presentation.currentLocation"
       :room-count="presentation.roomCount"
       :companion="presentation.phase === 'success' ? presentation.room.companion : null"
@@ -37,22 +44,23 @@
     />
     <template v-if="presentation.phase === 'success'">
       <BaseKnowledgeWindow
-        v-if="presentation.room.slug === 'main'"
+        v-if="!backgroundOnly && presentation.room.slug === 'main'"
         class="base-runtime-view__knowledge"
         :workspace="presentation.room.knowledgeWorkspace"
       />
       <BaseCaptureWindow
-        v-if="presentation.room.slug === 'main'"
+        v-if="!backgroundOnly && presentation.room.slug === 'main'"
         class="base-runtime-view__capture"
         :workspace="presentation.room.creationWorkspace"
       />
       <CompanionWindowHost
+        v-if="!backgroundOnly"
         ref="companionWindowHost"
         :current-location="presentation.room.displayName"
         :context="{ roomId: presentation.room.objectId, objectId: baseState.selectedObjectId }"
         @destination="openObject"
       />
-      <ObjectInteractionHost ref="objectInteractionHost" />
+      <ObjectInteractionHost v-if="!backgroundOnly" ref="objectInteractionHost" />
     </template>
   </section>
 </template>
@@ -69,12 +77,25 @@ import BaseKnowledgeWindow from "./components/BaseKnowledgeWindow.vue";
 import BaseRoomScene from "./components/BaseRoomScene.vue";
 import BaseRuntimeChrome from "./components/BaseRuntimeChrome.vue";
 import type { BaseWorkspaceSlotPresentation } from "./baseRuntimeProjection";
-import { loadBaseRuntimeSnapshot, projectBaseRuntimeState } from "./baseRuntimeProjection";
 import {
+  loadBaseRuntimeSnapshot,
+  projectBaseRuntimeState,
+  routeRoomParameterToSnapshotId,
+} from "./baseRuntimeProjection";
+import {
+  type BaseNavigationScope,
   navigateFromBase,
   navigateToBaseRoom,
   navigateToBaseWorkspace,
 } from "./baseRuntimeInteractions";
+
+const props = withDefaults(defineProps<{
+  navigationScope?: BaseNavigationScope;
+  backgroundOnly?: boolean;
+}>(), {
+  navigationScope: "development",
+  backgroundOnly: false,
+});
 
 const runtime = useCosmosRuntime();
 const route = useRoute();
@@ -83,8 +104,14 @@ const baseState = runtime.base.state;
 const companionWindowHost = ref<InstanceType<typeof CompanionWindowHost> | null>(null);
 const objectInteractionHost = ref<InstanceType<typeof ObjectInteractionHost> | null>(null);
 const requestedRoomId = computed(() => {
-  const value = route.query.roomId;
-  return typeof value === "string" && value.length > 0 ? value : null;
+  if (props.navigationScope === "development") {
+    const value = route.query.roomId;
+    return typeof value === "string" && value.length > 0 ? value : null;
+  }
+  return routeRoomParameterToSnapshotId(
+    baseState.snapshot,
+    route.meta.environment === "room" ? route.params.roomId : null,
+  );
 });
 const presentation = computed(() =>
   projectBaseRuntimeState(
@@ -114,28 +141,34 @@ const rightNeighbor = computed(() => {
 });
 
 function travelToRoom(targetRoomId: string) {
+  if (props.backgroundOnly) return;
   const snapshot = baseState.snapshot;
   if (!snapshot) return;
-  void navigateToBaseRoom(router, runtime.base, snapshot, targetRoomId, "development");
+  void navigateToBaseRoom(router, runtime.base, snapshot, targetRoomId, props.navigationScope);
 }
 
 function closeBase() {
+  if (props.backgroundOnly) return;
   void navigateFromBase(router);
 }
 
 function openWorkspace(slot: Readonly<BaseWorkspaceSlotPresentation>) {
+  if (props.backgroundOnly) return;
   void navigateToBaseWorkspace(router, runtime.base, slot);
 }
 
 function openCompanion() {
+  if (props.backgroundOnly) return;
   companionWindowHost.value?.open();
 }
 
 function openObject(objectId: string) {
+  if (props.backgroundOnly) return;
   void objectInteractionHost.value?.openObject(objectId, "details").catch(() => undefined);
 }
 
 function openObjectContextMenu(event: MouseEvent, objectId: string) {
+  if (props.backgroundOnly) return;
   void objectInteractionHost.value
     ?.openContextMenu(objectId, { x: event.clientX, y: event.clientY })
     .catch(() => undefined);

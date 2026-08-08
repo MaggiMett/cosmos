@@ -79,7 +79,7 @@ describe("Base Room Runtime visual slice", () => {
       "utf8",
     );
 
-    expect(view).toContain('targetRoomId, "development"');
+    expect(view).toContain("targetRoomId, props.navigationScope");
     expect(interactions).toContain('path: "/dev/base-runtime"');
     expect(interactions).toContain("roomId: targetRoom.objectId");
     expect(interactions).not.toContain("room.workshop");
@@ -117,7 +117,7 @@ describe("Base Room Runtime visual slice", () => {
     expect(capture).toContain("workspace.displayName");
     expect(capture).toContain("workspace.sourceProjectId");
     expect(capture).toContain("Creation Workspace unavailable");
-    expect(view.match(/v-if="presentation\.room\.slug === 'main'"/g)).toHaveLength(2);
+    expect(view.match(/v-if="!backgroundOnly && presentation\.room\.slug === 'main'"/g)).toHaveLength(2);
     for (const fixture of [
       "Orbital Architecture",
       "Recent Research",

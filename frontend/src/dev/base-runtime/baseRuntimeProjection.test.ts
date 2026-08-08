@@ -6,9 +6,27 @@ import type {
   BaseSnapshot,
   WorkspaceSlot,
 } from "../../runtime/baseRuntime";
-import { loadBaseRuntimeSnapshot, projectBaseRuntimeState } from "./baseRuntimeProjection";
+import {
+  loadBaseRuntimeSnapshot,
+  projectBaseRuntimeState,
+  routeRoomParameterToSnapshotId,
+} from "./baseRuntimeProjection";
 
 describe("real Base Runtime projection", () => {
+  it("maps productive slug and ID parameters deterministically to Snapshot Room IDs", () => {
+    const value = snapshot();
+
+    expect(routeRoomParameterToSnapshotId(value, null)).toBeNull();
+    expect(routeRoomParameterToSnapshotId(value, "main")).toBe("room.central.real");
+    expect(routeRoomParameterToSnapshotId(value, "workshop")).toBe("room.studio.real");
+    expect(routeRoomParameterToSnapshotId(value, "room.studio.real")).toBe("room.studio.real");
+  });
+
+  it("preserves an unknown productive Room parameter for the Not Found projection", () => {
+    expect(routeRoomParameterToSnapshotId(snapshot(), "room.unknown")).toBe("room.unknown");
+    expect(routeRoomParameterToSnapshotId(null, "workshop")).toBe("workshop");
+  });
+
   it("projects the real Main Room and preserves authoritative IDs", () => {
     const state = projectBaseRuntimeState("ready", snapshot(), null);
 

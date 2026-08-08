@@ -85,6 +85,18 @@ export function loadBaseRuntimeSnapshot(
   return runtime.load();
 }
 
+export function routeRoomParameterToSnapshotId(
+  snapshot: DeepReadonly<BaseSnapshot> | null,
+  value: unknown,
+): string | null {
+  if (typeof value !== "string" || value.trim().length === 0) return null;
+  const parameter = value.trim();
+  if (!snapshot) return parameter;
+  return snapshot.rooms.find(
+    (room) => room.objectId === parameter || room.slug === parameter,
+  )?.objectId ?? parameter;
+}
+
 export function projectBaseRuntimeState(
   phase: BaseRuntime["state"]["phase"],
   snapshot: DeepReadonly<BaseSnapshot> | null,

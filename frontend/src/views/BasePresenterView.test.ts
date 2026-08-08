@@ -1,0 +1,97 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
+import { compileScript, compileTemplate, parse } from "vue/compiler-sfc";
+import { describe, expect, it } from "vitest";
+
+import { configuredBasePresenter, resolveBasePresenter } from "./basePresenter";
+
+const presenterPath = "./BasePresenterView.vue";
+const presenterSource = source(presenterPath);
+const environmentSource = source("./EnvironmentView.ts");
+const legacySource = source("./BaseView.vue");
+const newSource = source("../dev/base-runtime/BaseRuntimeView.vue");
+const roomSource = source("../dev/base-runtime/components/BaseRoomScene.vue");
+const workspaceSource = source("./WorkspaceView.vue");
+
+describe("controlled Base presenter preparation", () => {
+  it("keeps Legacy as the default when the variable is unset", () => {
+    expect(resolveBasePresenter(undefined)).toBe("legacy");
+    expect(configuredBasePresenter).toBe("legacy");
+  });
+
+  it("enables New only for the exact explicit value", () => {
+    expect(resolveBasePresenter("new")).toBe("new");
+    expect(resolveBasePresenter("legacy")).toBe("legacy");
+    expect(resolveBasePresenter("NEW")).toBe("legacy");
+    expect(resolveBasePresenter("unexpected")).toBe("legacy");
+    expect(resolveBasePresenter(null)).toBe("legacy");
+  });
+
+  it("compiles a narrow wrapper that keeps both presenters renderable", () => {
+    const descriptor = parse(presenterSource, { filename: presenterPath }).descriptor;
+    compileScript(descriptor, { id: "base-presenter" });
+    if (!descriptor.template) throw new Error("Presenter template missing.");
+    expect(compileTemplate({
+      id: "base-presenter",
+      filename: presenterPath,
+      source: descriptor.template.content,
+    }).errors).toEqual([]);
+    expect(presenterSource).toContain("LegacyBaseView");
+    expect(presenterSource).toContain("BaseRuntimeView");
+    expect(presenterSource).toContain("presenter === 'legacy'");
+    expect(presenterSource).toContain("presenter: configuredBasePresenter");
+    expect(presenterSource).toContain('navigation-scope="production"');
+  });
+
+  it("binds only productive Base and Room environments to the wrapper", () => {
+    expect(environmentSource).toContain('route.meta.environment === "base"');
+    expect(environmentSource).toContain('route.meta.environment === "room"');
+    expect(environmentSource).toContain("h(BasePresenterView)");
+    expect(environmentSource).not.toContain("h(BaseView)");
+  });
+
+  it("preserves the existing Workspace stack with a presenter background", () => {
+    expect(environmentSource).toContain(
+      'h(BasePresenterView, { backgroundOnly: true, inert: true, "aria-hidden": "true" })',
+    );
+    expect(environmentSource).toContain("h(WorkspaceView)");
+    expect(presenterSource).toContain(':background-only="backgroundOnly"');
+    expect(newSource).toContain(':inert="backgroundOnly || undefined"');
+    expect(newSource).toContain('v-if="!backgroundOnly"');
+    expect(newSource).toContain("if (props.backgroundOnly) return");
+    expect(workspaceSource).toContain("runtime.workspaces.open");
+  });
+
+  it("keeps all productive interactions on the prepared New presenter", () => {
+    expect(newSource).toContain("navigateToBaseRoom");
+    expect(newSource).toContain("navigateToBaseWorkspace");
+    expect(newSource).toContain("CompanionWindowHost");
+    expect(roomSource).toContain("BasePetPresence");
+    expect(newSource).toContain("openContextMenu");
+    expect(newSource).toContain("navigateFromBase");
+  });
+
+  it("creates no Runtime, Registry, store, or parallel Room state", () => {
+    const combined = `${presenterSource}\n${environmentSource}\n${newSource}`;
+    expect(combined).not.toContain("createCosmosFrontendRuntime");
+    expect(combined).not.toContain("new BaseRuntime");
+    expect(combined).not.toContain("createStore");
+    expect(combined).not.toContain("selectedRoomId");
+    expect(combined).not.toContain("localStorage");
+    expect(combined).not.toContain("sessionStorage");
+  });
+
+  it("leaves the complete Legacy presenter and canonical Workspace path intact", () => {
+    expect(legacySource).toContain("useCosmosRuntime()");
+    expect(legacySource).toContain("travelThroughDoor");
+    expect(legacySource).toContain("openObjectContextMenu");
+    expect(legacySource).toContain("greetPet");
+    expect(legacySource).toContain("companionWindowHost.value?.open()");
+    expect(legacySource).toContain('router.push(`/workspaces/${slot.workspace.objectId}`)');
+  });
+});
+
+function source(path: string): string {
+  return readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8");
+}
