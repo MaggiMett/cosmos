@@ -18,6 +18,15 @@ export interface PreparedThemeActivation {
   readonly lastKnownGoodThemeId: string;
 }
 
+export interface ActiveThemeCommit {
+  readonly activeThemeId: string;
+  readonly presentationRevision: number;
+}
+
+export type ActiveThemeCommitSubscriber = (
+  commit: Readonly<ActiveThemeCommit>,
+) => void;
+
 export type ThemeActivationErrorCode =
   | "invalid_preflight"
   | "stale_preparation"
@@ -56,6 +65,8 @@ export class DomThemePresenter implements ThemePresenter {
 export class ThemeRuntime {
   private activeDefinition: Readonly<ThemeDefinition> | null = null;
   private lastKnownGoodThemeId: string;
+  private presentationRevision = 0;
+  private readonly activeThemeSubscribers = new Set<ActiveThemeCommitSubscriber>();
 
   constructor(
     private readonly registry: ThemeRegistry,
@@ -80,6 +91,13 @@ export class ThemeRuntime {
       this.lastKnownGoodThemeId,
       this.fallbackThemeId,
     );
+  }
+
+  subscribeActiveTheme(subscriber: ActiveThemeCommitSubscriber): () => void {
+    this.activeThemeSubscribers.add(subscriber);
+    return () => {
+      this.activeThemeSubscribers.delete(subscriber);
+    };
   }
 
   prepareActivation(themeId: string): Readonly<PreparedThemeActivation> {
@@ -192,7 +210,7 @@ export class ThemeRuntime {
         let restored: Readonly<ThemeDefinition>;
         try {
           await this.presenter.apply(lastKnownGood);
-          this.activeDefinition = lastKnownGood;
+          this.commit(lastKnownGood);
           restored = lastKnownGood;
         } catch (error) {
           restored = await this.restoreCoreFallback(lastKnownGood, error);
@@ -233,8 +251,26 @@ export class ThemeRuntime {
   }
 
   private commit(definition: Readonly<ThemeDefinition>): void {
-    this.activeDefinition = definition;
     this.lastKnownGoodThemeId = definition.objectId;
+    this.setActiveDefinition(definition);
+  }
+
+  private setActiveDefinition(definition: Readonly<ThemeDefinition>): void {
+    const changed = this.activeDefinition?.objectId !== definition.objectId;
+    this.activeDefinition = definition;
+    if (!changed) return;
+
+    const commit = Object.freeze({
+      activeThemeId: definition.objectId,
+      presentationRevision: ++this.presentationRevision,
+    });
+    for (const subscriber of this.activeThemeSubscribers) {
+      try {
+        subscriber(commit);
+      } catch {
+        // Runtime commits are authoritative; observers are isolated read boundaries.
+      }
+    }
   }
 
   private async restoreAfterFailedApply(
@@ -244,7 +280,7 @@ export class ThemeRuntime {
   ): Promise<never> {
     try {
       await this.presenter.apply(rollbackDefinition);
-      this.activeDefinition = rollbackDefinition;
+      this.setActiveDefinition(rollbackDefinition);
     } catch (rollbackError) {
       await this.restoreCoreFallback(rollbackDefinition, rollbackError);
     }

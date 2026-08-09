@@ -47,7 +47,8 @@
         :data-pointer-policy="item.kind === 'surface' ? item.pointerPolicy : 'none'"
         :data-core-fallback="item.kind === 'object' ? item.fallback : undefined"
         :data-theme-slot-id="visualFor(item.id)?.slotId"
-        :data-theme-slot-source="visualFor(item.id)?.source"
+        :data-theme-slot-source="effectiveVisualSource(item.id)"
+        :data-theme-resource-fallback="usesResourceFallback(item.id) || undefined"
         :transform="item.kind === 'object' ? item.transform : undefined"
       >
         <RoomShadowShape
@@ -56,20 +57,22 @@
           :style="themeMaterialStyle(item.id)"
         />
         <image
-          v-if="visualFor(item.id)?.assetUrl"
+          v-if="renderableAssetUrl(item.id)"
           class="room-composition-renderer__theme-asset"
           v-bind="imageBox(item.shape)"
-          :href="visualFor(item.id)?.assetUrl ?? undefined"
+          :href="renderableAssetUrl(item.id) ?? undefined"
           :preserveAspectRatio="visualFor(item.id)?.preserveAspectRatio"
           :opacity="visualFor(item.id)?.assetOpacity"
+          @error="markResourceFailed(visualFor(item.id)?.assetUrl)"
         />
         <image
-          v-if="visualFor(item.id)?.textureUrl"
+          v-if="renderableTextureUrl(item.id)"
           class="room-composition-renderer__theme-texture"
           v-bind="imageBox(item.shape)"
-          :href="visualFor(item.id)?.textureUrl ?? undefined"
+          :href="renderableTextureUrl(item.id) ?? undefined"
           preserveAspectRatio="xMidYMid slice"
           :opacity="visualFor(item.id)?.materialOpacity ?? 1"
+          @error="markResourceFailed(visualFor(item.id)?.textureUrl)"
         />
         <template v-if="mode === 'visual' && item.kind === 'object' && item.functionContainer">
           <text
@@ -142,7 +145,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, type CSSProperties } from "vue";
+import { computed, ref, watch, type CSSProperties } from "vue";
 
 import type { ImmutableRoomSnapshot } from "../../theme-engine/roomSnapshotResolver";
 import type { BoundsShape, Point } from "../../theme-engine/types";
@@ -169,9 +172,51 @@ const model = computed(() => projectRoomCompositionForShadowRender(props.snapsho
 const themeVisuals = computed(
   () => new Map((props.presentation?.visuals ?? []).map((visual) => [visual.itemId, visual])),
 );
+const failedResourceUrls = ref(new Set<string>());
+
+watch(
+  () => props.presentation,
+  () => {
+    failedResourceUrls.value = new Set<string>();
+  },
+);
 
 function visualFor(itemId: string): Readonly<RoomCompositionThemeVisual> | undefined {
   return themeVisuals.value.get(itemId);
+}
+
+function renderableAssetUrl(itemId: string): string | null {
+  return renderableResourceUrl(visualFor(itemId)?.assetUrl);
+}
+
+function renderableTextureUrl(itemId: string): string | null {
+  return renderableResourceUrl(visualFor(itemId)?.textureUrl);
+}
+
+function renderableResourceUrl(url: string | null | undefined): string | null {
+  return url && !failedResourceUrls.value.has(url) ? url : null;
+}
+
+function markResourceFailed(url: string | null | undefined): void {
+  if (url) failedResourceUrls.value.add(url);
+}
+
+function usesResourceFallback(itemId: string): boolean {
+  const visual = visualFor(itemId);
+  return Boolean(
+    (visual?.assetUrl && failedResourceUrls.value.has(visual.assetUrl)) ||
+    (visual?.textureUrl && failedResourceUrls.value.has(visual.textureUrl)),
+  );
+}
+
+function effectiveVisualSource(
+  itemId: string,
+): RoomCompositionThemeVisual["source"] | undefined {
+  const visual = visualFor(itemId);
+  if (!visual) return undefined;
+  return visual.assetUrl && failedResourceUrls.value.has(visual.assetUrl)
+    ? "core-fallback"
+    : visual.source;
 }
 
 function themeMaterialStyle(itemId: string): CSSProperties {

@@ -15,6 +15,10 @@ export { BaseRuntime } from "./runtime/baseRuntime";
 export { CosmosMapRuntime, focusedProjectId } from "./runtime/cosmosMapRuntime";
 export { ThemeRegistry } from "./runtime/themeRegistry";
 export { DomThemePresenter, ThemeActivationError, ThemeRuntime } from "./runtime/themeRuntime";
+export type {
+  ActiveThemeCommit,
+  ActiveThemeCommitSubscriber,
+} from "./runtime/themeRuntime";
 export {
   ApiThemePackageRecordSource,
   InstalledThemePackageLoader,

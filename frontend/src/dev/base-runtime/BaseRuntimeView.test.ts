@@ -218,6 +218,26 @@ describe("Base Room Runtime visual slice", () => {
     expect(view).toContain(':data-theme-visuals="themePresentation ? \'theme\' : \'core\'"');
   });
 
+  it("refreshes mounted and background-only Base presentation from committed ThemeRuntime state", () => {
+    const view = sourceFor("./BaseRuntimeView.vue");
+
+    expect(view).toContain("runtime.themes.subscribeActiveTheme");
+    expect(view).toContain("void refreshThemePresentation()");
+    expect(view).toContain("onBeforeUnmount");
+    expect(view).toContain("unsubscribeActiveTheme?.()");
+    expect(view).not.toMatch(/ref<[^>]*activeThemeId/);
+    expect(view).not.toContain("Full-App-Restart");
+    expect(view).not.toContain("themePackages.load(");
+    const subscription = view.slice(
+      view.indexOf("runtime.themes.subscribeActiveTheme"),
+      view.indexOf("loadBase();"),
+    );
+    expect(subscription).toContain("refreshThemePresentation");
+    expect(subscription).not.toContain("props.backgroundOnly");
+    expect(subscription).not.toContain("runtime.base");
+    expect(subscription).not.toContain("runtime.application");
+  });
+
   it("mounts exactly one accessible Composition interaction structure", () => {
     const scene = sourceFor("./components/RoomCompositionRuntimeScene.vue");
 

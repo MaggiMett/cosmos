@@ -301,8 +301,20 @@ describe("controlled Base Room Theme presentation", () => {
       expect(value).not.toContain("SQLite");
       expect(value).not.toContain("manifest");
     }
-    expect(renderer).toContain(":href=\"visualFor(item.id)?.assetUrl ?? undefined\"");
+    expect(renderer).toContain(":href=\"renderableAssetUrl(item.id) ?? undefined\"");
     expect(renderer).not.toContain("reference.path");
+  });
+
+  it("falls failed Theme resources back to the underlying Core visual at the renderer edge", () => {
+    const renderer = source("../room-composition-preview/RoomCompositionShadowRenderer.vue");
+
+    expect(renderer).toContain("@error=\"markResourceFailed(visualFor(item.id)?.assetUrl)\"");
+    expect(renderer).toContain("@error=\"markResourceFailed(visualFor(item.id)?.textureUrl)\"");
+    expect(renderer).toContain(':data-theme-resource-fallback="usesResourceFallback(item.id) || undefined"');
+    expect(renderer).toContain('? "core-fallback"');
+    expect(renderer.indexOf("<RoomShadowShape")).toBeLessThan(renderer.indexOf("<image"));
+    expect(renderer).not.toContain("runtime.");
+    expect(renderer).not.toContain("fetch(");
   });
 });
 

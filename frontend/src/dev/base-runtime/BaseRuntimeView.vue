@@ -82,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import CompanionWindowHost from "../../components/cosmos/CompanionWindowHost.vue";
@@ -152,6 +152,7 @@ const themePresentationResult = ref<Readonly<BaseRoomThemePresentationResult>>(
   coreBaseRoomThemePresentation("disabled"),
 );
 let themeLoadGeneration = 0;
+let unsubscribeActiveTheme: (() => void) | null = null;
 const requestedRoomId = computed(() => {
   if (props.navigationScope === "development") {
     const value = route.query.roomId;
@@ -339,7 +340,16 @@ watch(
 );
 
 onMounted(() => {
+  unsubscribeActiveTheme = runtime.themes.subscribeActiveTheme(() => {
+    void refreshThemePresentation();
+  });
   loadBase();
+});
+
+onBeforeUnmount(() => {
+  unsubscribeActiveTheme?.();
+  unsubscribeActiveTheme = null;
+  themeLoadGeneration += 1;
 });
 </script>
 
