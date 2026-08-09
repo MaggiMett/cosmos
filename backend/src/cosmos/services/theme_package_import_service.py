@@ -107,6 +107,7 @@ class ThemePackageImportError(RuntimeServiceError):
         package_id: str | None = None,
         package_version: str | None = None,
         theme_id: str | None = None,
+        theme_name: str | None = None,
         archive_digest: str | None = None,
         manifest_digest: str | None = None,
         asset_count: int = 0,
@@ -115,6 +116,7 @@ class ThemePackageImportError(RuntimeServiceError):
         self.package_id = package_id
         self.package_version = package_version
         self.theme_id = theme_id
+        self.theme_name = theme_name
         self.archive_digest = archive_digest
         self.manifest_digest = manifest_digest
         self.asset_count = asset_count
@@ -125,6 +127,7 @@ class ThemePackageImportError(RuntimeServiceError):
             "packageId": self.package_id,
             "packageVersion": self.package_version,
             "themeId": self.theme_id,
+            "themeName": self.theme_name,
             "installStatus": "rejected",
             "diagnostics": [{"code": self.code, "message": str(self)}],
             "assets": {"total": self.asset_count, "installed": 0, "reused": 0},
@@ -181,6 +184,7 @@ class ThemePackageImportService:
             "packageId": None,
             "packageVersion": None,
             "themeId": None,
+            "themeName": None,
             "manifestDigest": None,
         }
         asset_count = 0
@@ -216,6 +220,11 @@ class ThemePackageImportService:
                     _validate_theme_manifest(manifest)
                     theme_id = _required_string(manifest, "themeId", "Theme Manifest")
                     identity["themeId"] = theme_id
+                    identity["themeName"] = _required_string(
+                        manifest,
+                        "displayName",
+                        "Theme Manifest",
+                    )
                     manifest_digest = canonical_manifest_digest(manifest)
                     identity["manifestDigest"] = manifest_digest
                     self._validate_package_identity(
@@ -257,6 +266,7 @@ class ThemePackageImportService:
                 "packageId": package_id,
                 "packageVersion": package_version,
                 "themeId": theme_id,
+                "themeName": identity["themeName"],
                 "installStatus": "installed",
                 "diagnostics": [],
                 "assets": {
@@ -280,6 +290,7 @@ class ThemePackageImportService:
                 package_id=identity["packageId"],
                 package_version=identity["packageVersion"],
                 theme_id=identity["themeId"],
+                theme_name=identity["themeName"],
                 archive_digest=archive_digest,
                 manifest_digest=identity["manifestDigest"],
                 asset_count=asset_count,
@@ -291,6 +302,7 @@ class ThemePackageImportService:
                 package_id=identity["packageId"],
                 package_version=identity["packageVersion"],
                 theme_id=identity["themeId"],
+                theme_name=identity["themeName"],
                 archive_digest=archive_digest,
                 manifest_digest=identity["manifestDigest"],
                 asset_count=asset_count,

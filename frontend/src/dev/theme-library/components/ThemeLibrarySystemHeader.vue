@@ -13,7 +13,7 @@
     />
 
     <div class="theme-library-header__actions">
-      <button type="button" class="theme-library-header__import">
+      <button type="button" class="theme-library-header__import" @click="$emit('import')">
         <span aria-hidden="true">⇧</span>
         Import Theme Pack
       </button>
@@ -27,6 +27,8 @@
 
 <script setup lang="ts">
 import CosmosNavigation from "../../../components/cosmos/CosmosNavigation.vue";
+
+defineEmits<{ import: [] }>();
 
 const leftNeighbor = { objectId: "cosmos", displayName: "Cosmos" } as const;
 const rightNeighbor = { objectId: "base", displayName: "Base" } as const;

@@ -35,17 +35,37 @@ export class CosmosApiClient {
       const payload = await parseJson(response);
 
       if (!response.ok) {
-        return {
-          ok: false,
-          error: {
-            kind: response.status === 400 || response.status === 422 ? "validation" : "http",
-            status: response.status,
-            message: backendErrorMessage(payload, response.status),
-          },
-        };
+        return failedResponse(response, payload);
       }
 
       return { ok: true, data: payload as T };
+    } catch (cause) {
+      return { ok: false, error: normalizeApiError(cause) };
+    }
+  }
+
+  async upload<T>(
+    path: string,
+    body: Blob,
+    contentType: string,
+    signal?: AbortSignal,
+  ): Promise<ApiResult<T>> {
+    if (!this.baseUrl) {
+      return {
+        ok: false,
+        error: { kind: "unavailable", message: "No Cosmos API base URL is configured." },
+      };
+    }
+
+    try {
+      const response = await fetch(this.urlFor(path), {
+        method: "POST",
+        body,
+        headers: { "Content-Type": contentType },
+        signal,
+      });
+      const payload = await parseJson(response);
+      return response.ok ? { ok: true, data: payload as T } : failedResponse(response, payload);
     } catch (cause) {
       return { ok: false, error: normalizeApiError(cause) };
     }
@@ -126,4 +146,30 @@ function backendErrorMessage(payload: unknown, status: number): string {
     if (typeof message === "string" && message.trim()) return message;
   }
   return `Cosmos API responded with ${status}.`;
+}
+
+function failedResponse(response: Response, payload: unknown): ApiResult<never> {
+  const code = backendErrorCode(payload);
+  return {
+    ok: false,
+    error: {
+      kind: response.status === 400 || response.status === 422 ? "validation" : "http",
+      status: response.status,
+      message: backendErrorMessage(payload, response.status),
+      ...(code ? { code } : {}),
+      details: payload,
+    },
+  };
+}
+
+function backendErrorCode(payload: unknown): string | undefined {
+  if (!payload || typeof payload !== "object") return undefined;
+  if ("code" in payload && typeof payload.code === "string") return payload.code;
+  if ("diagnostics" in payload && Array.isArray(payload.diagnostics)) {
+    const diagnostic = payload.diagnostics[0];
+    if (diagnostic && typeof diagnostic === "object" && "code" in diagnostic) {
+      return typeof diagnostic.code === "string" ? diagnostic.code : undefined;
+    }
+  }
+  return undefined;
 }

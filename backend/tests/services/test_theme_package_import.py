@@ -56,6 +56,7 @@ def test_valid_package_installs_assets_persists_and_does_not_activate(tmp_path: 
         "packageId": "max.theme-package.aurora",
         "packageVersion": "1.0.0",
         "themeId": "max.theme.aurora",
+        "themeName": "Aurora",
         "installStatus": "installed",
         "diagnostics": [],
         "assets": {"total": 1, "installed": 1, "reused": 0},

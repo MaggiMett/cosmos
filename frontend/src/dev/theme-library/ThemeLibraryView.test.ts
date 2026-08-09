@@ -14,6 +14,7 @@ const files = [
   "./components/ThemeLibraryEmptyState.vue",
   "./components/ThemeLibraryRuntimeState.vue",
   "./components/ThemeLibraryVisual.vue",
+  "./components/ThemePackageImportReview.vue",
 ] as const;
 
 function sourceFor(path: (typeof files)[number]): string {
@@ -136,6 +137,46 @@ describe("Cosmos Theme Library vertical slice", () => {
     expect(empty).toContain("Create your first world.");
     expect(empty).toContain("New Theme");
     expect(empty).toContain("Import Theme Pack");
+    expect(empty).toContain("$emit('import')");
+  });
+
+  it("routes header and empty-state import actions through one real ZIP file input", () => {
+    const view = sourceFor("./ThemeLibraryView.vue");
+    const header = sourceFor("./components/ThemeLibrarySystemHeader.vue");
+    const empty = sourceFor("./components/ThemeLibraryEmptyState.vue");
+    const review = sourceFor("./components/ThemePackageImportReview.vue");
+
+    expect(header).toContain("$emit('import')");
+    expect(empty).toContain("$emit('import')");
+    expect(view).toContain('@import="openImportPicker"');
+    expect(view).toContain('type="file"');
+    expect(view).toContain('accept=".zip,application/zip"');
+    expect(view).not.toContain("multiple");
+    expect(view).toContain("new ThemePackageImportApi(runtime.api)");
+    expect(review).toContain("Ready to inspect");
+    expect(review).toContain("Importing…");
+    expect(review.split("<style scoped>")[0]).not.toMatch(/\d+%/);
+  });
+
+  it("shows real success metadata and explicitly defers registration until reload", () => {
+    const view = sourceFor("./ThemeLibraryView.vue");
+    const review = sourceFor("./components/ThemePackageImportReview.vue");
+
+    for (const field of [
+      "result.themeName",
+      "result.themeId",
+      "result.packageId",
+      "result.packageVersion",
+      "result.installStatus",
+      "result.assets.total",
+      "result.integrity.status",
+    ]) {
+      expect(review).toContain(field);
+    }
+    expect(review).toContain("Theme installed. Reload Cosmos to make it available.");
+    expect(view).not.toContain("readSnapshot()");
+    expect(view).not.toContain("register(");
+    expect(view).not.toContain("activateTheme(import");
   });
 
   it("contains quiet loading, error and active-Theme inconsistency states", () => {
@@ -149,7 +190,7 @@ describe("Cosmos Theme Library vertical slice", () => {
     expect(state).toContain("Active theme unavailable");
   });
 
-  it("remains a static, asset-free system UI", () => {
+  it("remains asset-free and keeps raw HTTP details outside the UI", () => {
     const combined = files.map(sourceFor).join("\n");
 
     expect(combined).not.toContain("fetch(");

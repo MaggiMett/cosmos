@@ -9,10 +9,14 @@
     <small>Design a new Cosmos theme or bring in an existing Theme Pack.</small>
     <div>
       <button type="button" class="theme-library-empty__primary">New Theme</button>
-      <button type="button">Import Theme Pack</button>
+      <button type="button" @click="$emit('import')">Import Theme Pack</button>
     </div>
   </section>
 </template>
+
+<script setup lang="ts">
+defineEmits<{ import: [] }>();
+</script>
 
 <style scoped>
 .theme-library-empty {

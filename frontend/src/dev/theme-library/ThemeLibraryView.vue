@@ -5,7 +5,17 @@
     data-testid="theme-library-view"
   >
     <div class="theme-library-view__stars" aria-hidden="true" />
-    <ThemeLibrarySystemHeader />
+    <ThemeLibrarySystemHeader @import="openImportPicker" />
+
+    <input
+      ref="importInput"
+      class="theme-library-view__file-input"
+      type="file"
+      accept=".zip,application/zip"
+      aria-label="Choose Theme Pack ZIP"
+      data-testid="theme-package-file-input"
+      @change="selectImportFile"
+    />
 
     <main class="theme-library-view__content">
       <header class="theme-library-view__heading">
@@ -46,7 +56,7 @@
         </section>
       </template>
 
-      <ThemeLibraryEmptyState v-else-if="presentation.phase === 'empty'" />
+      <ThemeLibraryEmptyState v-else-if="presentation.phase === 'empty'" @import="openImportPicker" />
       <ThemeLibraryRuntimeState
         v-else
         :phase="presentation.phase"
@@ -56,6 +66,17 @@
         "
       />
     </main>
+
+    <ThemePackageImportReview
+      v-if="themeImport.importStatus.value !== 'idle'"
+      :file="themeImport.selectedFile.value"
+      :status="themeImport.importStatus.value"
+      :result="themeImport.importResult.value"
+      :error="themeImport.importError.value"
+      @close="themeImport.reset"
+      @choose-another="openImportPicker"
+      @import="themeImport.importSelected"
+    />
   </section>
 </template>
 
@@ -63,6 +84,7 @@
 import { computed, onMounted, ref } from "vue";
 
 import { useCosmosRuntime } from "../../runtime/plugin";
+import { ThemePackageImportApi } from "../../runtime/themePackageImportApi";
 import ThemeLibraryDetails from "./components/ThemeLibraryDetails.vue";
 import ThemeLibraryEmptyState from "./components/ThemeLibraryEmptyState.vue";
 import ThemeLibraryFilters from "./components/ThemeLibraryFilters.vue";
@@ -70,7 +92,9 @@ import ThemeLibraryGallery from "./components/ThemeLibraryGallery.vue";
 import ThemeLibraryHero from "./components/ThemeLibraryHero.vue";
 import ThemeLibraryRuntimeState from "./components/ThemeLibraryRuntimeState.vue";
 import ThemeLibrarySystemHeader from "./components/ThemeLibrarySystemHeader.vue";
+import ThemePackageImportReview from "./components/ThemePackageImportReview.vue";
 import { useThemeLibraryActivation } from "./themeLibraryActivation";
+import { useThemeLibraryImport } from "./themeLibraryImport";
 import {
   loadThemeLibrarySnapshot,
   projectThemeLibrarySnapshot,
@@ -78,11 +102,25 @@ import {
 } from "./themeLibraryProjection";
 
 const runtime = useCosmosRuntime();
+const importInput = ref<HTMLInputElement | null>(null);
 const presentation = ref<ThemeLibraryPresentation>({ phase: "loading" });
 const themeCount = computed(() =>
   "themeCount" in presentation.value ? presentation.value.themeCount : 0,
 );
 const { activatingThemeId, activationError, activate } = useThemeLibraryActivation(runtime.themes);
+const themeImport = useThemeLibraryImport(new ThemePackageImportApi(runtime.api));
+
+function openImportPicker(): void {
+  if (themeImport.importStatus.value === "importing") return;
+  importInput.value?.click();
+}
+
+function selectImportFile(event: Event): void {
+  const input = event.currentTarget as HTMLInputElement;
+  const file = input.files?.item(0) ?? null;
+  if (file) themeImport.selectFile(file);
+  input.value = "";
+}
 
 async function activateTheme(themeId: string): Promise<void> {
   const current = presentation.value;
@@ -130,6 +168,16 @@ onMounted(async () => {
   background-size: 91px 91px, 151px 151px;
   opacity: 0.25;
   pointer-events: none;
+}
+
+.theme-library-view__file-input {
+  position: fixed;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .theme-library-view__content {

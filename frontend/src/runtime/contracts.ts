@@ -13,6 +13,8 @@ export interface ApiError {
   kind: "unavailable" | "network" | "validation" | "http" | "unknown";
   message: string;
   status?: number;
+  code?: string;
+  details?: unknown;
   cause?: unknown;
 }
 
