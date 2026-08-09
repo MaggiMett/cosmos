@@ -9,7 +9,7 @@ export { ApplicationRuntime } from "./runtime/applicationRuntime";
 export { BaseRuntime } from "./runtime/baseRuntime";
 export { CosmosMapRuntime, focusedProjectId } from "./runtime/cosmosMapRuntime";
 export { ThemeRegistry } from "./runtime/themeRegistry";
-export { DomThemePresenter, ThemeRuntime } from "./runtime/themeRuntime";
+export { DomThemePresenter, ThemeActivationError, ThemeRuntime } from "./runtime/themeRuntime";
 export { ToolRuntime } from "./runtime/toolRuntime";
 export { TransitionRuntime } from "./runtime/transitionRuntime";
 export { WindowRuntime, WindowRuntimeError, capabilitiesFor } from "./runtime/windowRuntime";
@@ -46,7 +46,11 @@ export type {
 } from "./runtime/cosmosMapRuntime";
 export type { CosmosFrontendRuntime, CosmosRuntimePluginOptions } from "./runtime/plugin";
 export type { ThemeDefinition } from "./runtime/themeRegistry";
-export type { ThemePresenter } from "./runtime/themeRuntime";
+export type {
+  PreparedThemeActivation,
+  ThemeActivationErrorCode,
+  ThemePresenter,
+} from "./runtime/themeRuntime";
 export type {
   ThemeRegistryReadStatus,
   ThemeRuntimeReadSnapshot,

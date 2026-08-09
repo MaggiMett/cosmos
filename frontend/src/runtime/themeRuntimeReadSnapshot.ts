@@ -17,12 +17,14 @@ export interface ThemeRuntimeReadTheme {
 export interface ThemeRuntimeReadSnapshot {
   readonly themes: readonly Readonly<ThemeRuntimeReadTheme>[];
   readonly activeThemeId: string | null;
+  readonly lastKnownGoodThemeId: string;
   readonly fallbackThemeId: string;
 }
 
 export function createThemeRuntimeReadSnapshot(
   definitions: readonly Readonly<ThemeDefinition>[],
   activeThemeId: string | null,
+  lastKnownGoodThemeId: string,
   fallbackThemeId: string,
 ): Readonly<ThemeRuntimeReadSnapshot> {
   const themes = definitions.map((definition) =>
@@ -41,6 +43,7 @@ export function createThemeRuntimeReadSnapshot(
   return Object.freeze({
     themes: Object.freeze(themes),
     activeThemeId,
+    lastKnownGoodThemeId,
     fallbackThemeId,
   });
 }

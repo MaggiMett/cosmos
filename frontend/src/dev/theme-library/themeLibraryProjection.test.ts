@@ -13,6 +13,7 @@ function snapshot(
   return Object.freeze({
     themes: Object.freeze([...themes]),
     activeThemeId,
+    lastKnownGoodThemeId: "cosmos.theme.core",
     fallbackThemeId: "cosmos.theme.core",
   });
 }

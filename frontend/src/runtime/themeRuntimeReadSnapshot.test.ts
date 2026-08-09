@@ -49,6 +49,7 @@ describe("ThemeRuntime read snapshot", () => {
       secondTheme.displayName,
     ]);
     expect(snapshot.fallbackThemeId).toBe(cosmosTheme.objectId);
+    expect(snapshot.lastKnownGoodThemeId).toBe(cosmosTheme.objectId);
   });
 
   it("projects the authoritative active Theme ID and runtime status", async () => {
@@ -58,6 +59,7 @@ describe("ThemeRuntime read snapshot", () => {
     const snapshot = runtime.readSnapshot();
 
     expect(snapshot.activeThemeId).toBe(secondTheme.objectId);
+    expect(snapshot.lastKnownGoodThemeId).toBe(secondTheme.objectId);
     expect(snapshot.themes.find((theme) => theme.themeId === secondTheme.objectId)).toMatchObject({
       runtimeStatus: "active",
       registryStatus: "registered",
