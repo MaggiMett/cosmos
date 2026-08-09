@@ -106,6 +106,19 @@ export interface ResolvedPresentationBinding {
   readonly templateId: string;
   readonly templateVersion: string;
   readonly slotId: string;
+  readonly fit: "contain" | "cover" | "fill" | "none";
+  readonly alignment:
+    | "center"
+    | "top"
+    | "right"
+    | "bottom"
+    | "left"
+    | "top-left"
+    | "top-right"
+    | "bottom-left"
+    | "bottom-right";
+  readonly opacity: number;
+  readonly tint: string | null;
   readonly states: readonly string[];
   readonly assetRequestId: string;
 }
@@ -651,6 +664,10 @@ function projectBinding(context: SkinContext, binding: Readonly<AssetBinding>): 
     templateId: context.skin.target.templateRef?.id ?? "unscoped",
     templateVersion: context.template?.version ?? "unavailable",
     slotId: binding.slotId,
+    fit: binding.fit ?? "contain",
+    alignment: binding.alignment ?? "center",
+    opacity: binding.opacity ?? 1,
+    tint: binding.tint ?? null,
     states: Object.freeze([...(binding.states ?? [])].sort()),
     assetRequestId: `${context.skin.skinId}:${binding.bindingId}`,
   };

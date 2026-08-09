@@ -197,6 +197,27 @@ describe("Base Room Runtime visual slice", () => {
     expect(gate).toContain("validationStatus.valid");
   });
 
+  it("keeps Theme visuals opt-in and independent from both existing rollout switches", () => {
+    const view = sourceFor("./BaseRuntimeView.vue");
+    const switchSource = readFileSync(
+      fileURLToPath(new URL("./baseThemeVisuals.ts", import.meta.url)),
+      "utf8",
+    );
+    const roomSwitch = readFileSync(
+      fileURLToPath(new URL("./baseRoomRenderer.ts", import.meta.url)),
+      "utf8",
+    );
+
+    expect(switchSource).toContain('value === "theme" ? "theme" : "core"');
+    expect(switchSource).toContain("VITE_BASE_THEME_VISUALS");
+    expect(switchSource).not.toContain("VITE_BASE_ROOM_RENDERER");
+    expect(switchSource).not.toContain("VITE_BASE_PRESENTER");
+    expect(roomSwitch).not.toContain("VITE_BASE_THEME_VISUALS");
+    expect(view).toContain("loadBaseRoomThemePresentation({");
+    expect(view).toContain(':theme-presentation="themePresentation"');
+    expect(view).toContain(':data-theme-visuals="themePresentation ? \'theme\' : \'core\'"');
+  });
+
   it("mounts exactly one accessible Composition interaction structure", () => {
     const scene = sourceFor("./components/RoomCompositionRuntimeScene.vue");
 
@@ -229,6 +250,7 @@ describe("Base Room Runtime visual slice", () => {
     expect(scene).toContain(':inert="backgroundOnly || undefined"');
     expect(scene).toContain('v-if="!backgroundOnly"');
     expect(scene).toContain("pointer-events: none");
+    expect(scene).toContain(':presentation="themePresentation"');
   });
 
   it("forwards Composition Functions only to existing Base presenter actions", () => {

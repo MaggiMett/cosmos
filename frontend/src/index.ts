@@ -10,6 +10,7 @@ export {
   loadActiveThemePresentationSnapshot,
   resolveActiveThemePresentationSnapshot,
 } from "./runtime/activeThemePresentationSnapshot";
+export { resolveRendererAssetResourceUrl } from "./runtime/assetResourceUrl";
 export { BaseRuntime } from "./runtime/baseRuntime";
 export { CosmosMapRuntime, focusedProjectId } from "./runtime/cosmosMapRuntime";
 export { ThemeRegistry } from "./runtime/themeRegistry";

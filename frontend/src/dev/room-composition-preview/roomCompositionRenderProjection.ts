@@ -39,6 +39,27 @@ export interface RoomShadowObjectItem extends RoomShadowRenderItemBase {
 
 export type RoomShadowRenderItem = RoomShadowSurfaceItem | RoomShadowObjectItem;
 
+export interface RoomCompositionThemeVisual {
+  readonly itemId: string;
+  readonly slotId: string;
+  readonly source: "active-theme" | "core-fallback";
+  readonly assetUrl: string | null;
+  readonly textureUrl: string | null;
+  readonly preserveAspectRatio: string;
+  readonly assetOpacity: number;
+  readonly fill: string | null;
+  readonly stroke: string | null;
+  readonly materialOpacity: number | null;
+}
+
+export interface RoomCompositionThemePresentation {
+  readonly activeThemeId: string;
+  readonly skinId: string;
+  readonly visuals: readonly Readonly<RoomCompositionThemeVisual>[];
+  readonly resolvedThemeSlotCount: number;
+  readonly coreFallbackSlotCount: number;
+}
+
 export interface RoomCompositionShadowRenderModel {
   roomId: string;
   width: number;

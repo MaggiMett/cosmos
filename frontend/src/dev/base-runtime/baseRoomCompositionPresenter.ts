@@ -10,6 +10,7 @@ import {
 import { projectBaseRuntimeState } from "./baseRuntimeProjection";
 import {
   compareBaseRoomVisualParity,
+  type BaseRoomVisualParityResult,
 } from "./baseRoomVisualParity";
 
 export type BaseRoomCompositionFallbackReason =
@@ -25,6 +26,7 @@ export type BaseRoomCompositionPresenterResult =
       status: "active";
       shadow: Readonly<RoomShadowModeResult>;
       interactions: Readonly<RoomCompositionInteractionDiagnostics>;
+      visualParity: Readonly<BaseRoomVisualParityResult>;
     }
   | {
       status: "fallback";
@@ -92,7 +94,7 @@ export function resolveBaseRoomCompositionPresenter(
         reason: "blocking-visual-parity",
       });
     }
-    return Object.freeze({ status: "active", shadow, interactions });
+    return Object.freeze({ status: "active", shadow, interactions, visualParity });
   } catch {
     return Object.freeze({ status: "fallback", reason: "resolution-error" });
   }

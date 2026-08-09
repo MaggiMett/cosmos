@@ -6,6 +6,8 @@
     :inert="backgroundOnly || undefined"
     :data-room-renderer="compositionActive ? 'composition' : 'presenter'"
     :data-room-renderer-fallback="compositionFallbackReason"
+    :data-theme-visuals="themePresentation ? 'theme' : 'core'"
+    :data-theme-visuals-fallback="themePresentationFallbackReason"
     data-testid="base-runtime-view"
   >
     <RoomCompositionRuntimeScene
@@ -15,6 +17,7 @@
       :room-name="presentation.room.displayName"
       :selected-object-id="baseState.selectedObjectId"
       :background-only="backgroundOnly"
+      :theme-presentation="themePresentation"
       @activate="activateCompositionTarget"
       @open-context-menu="openObjectContextMenu"
     />
@@ -79,11 +82,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import CompanionWindowHost from "../../components/cosmos/CompanionWindowHost.vue";
 import ObjectInteractionHost from "../../components/windows/ObjectInteractionHost.vue";
+import { resolveRendererAssetResourceUrl } from "../../runtime/assetResourceUrl";
+import { AssetCatalogApi } from "../../runtime/assetCatalogApi";
 import { useCosmosRuntime } from "../../runtime/plugin";
 import BaseCaptureWindow from "./components/BaseCaptureWindow.vue";
 import BaseKnowledgeWindow from "./components/BaseKnowledgeWindow.vue";
@@ -94,8 +99,21 @@ import {
   configuredBaseRoomRenderer,
   type BaseRoomRenderer,
 } from "./baseRoomRenderer";
-import { resolveBaseRoomCompositionPresenter } from "./baseRoomCompositionPresenter";
+import {
+  resolveBaseRoomCompositionPresenter,
+  type BaseRoomCompositionFallbackReason,
+} from "./baseRoomCompositionPresenter";
+import {
+  coreBaseRoomThemePresentation,
+  loadBaseRoomThemePresentation,
+  type BaseRoomThemeFallbackReason,
+  type BaseRoomThemePresentationResult,
+} from "./baseRoomThemePresentation";
 import { forwardRoomCompositionTarget } from "./baseRoomCompositionInteractions";
+import {
+  configuredBaseThemeVisuals,
+  type BaseThemeVisuals,
+} from "./baseThemeVisuals";
 import type { BaseWorkspaceSlotPresentation } from "./baseRuntimeProjection";
 import type { RoomShadowInteractionTarget } from "../room-composition-preview/roomCompositionInteractionProjection";
 import {
@@ -115,18 +133,25 @@ const props = withDefaults(defineProps<{
   navigationScope?: BaseNavigationScope;
   backgroundOnly?: boolean;
   roomRenderer?: BaseRoomRenderer;
+  themeVisuals?: BaseThemeVisuals;
 }>(), {
   navigationScope: "development",
   backgroundOnly: false,
   roomRenderer: configuredBaseRoomRenderer,
+  themeVisuals: configuredBaseThemeVisuals,
 });
 
 const runtime = useCosmosRuntime();
+const assetCatalog = new AssetCatalogApi(runtime.api);
 const route = useRoute();
 const router = useRouter();
 const baseState = runtime.base.state;
 const companionWindowHost = ref<InstanceType<typeof CompanionWindowHost> | null>(null);
 const objectInteractionHost = ref<InstanceType<typeof ObjectInteractionHost> | null>(null);
+const themePresentationResult = ref<Readonly<BaseRoomThemePresentationResult>>(
+  coreBaseRoomThemePresentation("disabled"),
+);
+let themeLoadGeneration = 0;
 const requestedRoomId = computed(() => {
   if (props.navigationScope === "development") {
     const value = route.query.roomId;
@@ -163,6 +188,16 @@ const compositionActive = computed(
 const compositionFallbackReason = computed(() =>
   props.roomRenderer === "composition" && compositionResult.value?.status === "fallback"
     ? compositionResult.value.reason
+    : undefined,
+);
+const themePresentation = computed(() =>
+  themePresentationResult.value.status === "active"
+    ? themePresentationResult.value.presentation
+    : undefined,
+);
+const themePresentationFallbackReason = computed(() =>
+  themePresentationResult.value.status === "core"
+    ? themePresentationResult.value.reason
     : undefined,
 );
 const viewLabel = computed(() =>
@@ -244,6 +279,64 @@ function loadBase() {
     })
     .catch(() => undefined);
 }
+
+async function refreshThemePresentation(): Promise<void> {
+  const generation = ++themeLoadGeneration;
+  if (props.themeVisuals !== "theme") {
+    themePresentationResult.value = coreBaseRoomThemePresentation("disabled");
+    return;
+  }
+  const composition = compositionResult.value;
+  if (!composition || composition.status !== "active") {
+    themePresentationResult.value = coreBaseRoomThemePresentation(
+      composition?.status === "fallback"
+        ? themeFallbackForComposition(composition.reason)
+        : "loading",
+    );
+    return;
+  }
+  themePresentationResult.value = coreBaseRoomThemePresentation("loading");
+  const result = await loadBaseRoomThemePresentation({
+    mode: props.themeVisuals,
+    themeRuntime: runtime.themes,
+    skinPackSource: runtime.themePackages,
+    assetCatalog,
+    roomSnapshot: composition.shadow.snapshot,
+    parity: {
+      room: composition.shadow.parity.status,
+      interaction: composition.interactions.parity.status,
+      visual: composition.visualParity.status,
+    },
+    resolveResourceUrl: (reference) =>
+      resolveRendererAssetResourceUrl(reference, runtime.api.configuredBaseUrl),
+  });
+  if (generation === themeLoadGeneration) themePresentationResult.value = result;
+}
+
+function themeFallbackForComposition(
+  reason: BaseRoomCompositionFallbackReason,
+): BaseRoomThemeFallbackReason {
+  if (reason === "blocking-room-parity") return "blocking-room-parity";
+  if (reason === "blocking-interaction-parity") return "blocking-interaction-parity";
+  if (reason === "blocking-visual-parity") return "blocking-visual-parity";
+  if (reason === "invalid-snapshot") return "invalid-room-snapshot";
+  return "presentation-error";
+}
+
+watch(
+  [
+    () => props.themeVisuals,
+    () => compositionResult.value?.status ?? "unavailable",
+    () =>
+      compositionResult.value?.status === "active"
+        ? compositionResult.value.shadow.snapshot.snapshotId
+        : compositionResult.value?.reason ?? "unavailable",
+  ],
+  () => {
+    void refreshThemePresentation();
+  },
+  { immediate: true },
+);
 
 onMounted(() => {
   loadBase();

@@ -5,6 +5,8 @@
     data-testid="room-composition-shadow-renderer"
     :data-room-id="model.roomId"
     :data-diagnostic-mode="mode"
+    :data-theme-presentation="presentation ? 'theme' : 'core'"
+    :data-active-theme-id="presentation?.activeThemeId"
     aria-hidden="true"
   >
     <svg
@@ -44,9 +46,31 @@
         :data-depth="item.depth"
         :data-pointer-policy="item.kind === 'surface' ? item.pointerPolicy : 'none'"
         :data-core-fallback="item.kind === 'object' ? item.fallback : undefined"
+        :data-theme-slot-id="visualFor(item.id)?.slotId"
+        :data-theme-slot-source="visualFor(item.id)?.source"
         :transform="item.kind === 'object' ? item.transform : undefined"
       >
-        <RoomShadowShape :shape="item.shape" class="room-composition-renderer__visual" />
+        <RoomShadowShape
+          :shape="item.shape"
+          class="room-composition-renderer__visual"
+          :style="themeMaterialStyle(item.id)"
+        />
+        <image
+          v-if="visualFor(item.id)?.assetUrl"
+          class="room-composition-renderer__theme-asset"
+          v-bind="imageBox(item.shape)"
+          :href="visualFor(item.id)?.assetUrl ?? undefined"
+          :preserveAspectRatio="visualFor(item.id)?.preserveAspectRatio"
+          :opacity="visualFor(item.id)?.assetOpacity"
+        />
+        <image
+          v-if="visualFor(item.id)?.textureUrl"
+          class="room-composition-renderer__theme-texture"
+          v-bind="imageBox(item.shape)"
+          :href="visualFor(item.id)?.textureUrl ?? undefined"
+          preserveAspectRatio="xMidYMid slice"
+          :opacity="visualFor(item.id)?.materialOpacity ?? 1"
+        />
         <template v-if="mode === 'visual' && item.kind === 'object' && item.functionContainer">
           <text
             class="room-composition-renderer__function-label"
@@ -118,12 +142,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, type CSSProperties } from "vue";
 
 import type { ImmutableRoomSnapshot } from "../../theme-engine/roomSnapshotResolver";
 import type { BoundsShape, Point } from "../../theme-engine/types";
 import RoomShadowShape from "./RoomShadowShape.vue";
-import { projectRoomCompositionForShadowRender } from "./roomCompositionRenderProjection";
+import {
+  projectRoomCompositionForShadowRender,
+  type RoomCompositionThemePresentation,
+  type RoomCompositionThemeVisual,
+} from "./roomCompositionRenderProjection";
 import type {
   RoomCompositionInteractionProjection,
   RoomShadowDiagnosticMode,
@@ -134,9 +162,54 @@ const props = defineProps<{
   snapshot: Readonly<ImmutableRoomSnapshot>;
   interaction: Readonly<RoomCompositionInteractionProjection>;
   mode: RoomShadowDiagnosticMode;
+  presentation?: Readonly<RoomCompositionThemePresentation>;
 }>();
 
 const model = computed(() => projectRoomCompositionForShadowRender(props.snapshot));
+const themeVisuals = computed(
+  () => new Map((props.presentation?.visuals ?? []).map((visual) => [visual.itemId, visual])),
+);
+
+function visualFor(itemId: string): Readonly<RoomCompositionThemeVisual> | undefined {
+  return themeVisuals.value.get(itemId);
+}
+
+function themeMaterialStyle(itemId: string): CSSProperties {
+  const visual = visualFor(itemId);
+  if (!visual) return {};
+  return {
+    ...(visual.fill ? { fill: visual.fill } : {}),
+    ...(visual.stroke ? { stroke: visual.stroke } : {}),
+    ...(visual.materialOpacity !== null ? { opacity: visual.materialOpacity } : {}),
+  };
+}
+
+function imageBox(shape: BoundsShape): {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+} {
+  if (shape.type === "rect") {
+    return { x: shape.x, y: shape.y, width: shape.width, height: shape.height };
+  }
+  if (shape.type === "ellipse") {
+    return {
+      x: shape.cx - shape.rx,
+      y: shape.cy - shape.ry,
+      width: shape.rx * 2,
+      height: shape.ry * 2,
+    };
+  }
+  const xs = shape.points.map((point) => point.x);
+  const ys = shape.points.map((point) => point.y);
+  return {
+    x: Math.min(...xs),
+    y: Math.min(...ys),
+    width: Math.max(...xs) - Math.min(...xs),
+    height: Math.max(...ys) - Math.min(...ys),
+  };
+}
 
 function labelPosition(shape: BoundsShape): Point {
   if (shape.type === "rect") {
@@ -178,6 +251,11 @@ function bindingLabel(target: Readonly<RoomShadowInteractionTarget>): string {
 }
 
 .room-composition-renderer__item {
+  pointer-events: none;
+}
+
+.room-composition-renderer__theme-asset,
+.room-composition-renderer__theme-texture {
   pointer-events: none;
 }
 

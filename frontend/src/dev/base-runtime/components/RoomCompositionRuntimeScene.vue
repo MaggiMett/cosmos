@@ -6,11 +6,13 @@
     :aria-hidden="backgroundOnly ? 'true' : undefined"
     :inert="backgroundOnly || undefined"
     :data-room-id="snapshot.roomId"
+    :data-theme-visuals="themePresentation ? 'theme' : 'core'"
     data-testid="room-composition-runtime-scene"
   >
     <RoomCompositionShadowRenderer
       :snapshot="snapshot"
       :interaction="interactions"
+      :presentation="themePresentation"
       mode="visual"
     />
 
@@ -63,6 +65,7 @@ import type {
   RoomCompositionInteractionProjection,
   RoomShadowInteractionTarget,
 } from "../../room-composition-preview/roomCompositionInteractionProjection";
+import type { RoomCompositionThemePresentation } from "../../room-composition-preview/roomCompositionRenderProjection";
 
 const props = defineProps<{
   snapshot: Readonly<ImmutableRoomSnapshot>;
@@ -70,6 +73,7 @@ const props = defineProps<{
   roomName: string;
   selectedObjectId: string | null;
   backgroundOnly: boolean;
+  themePresentation?: Readonly<RoomCompositionThemePresentation>;
 }>();
 
 const emit = defineEmits<{
