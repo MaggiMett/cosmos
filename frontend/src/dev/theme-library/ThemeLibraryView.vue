@@ -16,6 +16,14 @@
             <span>{{ themeCount }} {{ themeCount === 1 ? "theme" : "themes" }}</span>
           </p>
         </div>
+        <p
+          v-if="activationError"
+          class="theme-library-view__activation-error"
+          role="alert"
+          data-testid="theme-library-activation-error"
+        >
+          {{ activationError.message }}
+        </p>
       </header>
 
       <template v-if="presentation.phase === 'success'">
@@ -24,9 +32,17 @@
         <section class="theme-library-view__collection" aria-labelledby="installed-themes-title">
           <div class="theme-library-view__gallery">
             <h2 id="installed-themes-title">Installed Themes</h2>
-            <ThemeLibraryGallery :themes="presentation.themes" />
+            <ThemeLibraryGallery
+              :themes="presentation.themes"
+              :activating-theme-id="activatingThemeId"
+              @activate="activateTheme"
+            />
           </div>
-          <ThemeLibraryDetails :theme="presentation.activeTheme" />
+          <ThemeLibraryDetails
+            :theme="presentation.activeTheme"
+            :activating-theme-id="activatingThemeId"
+            @activate="activateTheme"
+          />
         </section>
       </template>
 
@@ -54,6 +70,7 @@ import ThemeLibraryGallery from "./components/ThemeLibraryGallery.vue";
 import ThemeLibraryHero from "./components/ThemeLibraryHero.vue";
 import ThemeLibraryRuntimeState from "./components/ThemeLibraryRuntimeState.vue";
 import ThemeLibrarySystemHeader from "./components/ThemeLibrarySystemHeader.vue";
+import { useThemeLibraryActivation } from "./themeLibraryActivation";
 import {
   loadThemeLibrarySnapshot,
   projectThemeLibrarySnapshot,
@@ -65,6 +82,20 @@ const presentation = ref<ThemeLibraryPresentation>({ phase: "loading" });
 const themeCount = computed(() =>
   "themeCount" in presentation.value ? presentation.value.themeCount : 0,
 );
+const { activatingThemeId, activationError, activate } = useThemeLibraryActivation(runtime.themes);
+
+async function activateTheme(themeId: string): Promise<void> {
+  const current = presentation.value;
+  if (current.phase !== "success") return;
+
+  await activate(
+    themeId,
+    current.activeTheme.themeId === themeId,
+    (nextPresentation) => {
+      presentation.value = nextPresentation;
+    },
+  );
+}
 
 onMounted(async () => {
   try {
@@ -118,6 +149,19 @@ onMounted(async () => {
 .theme-library-view__heading {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.theme-library-view__activation-error {
+  max-width: 440px;
+  padding: 8px 12px;
+  border: 1px solid rgba(199, 149, 120, 0.28);
+  border-radius: var(--cosmos-radius-control);
+  background: rgba(95, 57, 43, 0.16);
+  color: #d4b4a2;
+  font-size: 0.64rem;
+  line-height: 1.4;
 }
 
 .theme-library-view__heading h1,

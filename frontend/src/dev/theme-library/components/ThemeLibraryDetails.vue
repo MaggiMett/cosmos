@@ -33,7 +33,21 @@
     </dl>
 
     <div class="theme-details__actions">
-      <button type="button" class="theme-details__primary">Activate</button>
+      <button
+        type="button"
+        class="theme-details__primary"
+        :disabled="theme.status === 'Active' || activatingThemeId !== null"
+        :aria-busy="activatingThemeId === theme.themeId"
+        @click="$emit('activate', theme.themeId)"
+      >
+        {{
+          theme.status === "Active"
+            ? "Active"
+            : activatingThemeId === theme.themeId
+              ? "Activating…"
+              : "Activate"
+        }}
+      </button>
       <button type="button">Customize</button>
       <button type="button">Duplicate</button>
       <button type="button">Export</button>
@@ -45,7 +59,12 @@
 import type { ThemeLibraryTheme } from "../themeLibraryProjection";
 import ThemeLibraryVisual from "./ThemeLibraryVisual.vue";
 
-defineProps<{ theme: Readonly<ThemeLibraryTheme> }>();
+defineProps<{
+  theme: Readonly<ThemeLibraryTheme>;
+  activatingThemeId: string | null;
+}>();
+
+defineEmits<{ activate: [themeId: string] }>();
 </script>
 
 <style scoped>
@@ -171,5 +190,11 @@ defineProps<{ theme: Readonly<ThemeLibraryTheme> }>();
   background: linear-gradient(180deg, rgba(71, 128, 162, 0.27), rgba(33, 70, 95, 0.2));
   box-shadow: 0 0 18px rgba(98, 200, 234, 0.12);
   color: var(--cosmos-color-text);
+}
+
+.theme-details__actions button:disabled {
+  color: #8799a2;
+  cursor: default;
+  opacity: 0.86;
 }
 </style>

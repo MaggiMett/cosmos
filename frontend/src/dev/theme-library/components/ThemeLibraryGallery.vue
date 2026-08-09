@@ -9,8 +9,21 @@
     >
       <div class="theme-card__visual">
         <ThemeLibraryVisual :label="`${theme.name} preview`" :tone="theme.tone" variant="card" />
-        <div v-if="theme.status === 'Active'" class="theme-card__hover-actions">
-          <button type="button">Activate</button>
+        <div class="theme-card__hover-actions">
+          <button
+            type="button"
+            :disabled="theme.status === 'Active' || activatingThemeId !== null"
+            :aria-busy="activatingThemeId === theme.themeId"
+            @click="$emit('activate', theme.themeId)"
+          >
+            {{
+              theme.status === "Active"
+                ? "Active"
+                : activatingThemeId === theme.themeId
+                  ? "Activating…"
+                  : "Activate"
+            }}
+          </button>
           <button type="button">Preview</button>
           <button type="button">Open Builder</button>
         </div>
@@ -33,7 +46,12 @@
 import type { ThemeLibraryTheme } from "../themeLibraryProjection";
 import ThemeLibraryVisual from "./ThemeLibraryVisual.vue";
 
-defineProps<{ themes: readonly Readonly<ThemeLibraryTheme>[] }>();
+defineProps<{
+  themes: readonly Readonly<ThemeLibraryTheme>[];
+  activatingThemeId: string | null;
+}>();
+
+defineEmits<{ activate: [themeId: string] }>();
 </script>
 
 <style scoped>
@@ -96,6 +114,12 @@ defineProps<{ themes: readonly Readonly<ThemeLibraryTheme>[] }>();
 
 .theme-card__hover-actions button:last-child {
   border-right: 0;
+}
+
+.theme-card__hover-actions button:disabled {
+  color: #8799a2;
+  cursor: default;
+  opacity: 1;
 }
 
 .theme-card footer {

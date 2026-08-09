@@ -97,6 +97,36 @@ describe("Cosmos Theme Library vertical slice", () => {
     }
   });
 
+  it("binds only Activate to the existing safe ThemeRuntime contract", () => {
+    const view = sourceFor("./ThemeLibraryView.vue");
+    const gallery = sourceFor("./components/ThemeLibraryGallery.vue");
+    const details = sourceFor("./components/ThemeLibraryDetails.vue");
+    const hero = sourceFor("./components/ThemeLibraryHero.vue");
+
+    expect(view).toContain("useThemeLibraryActivation(runtime.themes)");
+    expect(view).toContain('@activate="activateTheme"');
+    expect(view).toContain("current.activeTheme.themeId === themeId");
+    expect(gallery).toContain("activatingThemeId !== null");
+    expect(gallery).toContain("theme.status === 'Active'");
+    expect(gallery).toContain("$emit('activate', theme.themeId)");
+    expect(details).toContain("$emit('activate', theme.themeId)");
+    expect(hero).not.toContain("defineEmits");
+    expect(gallery).not.toContain("$emit('preview'");
+    expect(gallery).not.toContain("$emit('open-builder'");
+    expect(details).not.toContain("$emit('customize'");
+    expect(details).not.toContain("$emit('duplicate'");
+    expect(details).not.toContain("$emit('export'");
+  });
+
+  it("shows activation failures locally while keeping the Library presentation mounted", () => {
+    const view = sourceFor("./ThemeLibraryView.vue");
+
+    expect(view).toContain('v-if="activationError"');
+    expect(view).toContain('role="alert"');
+    expect(view).toContain("activationError.message");
+    expect(view).not.toContain("throw activationError");
+  });
+
   it("uses the empty state only for an actually empty Runtime projection", () => {
     const view = sourceFor("./ThemeLibraryView.vue");
     const empty = sourceFor("./components/ThemeLibraryEmptyState.vue");
