@@ -9,6 +9,11 @@ import { CoreToolsRuntime } from "./coreToolsRuntime";
 import { NotificationRuntime } from "./notificationRuntime";
 import { ObjectInteractionRuntime } from "./objectInteractionRuntime";
 import { ThemeRegistry } from "./themeRegistry";
+import {
+  ApiThemePackageRecordSource,
+  InstalledThemePackageLoader,
+  type ThemePackageStartupLoader,
+} from "./themePackageRegistry";
 import { ThemeRuntime } from "./themeRuntime";
 import { ApiThemeActivationPersistence } from "./themeRuntimePersistence";
 import { ToolRuntime } from "./toolRuntime";
@@ -25,6 +30,7 @@ export interface CosmosFrontendRuntime {
   notifications: NotificationRuntime;
   objectInteractions: ObjectInteractionRuntime;
   themes: ThemeRuntime;
+  themePackages: ThemePackageStartupLoader;
   tools: ToolRuntime;
   transitions: TransitionRuntime;
   windows: WindowRuntime;
@@ -43,6 +49,11 @@ export function createCosmosFrontendRuntime(apiBaseUrl?: string): CosmosFrontend
   const transitions = new TransitionRuntime();
   const registry = new ThemeRegistry();
   registry.register(cosmosTheme);
+  const themePackages = new InstalledThemePackageLoader(
+    new ApiThemePackageRecordSource(api),
+    registry,
+    cosmosTheme.objectId,
+  );
   const themes = new ThemeRuntime(
     registry,
     transitions,
@@ -58,13 +69,14 @@ export function createCosmosFrontendRuntime(apiBaseUrl?: string): CosmosFrontend
 
   return {
     api,
-    application: new ApplicationRuntime(api, themes, cosmosTheme.objectId),
+    application: new ApplicationRuntime(api, themes, cosmosTheme.objectId, themePackages),
     base,
     cosmosMap,
     coreTools: new CoreToolsRuntime(api),
     notifications,
     objectInteractions: new ObjectInteractionRuntime(api, windows, cosmosMap),
     themes,
+    themePackages,
     tools,
     transitions,
     windows,

@@ -21,6 +21,7 @@ def test_sqlite_initialization_applies_foundation_once(tmp_path: Path) -> None:
         (2, "0002_cosmos_map.sql"),
         (3, "0003_core_tools.sql"),
         (4, "0004_asset_catalog.sql"),
+        (5, "0005_theme_packages.sql"),
     ]
     assert {
         "objects",
@@ -33,4 +34,5 @@ def test_sqlite_initialization_applies_foundation_once(tmp_path: Path) -> None:
         "runtime_state",
         "visual_assets",
         "asset_catalog_entries",
+        "theme_packages",
     }.issubset(tables)

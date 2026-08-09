@@ -3,6 +3,7 @@ import { reactive, readonly, type DeepReadonly } from "vue";
 import type { CosmosApiClient } from "./apiClient";
 import type { ReadinessResponse } from "./contracts";
 import type { ThemeRuntime } from "./themeRuntime";
+import type { ThemePackageStartupLoader } from "./themePackageRegistry";
 
 export type ApplicationPhase =
   | "idle"
@@ -27,6 +28,7 @@ export class ApplicationRuntime {
     private readonly api: CosmosApiClient,
     private readonly themes: ThemeRuntime,
     private readonly initialThemeId: string,
+    private readonly themePackages: ThemePackageStartupLoader | null = null,
   ) {}
 
   start(): Promise<void> {
@@ -48,6 +50,7 @@ export class ApplicationRuntime {
     this.mutableState.error = null;
     try {
       this.mutableState.phase = "loading_theme";
+      await this.themePackages?.load();
       await this.themes.restoreAtStartup(this.initialThemeId);
 
       this.mutableState.phase = "checking_backend";

@@ -9,6 +9,7 @@ from cosmos.persistence.core_tools import (
 )
 from cosmos.persistence.repositories import ObjectRepository, RelationshipRepository, RuntimeStateRepository
 from cosmos.persistence.sqlite import SQLitePersistence
+from cosmos.persistence.theme_packages import ThemePackageRepository
 
 __all__ = [
     "AssetCatalogRepository",
@@ -22,4 +23,5 @@ __all__ = [
     "RelationshipRepository",
     "RuntimeStateRepository",
     "SQLitePersistence",
+    "ThemePackageRepository",
 ]

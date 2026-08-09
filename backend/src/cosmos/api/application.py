@@ -77,6 +77,20 @@ async def theme_runtime_state(request: Request) -> JSONResponse:
         return _service_error(error)
 
 
+async def theme_packages(request: Request) -> JSONResponse:
+    try:
+        service = request.app.state.runtime.theme_packages
+        context = _local_owner_context()
+        if request.method == "GET":
+            return JSONResponse({"items": service.list_installed(context)})
+        return JSONResponse(
+            service.install_prevalidated(await _json_object(request), context),
+            status_code=201,
+        )
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
 async def update_camera(request: Request) -> JSONResponse:
     try:
         payload = await _json_object(request)
@@ -542,6 +556,7 @@ def create_app(
             Route("/cosmos/map", cosmos_map),
             Route("/base", base_snapshot),
             Route("/runtime-state/theme", theme_runtime_state, methods=["GET", "PUT"]),
+            Route("/theme-packages", theme_packages, methods=["GET", "POST"]),
             Route("/cosmos/camera", update_camera, methods=["PUT"]),
             Route("/cosmos/selection", update_selection, methods=["PUT"]),
             Route("/objects/{object_id:str}/position", move_node, methods=["PUT"]),

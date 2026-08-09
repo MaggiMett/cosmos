@@ -14,6 +14,7 @@ from cosmos.persistence import (
     RelationshipRepository,
     RuntimeStateRepository,
     SQLitePersistence,
+    ThemePackageRepository,
 )
 from cosmos.runtime import EventDispatcher, ProviderRuntime, Registry, RuntimeContext, ToolRuntime
 from cosmos.services import (
@@ -32,6 +33,7 @@ from cosmos.services import (
     ResourceService,
     ReviewService,
     TagService,
+    ThemePackageService,
     ToolService,
     WorkspaceService,
     create_version_one_object_contract,
@@ -69,6 +71,7 @@ class CosmosRuntime:
     projects: ProjectService
     relationships: RelationshipService
     runtime_state: RuntimeStateRepository
+    theme_packages: ThemePackageService
     companion: CompanionService
     base: BaseService
     tools: ToolService
@@ -102,6 +105,10 @@ class CosmosRuntime:
         companion = CompanionService(objects)
         base = BaseService(objects, companion)
         runtime_state = RuntimeStateRepository(persistence)
+        theme_packages = ThemePackageService(
+            persistence,
+            ThemePackageRepository(persistence),
+        )
         tools = ToolService(objects, ToolRuntime(objects.contract), events)
         workspaces = WorkspaceService(objects, runtime_state, tools, events)
         jobs = JobService(JobRepository(persistence), events)
@@ -125,6 +132,7 @@ class CosmosRuntime:
             projects=projects,
             relationships=relationships,
             runtime_state=runtime_state,
+            theme_packages=theme_packages,
             companion=companion,
             base=base,
             tools=tools,

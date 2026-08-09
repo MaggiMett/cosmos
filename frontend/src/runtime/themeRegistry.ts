@@ -2,6 +2,8 @@ export interface ThemeDefinition {
   objectId: string;
   displayName: string;
   version: string;
+  description?: string;
+  author?: string;
   tokens: Readonly<Record<string, string>>;
 }
 
@@ -34,6 +36,10 @@ export class ThemeRegistry {
       throw new ThemeRegistryError("unknown_theme", `Unknown Theme: ${objectId}`);
     }
     return definition;
+  }
+
+  has(objectId: string): boolean {
+    return this.definitions.has(objectId);
   }
 
   list(): readonly Readonly<ThemeDefinition>[] {

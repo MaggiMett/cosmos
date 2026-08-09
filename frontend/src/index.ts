@@ -10,6 +10,11 @@ export { BaseRuntime } from "./runtime/baseRuntime";
 export { CosmosMapRuntime, focusedProjectId } from "./runtime/cosmosMapRuntime";
 export { ThemeRegistry } from "./runtime/themeRegistry";
 export { DomThemePresenter, ThemeActivationError, ThemeRuntime } from "./runtime/themeRuntime";
+export {
+  ApiThemePackageRecordSource,
+  InstalledThemePackageLoader,
+  createThemeManifestDigest,
+} from "./runtime/themePackageRegistry";
 export { ApiThemeActivationPersistence } from "./runtime/themeRuntimePersistence";
 export { ToolRuntime } from "./runtime/toolRuntime";
 export { TransitionRuntime } from "./runtime/transitionRuntime";
@@ -56,6 +61,14 @@ export type {
   PersistedThemeActivationState,
   ThemeActivationPersistence,
 } from "./runtime/themeRuntimePersistence";
+export type {
+  InstalledThemePackageRecord,
+  ThemePackageLoadDiagnostic,
+  ThemePackageLoadReport,
+  ThemePackageLoadStatus,
+  ThemePackageRecordSource,
+  ThemePackageStartupLoader,
+} from "./runtime/themePackageRegistry";
 export type {
   ThemeRegistryReadStatus,
   ThemeRuntimeReadSnapshot,
