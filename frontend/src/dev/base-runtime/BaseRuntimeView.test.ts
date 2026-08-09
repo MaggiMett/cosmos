@@ -153,6 +153,24 @@ describe("Base Room Runtime visual slice", () => {
     expect(combined).not.toContain("moveNode");
   });
 
+  it("runs Room Composition Shadow diagnostics only after the real Base load", () => {
+    const view = sourceFor("./BaseRuntimeView.vue");
+    const diagnostics = readFileSync(
+      fileURLToPath(new URL("./baseRoomShadowDiagnostics.ts", import.meta.url)),
+      "utf8",
+    );
+
+    expect(view).toContain("scheduleBaseRoomShadowDiagnostics(runtime.base)");
+    expect(view.indexOf("loadBaseRuntimeSnapshot(runtime.base)")).toBeLessThan(
+      view.indexOf("scheduleBaseRoomShadowDiagnostics(runtime.base)"),
+    );
+    expect(diagnostics).toContain('Pick<BaseRuntime, "state">');
+    expect(diagnostics).toContain("runBaseMainRoomShadowMode");
+    expect(diagnostics).not.toContain("console.");
+    expect(diagnostics).not.toContain("runtime.base.select");
+    expect(diagnostics).not.toContain("fetch(");
+  });
+
   it("reuses the server-driven Object Context Menu for Base and Workspace objects", () => {
     const view = sourceFor("./BaseRuntimeView.vue");
     const room = sourceFor("./components/BaseRoomScene.vue");

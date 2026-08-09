@@ -206,6 +206,17 @@ export type {
   RunBaseRoomShadowModeInput,
 } from "./roomShadowMode";
 export {
+  BaseRuntimeRoomShadowProjectionError,
+  compareBaseRuntimeRoomShadowProjection,
+  projectBaseMainRoomToRoomCompositionShadow,
+} from "./baseRuntimeRoomShadowProjection";
+export type {
+  BaseRuntimeMainRoomReference,
+  BaseRuntimeMainRoomShadowProjection,
+  BaseRuntimeShadowBinding,
+  BaseRuntimeShadowBindingKind,
+} from "./baseRuntimeRoomShadowProjection";
+export {
   RoomCompositionResolver,
   RoomResolutionError,
 } from "./roomSnapshotResolver";

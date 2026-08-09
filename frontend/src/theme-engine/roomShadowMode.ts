@@ -1,7 +1,16 @@
+import type { DeepReadonly } from "vue";
+
+import type { BaseSnapshot } from "../runtime/baseRuntime";
 import {
   adaptBaseMainRoomV1,
   type BaseRoomCompatibilityAdapterInput,
 } from "./baseRoomCompatibilityAdapter";
+import {
+  compareBaseRuntimeRoomShadowProjection,
+  projectBaseMainRoomToRoomCompositionShadow,
+  type BaseRuntimeMainRoomReference,
+  type BaseRuntimeShadowBinding,
+} from "./baseRuntimeRoomShadowProjection";
 import { cloneAndFreeze } from "./immutable";
 import {
   compareLegacyBaseToRoomSnapshot,
@@ -21,22 +30,37 @@ import type { BaseComposition } from "./roomCompositionTypes";
 export interface RunBaseRoomShadowModeInput {
   legacy?: BaseRoomCompatibilityAdapterInput;
   skins?: RoomSkinResolutionInput;
+  baseSnapshot?: DeepReadonly<BaseSnapshot>;
 }
 
 export interface RoomShadowModeResult {
   mode: "shadow";
-  authoritativeRuntime: "legacy-base";
+  authoritativeRuntime: "legacy-base" | "base-runtime";
   snapshot: Readonly<ImmutableRoomSnapshot>;
   parity: Readonly<RoomParityResult>;
   diagnostics: readonly string[];
+  runtimeReference?: Readonly<BaseRuntimeMainRoomReference>;
+  runtimeBindings?: readonly Readonly<BaseRuntimeShadowBinding>[];
 }
 
 export function runBaseMainRoomShadowMode(
   input: RunBaseRoomShadowModeInput = {},
 ): Readonly<RoomShadowModeResult> {
-  const legacy = adaptBaseMainRoomV1(input.legacy);
+  if (input.baseSnapshot && input.legacy) {
+    throw new Error(
+      "Base Runtime and legacy fixture inputs cannot be combined in one Shadow run",
+    );
+  }
+  const runtimeProjection = input.baseSnapshot
+    ? projectBaseMainRoomToRoomCompositionShadow(input.baseSnapshot)
+    : null;
+  const legacy = runtimeProjection?.compatibility ?? adaptBaseMainRoomV1(input.legacy);
   const registries = createRoomCompositionRegistries();
-  registerCompatibilityProjection(registries, legacy);
+  registerCompatibilityProjection(
+    registries,
+    legacy,
+    runtimeProjection?.source.baseObjectId,
+  );
   const resolver = new RoomCompositionResolver(registries);
   const snapshot = resolver.resolve({
     roomComposition: legacy.roomComposition,
@@ -46,7 +70,14 @@ export function runBaseMainRoomShadowMode(
     },
     skins: input.skins ?? compatibilitySkinResolution(legacy),
   });
-  const parity = compareLegacyBaseToRoomSnapshot(legacy, snapshot);
+  const structuralParity = compareLegacyBaseToRoomSnapshot(legacy, snapshot);
+  const parity = runtimeProjection
+    ? compareBaseRuntimeRoomShadowProjection(
+        runtimeProjection,
+        snapshot,
+        structuralParity,
+      )
+    : structuralParity;
   const diagnostics = [
     ...snapshot.validationStatus.warnings.map(
       (warning) => `snapshot-warning: ${warning}`,
@@ -60,16 +91,25 @@ export function runBaseMainRoomShadowMode(
   ].sort(compareText);
   return cloneAndFreeze({
     mode: "shadow" as const,
-    authoritativeRuntime: "legacy-base" as const,
+    authoritativeRuntime: runtimeProjection
+      ? ("base-runtime" as const)
+      : ("legacy-base" as const),
     snapshot,
     parity,
     diagnostics,
+    ...(runtimeProjection
+      ? {
+          runtimeReference: runtimeProjection.source,
+          runtimeBindings: runtimeProjection.runtimeBindings,
+        }
+      : {}),
   });
 }
 
 function registerCompatibilityProjection(
   registries: RoomCompositionRegistries,
   legacy: ReturnType<typeof adaptBaseMainRoomV1>,
+  baseId = "core.base.shadow-compatibility",
 ): void {
   registries.shells.register(legacy.shell);
   registries.presets.register(legacy.preset);
@@ -77,7 +117,7 @@ function registerCompatibilityProjection(
   registries.functionContainers.registerMany(legacy.functionContainers);
   const base: BaseComposition = {
     schemaVersion: 1,
-    baseId: "core.base.shadow-compatibility",
+    baseId,
     version: "1.0.0",
     rooms: [legacy.roomComposition],
     connections: [],

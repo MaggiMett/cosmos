@@ -88,6 +88,7 @@ import {
   navigateToBaseRoom,
   navigateToBaseWorkspace,
 } from "./baseRuntimeInteractions";
+import { scheduleBaseRoomShadowDiagnostics } from "./baseRoomShadowDiagnostics";
 
 const props = withDefaults(defineProps<{
   navigationScope?: BaseNavigationScope;
@@ -175,7 +176,11 @@ function openObjectContextMenu(event: MouseEvent, objectId: string) {
 }
 
 function loadBase() {
-  void loadBaseRuntimeSnapshot(runtime.base).catch(() => undefined);
+  void loadBaseRuntimeSnapshot(runtime.base)
+    .then(() => {
+      scheduleBaseRoomShadowDiagnostics(runtime.base);
+    })
+    .catch(() => undefined);
 }
 
 onMounted(() => {

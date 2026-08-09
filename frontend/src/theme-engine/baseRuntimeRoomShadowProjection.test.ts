@@ -1,0 +1,311 @@
+import { describe, expect, it } from "vitest";
+
+import type {
+  BaseObjectSummary,
+  BaseRoom,
+  BaseSnapshot,
+  WorkspaceSlot,
+} from "../runtime/baseRuntime";
+import { deepClone } from "./immutable";
+import { compareLegacyBaseToRoomSnapshot } from "./roomParity";
+import {
+  compareBaseRuntimeRoomShadowProjection,
+  projectBaseMainRoomToRoomCompositionShadow,
+} from "./baseRuntimeRoomShadowProjection";
+import { runBaseMainRoomShadowMode } from "./roomShadowMode";
+import type { ImmutableRoomSnapshot } from "./roomSnapshotResolver";
+
+describe("real Base Main Room Room-Composition Shadow projection", () => {
+  it("projects the authoritative Main Room through the existing Shadow path", () => {
+    const result = runBaseMainRoomShadowMode({ baseSnapshot: snapshot() });
+
+    expect(result.authoritativeRuntime).toBe("base-runtime");
+    expect(result.snapshot.roomId).toBe("runtime.room.main");
+    expect(result.runtimeReference).toMatchObject({
+      baseObjectId: "runtime.base.home",
+      roomId: "runtime.room.main",
+      roomName: "Main Room",
+    });
+    expect(result.parity.status).toBe("equal");
+    expect(result.parity.comparedFunctionalObjects).toBe(5);
+  });
+
+  it("preserves real Workspace Slot and target IDs without fixture identities", () => {
+    const result = runBaseMainRoomShadowMode({ baseSnapshot: snapshot() });
+
+    expect(result.runtimeReference?.workspaceSlotIds).toEqual([
+      "runtime.slot.knowledge",
+      "runtime.slot.creation",
+    ]);
+    expect(result.runtimeReference?.workspaceTargetIds).toEqual([
+      "runtime.workspace.knowledge",
+      "runtime.workspace.creation",
+    ]);
+    expect(result.runtimeBindings?.filter((entry) => entry.kind === "workspace")).toEqual([
+      expect.objectContaining({
+        objectInstanceId: "runtime.slot.knowledge",
+        representedObjectId: "runtime.slot.knowledge",
+        targetObjectId: "runtime.workspace.knowledge",
+      }),
+      expect.objectContaining({
+        objectInstanceId: "runtime.slot.creation",
+        representedObjectId: "runtime.slot.creation",
+        targetObjectId: "runtime.workspace.creation",
+      }),
+    ]);
+    expect(result.snapshot.objectInstances.map((entry) => entry.instanceId)).not.toEqual(
+      expect.arrayContaining([
+        "core.scene.base.left-workspace",
+        "core.scene.base.right-workspace",
+      ]),
+    );
+  });
+
+  it("preserves the real Door and destination Room IDs as a read-only connection", () => {
+    const result = runBaseMainRoomShadowMode({ baseSnapshot: snapshot() });
+
+    expect(result.runtimeReference).toMatchObject({
+      doorId: "runtime.door.main-workshop",
+      doorTargetRoomId: "runtime.room.workshop",
+    });
+    expect(result.runtimeBindings).toContainEqual(
+      expect.objectContaining({
+        kind: "room-transition",
+        representedObjectId: "runtime.door.main-workshop",
+        targetObjectId: "runtime.room.workshop",
+      }),
+    );
+    expect(result.snapshot.roomConnections).toEqual([
+      expect.objectContaining({
+        fromRoomId: "runtime.room.main",
+        toRoomId: "runtime.room.workshop",
+        visualObjectInstanceIds: ["runtime.door.main-workshop"],
+      }),
+    ]);
+  });
+
+  it("retains the contract-relevant Companion and records the non-composition Pet", () => {
+    const result = runBaseMainRoomShadowMode({ baseSnapshot: snapshot() });
+
+    expect(result.runtimeReference).toMatchObject({
+      companionId: "runtime.companion.guide",
+      petId: "runtime.pet.resident",
+    });
+    expect(result.snapshot.objectInstances.map((entry) => entry.instanceId)).toContain(
+      "runtime.companion.guide",
+    );
+    expect(result.snapshot.objectInstances.map((entry) => entry.instanceId)).not.toContain(
+      "runtime.pet.resident",
+    );
+  });
+
+  it("keeps existing Function Container roles, Bounds, layers and Core fallbacks", () => {
+    const result = runBaseMainRoomShadowMode({ baseSnapshot: snapshot() });
+    const roles = result.snapshot.functionContainers.map(
+      (container) => container.descriptorRole,
+    );
+
+    expect(roles.filter((role) => role === "workspace.open")).toHaveLength(2);
+    expect(roles).toEqual(
+      expect.arrayContaining([
+        "workspace.open",
+        "base.open",
+        "companion.open",
+        "base.close",
+      ]),
+    );
+    expect(result.snapshot.objectInstances.every(
+      (object) => object.propertyResolution.skin.source === "core-default",
+    )).toBe(true);
+    expect(result.parity.status).toBe("equal");
+  });
+
+  it("preserves an unavailable Workspace target as null instead of inventing one", () => {
+    const value = snapshot();
+    value.rooms[0]!.workspaceSlots[1]!.workspace = null;
+
+    const result = runBaseMainRoomShadowMode({ baseSnapshot: value });
+
+    expect(result.runtimeReference?.workspaceTargetIds).toEqual([
+      "runtime.workspace.knowledge",
+      null,
+    ]);
+    expect(result.runtimeBindings).toContainEqual(
+      expect.objectContaining({
+        representedObjectId: "runtime.slot.creation",
+        targetObjectId: null,
+      }),
+    );
+    expect(result.parity.status).toBe("equal");
+  });
+
+  it("uses the existing compatible-difference class for presentation-only Skin changes", () => {
+    const projection = projectBaseMainRoomToRoomCompositionShadow(snapshot());
+    const result = runBaseMainRoomShadowMode({
+      baseSnapshot: snapshot(),
+      skins: {
+        activeThemeId: "runtime.theme.test",
+        availableSkins: [
+          { skinId: "core.skin.base.default", version: "1.0.0" },
+          { skinId: "runtime.skin.test", version: "1.0.0" },
+        ],
+        assignments: projection.compatibility.catalogObjects.map((object) => ({
+          assignmentId: `runtime.assignment.${object.catalogObjectId}`,
+          targetCatalogObjectId: object.catalogObjectId,
+          skinRef: { id: "runtime.skin.test", versionRange: "^1.0.0" },
+          source: "active-theme" as const,
+        })),
+      },
+    });
+
+    expect(result.parity.status).toBe("compatible-difference");
+    expect(result.parity.differences.every(
+      (difference) => difference.category === "skin",
+    )).toBe(true);
+  });
+
+  it("uses blocking-difference for a missing function or wrong Runtime target", () => {
+    const projection = projectBaseMainRoomToRoomCompositionShadow(snapshot());
+    const result = runBaseMainRoomShadowMode({ baseSnapshot: snapshot() });
+    const missing = deepClone(result.snapshot) as ImmutableRoomSnapshot;
+    missing.functionContainers = missing.functionContainers.filter(
+      (container) => container.attachedObjectInstanceId !== "runtime.slot.knowledge",
+    );
+    const missingStructural = compareLegacyBaseToRoomSnapshot(
+      projection.compatibility,
+      missing,
+    );
+    expect(
+      compareBaseRuntimeRoomShadowProjection(
+        projection,
+        missing,
+        missingStructural,
+      ).status,
+    ).toBe("blocking-difference");
+
+    const wrongTarget = deepClone(projection);
+    const workspace = (wrongTarget.runtimeBindings as unknown as Array<{
+      representedObjectId: string;
+      targetObjectId: string | null;
+    }>).find(
+      (binding) => binding.representedObjectId === "runtime.slot.knowledge",
+    )!;
+    workspace.targetObjectId = "runtime.workspace.wrong";
+    const wrongTargetParity = compareBaseRuntimeRoomShadowProjection(
+      wrongTarget,
+      result.snapshot,
+      compareLegacyBaseToRoomSnapshot(wrongTarget.compatibility, result.snapshot),
+    );
+    expect(wrongTargetParity.status).toBe("blocking-difference");
+    expect(wrongTargetParity.differences).toEqual([
+      expect.objectContaining({ category: "workspace-assignment" }),
+    ]);
+  });
+
+  it("reports an unmapped additional real Workspace Slot as blocking", () => {
+    const value = snapshot();
+    value.rooms[0]!.workspaceSlots.push(
+      workspaceSlot("runtime.slot.extra", "center", "runtime.workspace.extra"),
+    );
+
+    const result = runBaseMainRoomShadowMode({ baseSnapshot: value });
+
+    expect(result.parity.status).toBe("blocking-difference");
+    expect(result.parity.differences).toContainEqual(
+      expect.objectContaining({
+        category: "workspace-assignment",
+        legacyId: "runtime.slot.extra",
+      }),
+    );
+  });
+
+  it("does not mutate the authoritative Base Snapshot", () => {
+    const value = snapshot();
+    const before = JSON.stringify(value);
+
+    const result = runBaseMainRoomShadowMode({ baseSnapshot: value });
+
+    expect(JSON.stringify(value)).toBe(before);
+    expect(Object.isFrozen(value)).toBe(false);
+    expect(Object.isFrozen(result)).toBe(true);
+    expect(result).not.toHaveProperty("writeBack");
+    expect(result).not.toHaveProperty("persist");
+  });
+});
+
+function snapshot(): BaseSnapshot {
+  return {
+    base: summary("runtime.base.home", "Home Base", ["Base"]),
+    rooms: [
+      room("runtime.room.main", "Main Room", "main", [
+        workspaceSlot(
+          "runtime.slot.knowledge",
+          "rear_left",
+          "runtime.workspace.knowledge",
+        ),
+        workspaceSlot(
+          "runtime.slot.creation",
+          "rear_right",
+          "runtime.workspace.creation",
+        ),
+      ]),
+      room("runtime.room.workshop", "Workshop", "workshop", []),
+    ],
+    door: {
+      ...summary("runtime.door.main-workshop", "Workshop Door", ["Door"]),
+      roomAId: "runtime.room.main",
+      roomBId: "runtime.room.workshop",
+    },
+    cockpit: {
+      ...summary("runtime.cockpit.main", "Cockpit", ["Cockpit"]),
+      roomId: "runtime.room.main",
+    },
+    companion: {
+      ...summary("runtime.companion.guide", "Companion", ["Companion"]),
+      notificationAvailable: false,
+    },
+    pet: summary("runtime.pet.resident", "Base Pet", ["Pet"]),
+    unassignedWorkspaces: [],
+  };
+}
+
+function room(
+  objectId: string,
+  displayName: string,
+  slug: BaseRoom["slug"],
+  workspaceSlots: WorkspaceSlot[],
+): BaseRoom {
+  return {
+    ...summary(objectId, displayName, ["Room"]),
+    slug,
+    order: slug === "main" ? 0 : 1,
+    atmosphere: "Quiet",
+    workspaceSlots,
+  };
+}
+
+function workspaceSlot(
+  objectId: string,
+  placement: string,
+  workspaceObjectId: string,
+): WorkspaceSlot {
+  return {
+    ...summary(objectId, "Workspace Slot", ["WorkspaceSlot"]),
+    placement,
+    skin: "Core",
+    workspace: {
+      ...summary(workspaceObjectId, "Workspace", ["Workspace"]),
+      icon: placement.includes("left") ? "Knowledge" : "Creation",
+      overlay: "Workspace",
+      sourceProjectId: "runtime.project.source",
+    },
+  };
+}
+
+function summary(
+  objectId: string,
+  displayName: string,
+  systemTags: string[],
+): BaseObjectSummary {
+  return { objectId, displayName, description: "", systemTags, userTags: [] };
+}
