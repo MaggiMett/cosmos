@@ -1,3 +1,19 @@
+import type { ThemeManifest } from "../theme-engine/types";
+import { cloneAndFreeze } from "../theme-engine/immutable";
+
+export type ThemeDefinitionProvenance =
+  | Readonly<{
+      kind: "code-native";
+      provenance: string;
+    }>
+  | Readonly<{
+      kind: "theme-package";
+      packageId: string;
+      packageVersion: string;
+      provenance: string;
+      manifestDigest: string;
+    }>;
+
 export interface ThemeDefinition {
   objectId: string;
   displayName: string;
@@ -5,6 +21,10 @@ export interface ThemeDefinition {
   description?: string;
   author?: string;
   tokens: Readonly<Record<string, string>>;
+  /** Validated source metadata retained by the authoritative Theme Registry. */
+  provenance: ThemeDefinitionProvenance;
+  /** Present for manifest-backed Themes; code-native Themes need not invent one. */
+  manifest?: Readonly<ThemeManifest>;
 }
 
 export class ThemeRegistryError extends Error {
@@ -63,8 +83,29 @@ function validateTheme(definition: ThemeDefinition): void {
       "Theme tokens must use the --cosmos- namespace and contain values.",
     );
   }
+  if (
+    !definition.provenance ||
+    (definition.provenance.kind !== "code-native" &&
+      definition.provenance.kind !== "theme-package") ||
+    typeof definition.provenance.provenance !== "string" ||
+    !definition.provenance.provenance.trim()
+  ) {
+    throw new ThemeRegistryError("invalid_theme", "Theme provenance is required.");
+  }
+  if (
+    definition.provenance.kind === "theme-package" &&
+    (!definition.manifest ||
+      definition.manifest.themeId !== definition.objectId ||
+      definition.manifest.version !== definition.version ||
+      definition.provenance.packageVersion !== definition.version)
+  ) {
+    throw new ThemeRegistryError(
+      "invalid_theme",
+      "Package Theme provenance must match its validated manifest and Theme identity.",
+    );
+  }
 }
 
 function freezeDefinition(definition: ThemeDefinition): Readonly<ThemeDefinition> {
-  return Object.freeze({ ...definition, tokens: Object.freeze({ ...definition.tokens }) });
+  return cloneAndFreeze(definition);
 }

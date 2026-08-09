@@ -244,7 +244,7 @@ async function validateCandidate(
   return Object.freeze({
     record,
     manifest,
-    definition: themeDefinitionFromManifest(manifest, coreTokens),
+    definition: themeDefinitionFromManifest(record, manifest, coreTokens),
   });
 }
 
@@ -294,6 +294,7 @@ function validateRecordEnvelope(value: unknown): Readonly<InstalledThemePackageR
 }
 
 function themeDefinitionFromManifest(
+  record: Readonly<InstalledThemePackageRecord>,
   manifest: Readonly<ThemeManifest>,
   coreTokens: Readonly<Record<string, string>>,
 ): Readonly<ThemeDefinition> {
@@ -320,6 +321,14 @@ function themeDefinitionFromManifest(
     description: manifest.description,
     author: manifest.author?.name,
     tokens: Object.freeze(tokens),
+    provenance: Object.freeze({
+      kind: "theme-package",
+      packageId: record.packageId,
+      packageVersion: record.packageVersion,
+      provenance: record.source.provenance,
+      manifestDigest: record.manifestDigest,
+    }),
+    manifest,
   });
 }
 

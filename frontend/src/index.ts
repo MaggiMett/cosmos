@@ -6,6 +6,10 @@ export {
   useCosmosRuntime,
 } from "./runtime/plugin";
 export { ApplicationRuntime } from "./runtime/applicationRuntime";
+export {
+  loadActiveThemePresentationSnapshot,
+  resolveActiveThemePresentationSnapshot,
+} from "./runtime/activeThemePresentationSnapshot";
 export { BaseRuntime } from "./runtime/baseRuntime";
 export { CosmosMapRuntime, focusedProjectId } from "./runtime/cosmosMapRuntime";
 export { ThemeRegistry } from "./runtime/themeRegistry";
@@ -30,6 +34,27 @@ export type {
 } from "./runtime/contracts";
 export type { ApplicationPhase, ApplicationRuntimeState } from "./runtime/applicationRuntime";
 export type {
+  ActiveThemePackageProvenance,
+  ActiveThemePresentationDiagnostic,
+  ActiveThemePresentationDiagnosticCode,
+  ActiveThemePresentationProvenance,
+  ActiveThemePresentationResolutionStatus,
+  ActiveThemePresentationSnapshot,
+  ActiveThemePresentationTraceEntry,
+  LoadActiveThemePresentationInput,
+  PresentationAssetLookupStatus,
+  PresentationAssetResolutionStatus,
+  PresentationReferenceStatus,
+  RendererSafeAssetReference,
+  ResolveActiveThemePresentationInput,
+  ResolvedPresentationAsset,
+  ResolvedPresentationBinding,
+  ResolvedPresentationMaterial,
+  ResolvedPresentationSkin,
+  ResolvedPresentationState,
+  ResolvedPresentationToken,
+} from "./runtime/activeThemePresentationSnapshot";
+export type {
   BaseObjectSummary,
   BaseRoom,
   BaseSnapshot,
@@ -51,7 +76,7 @@ export type {
   MapProject,
 } from "./runtime/cosmosMapRuntime";
 export type { CosmosFrontendRuntime, CosmosRuntimePluginOptions } from "./runtime/plugin";
-export type { ThemeDefinition } from "./runtime/themeRegistry";
+export type { ThemeDefinition, ThemeDefinitionProvenance } from "./runtime/themeRegistry";
 export type {
   PreparedThemeActivation,
   ThemeActivationErrorCode,

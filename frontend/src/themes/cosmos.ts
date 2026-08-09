@@ -4,6 +4,10 @@ export const cosmosTheme: ThemeDefinition = {
   objectId: "cosmos.theme.cosmos",
   displayName: "Cosmos",
   version: "1.0.0",
+  provenance: {
+    kind: "code-native",
+    provenance: "Bundled Cosmos Core Theme",
+  },
   tokens: {
     "--cosmos-color-background": "#02040a",
     "--cosmos-color-surface": "rgba(7, 13, 22, 0.9)",
