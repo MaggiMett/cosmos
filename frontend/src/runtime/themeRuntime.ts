@@ -1,4 +1,8 @@
 import { ThemeRegistry, type ThemeDefinition } from "./themeRegistry";
+import {
+  createThemeRuntimeReadSnapshot,
+  type ThemeRuntimeReadSnapshot,
+} from "./themeRuntimeReadSnapshot";
 import { TransitionRuntime } from "./transitionRuntime";
 
 export interface ThemePresenter {
@@ -34,6 +38,14 @@ export class ThemeRuntime {
 
   get active(): Readonly<ThemeDefinition> | null {
     return this.activeDefinition;
+  }
+
+  readSnapshot(): Readonly<ThemeRuntimeReadSnapshot> {
+    return createThemeRuntimeReadSnapshot(
+      this.registry.list(),
+      this.activeDefinition?.objectId ?? null,
+      this.fallbackThemeId,
+    );
   }
 
   load(objectId: string): Readonly<ThemeDefinition> {

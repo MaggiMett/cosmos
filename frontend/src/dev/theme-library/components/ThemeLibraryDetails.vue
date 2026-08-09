@@ -1,34 +1,35 @@
 <template>
   <aside class="theme-details" aria-label="Selected theme details" data-testid="theme-library-details">
     <header>
-      <h2>Nebula Garden</h2>
-      <p><span>Installed</span> · <span>Inactive</span></p>
-      <small>A luminous conservatory where botanical forms meet deep-space calm.</small>
+      <h2>{{ theme.name }}</h2>
+      <p><span>{{ theme.registryStatus }}</span> · <span>{{ theme.status }}</span></p>
+      <small>{{ theme.description ?? "Description unavailable" }}</small>
     </header>
 
     <section>
       <h3>Screenshots</h3>
       <div class="theme-details__screenshots">
-        <ThemeLibraryVisual label="Nebula Garden screenshot one" tone="nebula" variant="screenshot" />
-        <ThemeLibraryVisual label="Nebula Garden screenshot two" tone="nebula" variant="screenshot" />
-        <ThemeLibraryVisual label="Nebula Garden screenshot three" tone="nebula" variant="screenshot" />
+        <ThemeLibraryVisual :label="`${theme.name} screenshot placeholder one`" :tone="theme.tone" variant="screenshot" />
+        <ThemeLibraryVisual :label="`${theme.name} screenshot placeholder two`" :tone="theme.tone" variant="screenshot" />
+        <ThemeLibraryVisual :label="`${theme.name} screenshot placeholder three`" :tone="theme.tone" variant="screenshot" />
       </div>
     </section>
 
     <section>
       <h3>Included Content</h3>
       <div class="theme-details__included">
-        <span>2 Room Shells</span>
-        <span>5 Objects</span>
-        <span>18 Assets</span>
+        <span>Room shells unavailable</span>
+        <span>Objects unavailable</span>
+        <span>Assets unavailable</span>
       </div>
     </section>
 
     <dl>
-      <div><dt>Version</dt><dd>1.2.0</dd></div>
-      <div><dt>Author</dt><dd>Northlight Studio</dd></div>
-      <div><dt>Changes</dt><dd>New twilight state and refined glass materials.</dd></div>
-      <div><dt>Compatibility</dt><dd>Cosmos 2.0+</dd></div>
+      <div><dt>Theme ID</dt><dd>{{ theme.themeId }}</dd></div>
+      <div><dt>Version</dt><dd>{{ theme.version ?? "Unavailable" }}</dd></div>
+      <div><dt>Author</dt><dd>{{ theme.author ?? "Unavailable" }}</dd></div>
+      <div><dt>Changes</dt><dd>Unavailable from Theme Runtime</dd></div>
+      <div><dt>Compatibility</dt><dd>Unavailable from Theme Runtime</dd></div>
     </dl>
 
     <div class="theme-details__actions">
@@ -41,7 +42,10 @@
 </template>
 
 <script setup lang="ts">
+import type { ThemeLibraryTheme } from "../themeLibraryProjection";
 import ThemeLibraryVisual from "./ThemeLibraryVisual.vue";
+
+defineProps<{ theme: Readonly<ThemeLibraryTheme> }>();
 </script>
 
 <style scoped>

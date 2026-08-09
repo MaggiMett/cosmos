@@ -12,6 +12,7 @@ const files = [
   "./components/ThemeLibraryGallery.vue",
   "./components/ThemeLibraryDetails.vue",
   "./components/ThemeLibraryEmptyState.vue",
+  "./components/ThemeLibraryRuntimeState.vue",
   "./components/ThemeLibraryVisual.vue",
 ] as const;
 
@@ -47,13 +48,15 @@ describe("Cosmos Theme Library vertical slice", () => {
     expect(combined).not.toContain("themeBuilder.css");
   });
 
-  it("contains active theme identity and all hero actions", () => {
+  it("renders active Theme identity from projection props and keeps actions inert", () => {
     const hero = sourceFor("./components/ThemeLibraryHero.vue");
 
     expect(hero).toContain("Active Theme");
-    expect(hero).toContain("Cosmos Reference");
+    expect(hero).toContain("theme.name");
+    expect(hero).toContain("theme.themeId");
     expect(hero).toContain("Version");
     expect(hero).toContain("Author");
+    expect(hero).toContain("Core fallback");
     expect(hero).toContain("Customize Theme");
     expect(hero).toContain("Preview");
     expect(hero).toContain("Duplicate");
@@ -69,15 +72,18 @@ describe("Cosmos Theme Library vertical slice", () => {
     }
   });
 
-  it("contains six themes and all requested status variants", () => {
+  it("loads ThemeRuntime and renders only the projected registered Themes", () => {
     const view = sourceFor("./ThemeLibraryView.vue");
+    const gallery = sourceFor("./components/ThemeLibraryGallery.vue");
 
+    expect(view).toContain("useCosmosRuntime");
+    expect(view).toContain("loadThemeLibrarySnapshot(runtime.themes)");
+    expect(view).toContain("projectThemeLibrarySnapshot(snapshot)");
+    expect(gallery).toContain('v-for="theme in themes"');
+    expect(gallery).toContain(':data-theme-id="theme.themeId"');
     for (const label of ["Cosmos Reference", "Minimal", "Nebula Garden", "Industrial", "Fantasy", "Pixel"]) {
-      expect(view).toContain(label);
+      expect(view).not.toContain(label);
     }
-    expect(view).toContain('status: "Active"');
-    expect(view).toContain('status: "Installed"');
-    expect(view).toContain('status: "Inactive"');
   });
 
   it("contains selected-theme details and actions", () => {
@@ -91,15 +97,26 @@ describe("Cosmos Theme Library vertical slice", () => {
     }
   });
 
-  it("implements the empty state on the same route", () => {
+  it("uses the empty state only for an actually empty Runtime projection", () => {
     const view = sourceFor("./ThemeLibraryView.vue");
     const empty = sourceFor("./components/ThemeLibraryEmptyState.vue");
 
-    expect(view).toContain('route.query.state === "empty"');
-    expect(view).toContain("0 themes");
+    expect(view).toContain("presentation.phase === 'empty'");
+    expect(view).not.toContain("route.query.state");
     expect(empty).toContain("Create your first world.");
     expect(empty).toContain("New Theme");
     expect(empty).toContain("Import Theme Pack");
+  });
+
+  it("contains quiet loading, error and active-Theme inconsistency states", () => {
+    const view = sourceFor("./ThemeLibraryView.vue");
+    const state = sourceFor("./components/ThemeLibraryRuntimeState.vue");
+
+    expect(view).toContain('ref<ThemeLibraryPresentation>({ phase: "loading" })');
+    expect(view).toContain('phase: "error"');
+    expect(state).toContain("Loading your themes");
+    expect(state).toContain("Theme Library is unavailable");
+    expect(state).toContain("Active theme unavailable");
   });
 
   it("remains a static, asset-free system UI", () => {

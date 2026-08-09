@@ -47,6 +47,12 @@ export type {
 export type { CosmosFrontendRuntime, CosmosRuntimePluginOptions } from "./runtime/plugin";
 export type { ThemeDefinition } from "./runtime/themeRegistry";
 export type { ThemePresenter } from "./runtime/themeRuntime";
+export type {
+  ThemeRegistryReadStatus,
+  ThemeRuntimeReadSnapshot,
+  ThemeRuntimeReadStatus,
+  ThemeRuntimeReadTheme,
+} from "./runtime/themeRuntimeReadSnapshot";
 export type { TransitionKind, TransitionRequest } from "./runtime/transitionRuntime";
 export type {
   WindowBounds,

@@ -1,5 +1,9 @@
 <template>
-  <section class="theme-library-view environment-view" data-testid="theme-library-view">
+  <section
+    class="theme-library-view environment-view"
+    :aria-busy="presentation.phase === 'loading'"
+    data-testid="theme-library-view"
+  >
     <div class="theme-library-view__stars" aria-hidden="true" />
     <ThemeLibrarySystemHeader />
 
@@ -7,97 +11,72 @@
       <header class="theme-library-view__heading">
         <div>
           <h1>Theme Library</h1>
-          <p v-if="!showEmptyState">
-            Your installed worlds, ready to revisit. <span>6 themes</span>
+          <p>
+            Your installed worlds, ready to revisit.
+            <span>{{ themeCount }} {{ themeCount === 1 ? "theme" : "themes" }}</span>
           </p>
-          <p v-else>No personal themes yet. <span>0 themes</span></p>
         </div>
       </header>
 
-      <template v-if="!showEmptyState">
-        <ThemeLibraryHero />
+      <template v-if="presentation.phase === 'success'">
+        <ThemeLibraryHero :theme="presentation.activeTheme" />
         <ThemeLibraryFilters />
         <section class="theme-library-view__collection" aria-labelledby="installed-themes-title">
           <div class="theme-library-view__gallery">
             <h2 id="installed-themes-title">Installed Themes</h2>
-            <ThemeLibraryGallery :themes="themes" />
+            <ThemeLibraryGallery :themes="presentation.themes" />
           </div>
-          <ThemeLibraryDetails />
+          <ThemeLibraryDetails :theme="presentation.activeTheme" />
         </section>
       </template>
 
-      <ThemeLibraryEmptyState v-else />
+      <ThemeLibraryEmptyState v-else-if="presentation.phase === 'empty'" />
+      <ThemeLibraryRuntimeState
+        v-else
+        :phase="presentation.phase"
+        :message="presentation.phase === 'error' ? presentation.message : undefined"
+        :active-theme-id="
+          presentation.phase === 'active-missing' ? presentation.activeThemeId : undefined
+        "
+      />
     </main>
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
-import { useRoute } from "vue-router";
+import { computed, onMounted, ref } from "vue";
 
+import { useCosmosRuntime } from "../../runtime/plugin";
 import ThemeLibraryDetails from "./components/ThemeLibraryDetails.vue";
 import ThemeLibraryEmptyState from "./components/ThemeLibraryEmptyState.vue";
 import ThemeLibraryFilters from "./components/ThemeLibraryFilters.vue";
-import ThemeLibraryGallery, {
-  type ThemeLibraryCard,
-} from "./components/ThemeLibraryGallery.vue";
+import ThemeLibraryGallery from "./components/ThemeLibraryGallery.vue";
 import ThemeLibraryHero from "./components/ThemeLibraryHero.vue";
+import ThemeLibraryRuntimeState from "./components/ThemeLibraryRuntimeState.vue";
 import ThemeLibrarySystemHeader from "./components/ThemeLibrarySystemHeader.vue";
+import {
+  loadThemeLibrarySnapshot,
+  projectThemeLibrarySnapshot,
+  type ThemeLibraryPresentation,
+} from "./themeLibraryProjection";
 
-const route = useRoute();
-const showEmptyState = computed(() => route.query.state === "empty");
+const runtime = useCosmosRuntime();
+const presentation = ref<ThemeLibraryPresentation>({ phase: "loading" });
+const themeCount = computed(() =>
+  "themeCount" in presentation.value ? presentation.value.themeCount : 0,
+);
 
-const themes: readonly ThemeLibraryCard[] = [
-  {
-    name: "Cosmos Reference",
-    description: "Quiet orbital architecture",
-    version: "v1.0.0",
-    author: "Cosmos Studio",
-    status: "Active",
-    tone: "cosmos",
-  },
-  {
-    name: "Minimal",
-    description: "Light, space and restraint",
-    version: "v2.1.0",
-    author: "Core",
-    status: "Installed",
-    tone: "minimal",
-  },
-  {
-    name: "Nebula Garden",
-    description: "A living garden among the stars",
-    version: "v1.2.0",
-    author: "Northlight Studio",
-    status: "Inactive",
-    tone: "nebula",
-    selected: true,
-  },
-  {
-    name: "Industrial",
-    description: "Honest materials and strong forms",
-    version: "v1.3.0",
-    author: "Ironvale",
-    status: "Installed",
-    tone: "industrial",
-  },
-  {
-    name: "Fantasy",
-    description: "A quiet world of myth and light",
-    version: "v1.0.5",
-    author: "Mythic Realm",
-    status: "Installed",
-    tone: "fantasy",
-  },
-  {
-    name: "Pixel",
-    description: "Small worlds, precise character",
-    version: "v1.4.2",
-    author: "Pixel Perfect",
-    status: "Installed",
-    tone: "pixel",
-  },
-];
+onMounted(async () => {
+  try {
+    const snapshot = await loadThemeLibrarySnapshot(runtime.themes);
+    presentation.value = projectThemeLibrarySnapshot(snapshot);
+  } catch (error) {
+    presentation.value = {
+      phase: "error",
+      message: error instanceof Error ? error.message : "Theme Runtime is unavailable.",
+    };
+  }
+});
 </script>
 
 <style scoped>
@@ -187,6 +166,10 @@ const themes: readonly ThemeLibraryCard[] = [
 }
 
 .theme-library-view__content > :deep(.theme-library-empty) {
+  grid-row: 2 / -1;
+}
+
+.theme-library-view__content > :deep(.theme-library-runtime-state) {
   grid-row: 2 / -1;
 }
 

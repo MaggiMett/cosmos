@@ -2,13 +2,14 @@
   <div class="theme-gallery" data-testid="theme-library-gallery">
     <article
       v-for="theme in themes"
-      :key="theme.name"
+      :key="theme.themeId"
       class="theme-card"
-      :class="{ 'theme-card--selected': theme.selected }"
+      :class="{ 'theme-card--selected': theme.status === 'Active' }"
+      :data-theme-id="theme.themeId"
     >
       <div class="theme-card__visual">
         <ThemeLibraryVisual :label="`${theme.name} preview`" :tone="theme.tone" variant="card" />
-        <div v-if="theme.selected" class="theme-card__hover-actions">
+        <div v-if="theme.status === 'Active'" class="theme-card__hover-actions">
           <button type="button">Activate</button>
           <button type="button">Preview</button>
           <button type="button">Open Builder</button>
@@ -16,9 +17,9 @@
       </div>
       <footer>
         <strong>{{ theme.name }}</strong>
-        <p>{{ theme.description }}</p>
+        <p>{{ theme.description ?? theme.themeId }}</p>
         <div>
-          <span>{{ theme.version }} · {{ theme.author }}</span>
+          <span>{{ theme.version ?? "Version unavailable" }} · {{ theme.author ?? "Author unavailable" }}</span>
           <span :class="`theme-card__status--${theme.status.toLowerCase()}`">
             <i aria-hidden="true" />{{ theme.status }}
           </span>
@@ -29,19 +30,10 @@
 </template>
 
 <script setup lang="ts">
+import type { ThemeLibraryTheme } from "../themeLibraryProjection";
 import ThemeLibraryVisual from "./ThemeLibraryVisual.vue";
 
-export interface ThemeLibraryCard {
-  name: string;
-  description: string;
-  version: string;
-  author: string;
-  status: "Active" | "Installed" | "Inactive";
-  tone: "cosmos" | "minimal" | "nebula" | "industrial" | "fantasy" | "pixel";
-  selected?: boolean;
-}
-
-defineProps<{ themes: readonly ThemeLibraryCard[] }>();
+defineProps<{ themes: readonly Readonly<ThemeLibraryTheme>[] }>();
 </script>
 
 <style scoped>
