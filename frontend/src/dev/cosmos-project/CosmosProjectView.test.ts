@@ -64,6 +64,7 @@ describe("Project Cosmos visual slice", () => {
     expect(controls).toContain("projectName");
     expect(controls).toContain("Fit");
     expect(controls).toContain("Search / Focus");
+    expect(controls).toContain("Themes");
     expect(controls).toContain("$emit('zoom-out')");
     expect(controls).toContain("$emit('zoom-in')");
     expect(controls).toContain("$emit('fit')");
@@ -136,6 +137,8 @@ describe("Project Cosmos visual slice", () => {
     expect(view).toContain("<CosmosQuickTravel");
     expect(view).toContain("<CompanionWindowHost");
     expect(view).toContain('router.push("/base")');
+    expect(view).toContain('@open-themes="openThemes"');
+    expect(view).toContain('router.push({ name: "theme-library" })');
     expect(view).not.toContain("selectedObjectId = ref");
   });
 

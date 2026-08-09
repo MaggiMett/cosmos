@@ -197,6 +197,26 @@ describe("Cosmos routing", () => {
     expect(String(libraryRecord?.component)).toContain("ThemeLibraryView.vue");
   });
 
+  it("promotes the same Theme Library component to the productive /themes route", () => {
+    const router = createCosmosRouter({ history: createMemoryHistory() });
+    const productive = router.resolve("/themes");
+    const productiveRecord = routeRecords.find(
+      (record) => record.name === "theme-library",
+    );
+    const developmentRecord = routeRecords.find(
+      (record) => record.name === "dev-theme-library",
+    );
+
+    expect(productive.name).toBe("theme-library");
+    expect(productive.meta).toMatchObject({
+      title: "Theme Library",
+      environment: "cosmos",
+    });
+    expect(productive.meta.developmentPreview).not.toBe(true);
+    expect(productiveRecord?.component).toBe(developmentRecord?.component);
+    expect(String(productiveRecord?.component)).toContain("ThemeLibraryView.vue");
+  });
+
   it("resolves Base Runtime inside the normal ApplicationShell boundary", () => {
     const router = createCosmosRouter({ history: createMemoryHistory() });
     const baseRuntime = router.resolve("/dev/base-runtime");

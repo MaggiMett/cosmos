@@ -75,7 +75,7 @@ describe("Global Cosmos visual slice", () => {
     expect(chrome).toContain(':left-neighbor="leftNeighbor"');
     expect(chrome).toContain(':right-neighbor="rightNeighbor"');
     expect(chrome).toContain('@toggle-quick-travel="$emit(\'toggle-quick-travel\')"');
-    for (const label of ["zoomLabel", "Fit", "Search / Focus", "Base", "Companion", "Settings"]) {
+    for (const label of ["zoomLabel", "Fit", "Search / Focus", "Base", "Companion", "Themes", "Settings"]) {
       expect(controls).toContain(label);
     }
     expect(controls).toContain("$emit('zoom-out')");
@@ -112,6 +112,8 @@ describe("Global Cosmos visual slice", () => {
     expect(view).toContain("<CosmosQuickTravel");
     expect(view).toContain("<CompanionWindowHost");
     expect(view).toContain('router.push("/base")');
+    expect(view).toContain('@open-themes="openThemes"');
+    expect(view).toContain('router.push({ name: "theme-library" })');
     expect(camera).toContain("runtime.setCamera");
     expect(camera).toContain("runtime.persistCamera()");
     expect(camera).toContain("runtime.focusCosmos");

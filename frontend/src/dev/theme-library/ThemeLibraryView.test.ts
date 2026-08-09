@@ -21,6 +21,8 @@ function sourceFor(path: (typeof files)[number]): string {
   return readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8");
 }
 
+const appSource = readFileSync(fileURLToPath(new URL("../../App.vue", import.meta.url)), "utf8");
+
 describe("Cosmos Theme Library vertical slice", () => {
   it.each(files)("compiles %s without script or template errors", (path) => {
     const source = sourceFor(path);
@@ -43,6 +45,11 @@ describe("Cosmos Theme Library vertical slice", () => {
     const header = sourceFor("./components/ThemeLibrarySystemHeader.vue");
 
     expect(header).toContain("<CosmosNavigation");
+    expect(combined.match(/<CosmosNavigation/g)).toHaveLength(1);
+    expect(header).toContain("@travel=\"$emit('travel', $event)\"");
+    expect(sourceFor("./ThemeLibraryView.vue")).toContain('@travel="travelFromLibrary"');
+    expect(appSource.match(/<ApplicationShell/g)).toHaveLength(1);
+    expect(appSource).toContain('v-if="route.meta.developmentPreview"');
     expect(combined).not.toContain("ThemeBuilderShell");
     expect(combined).not.toContain("StudioRail");
     expect(combined).not.toContain("BuilderTopNavigation");
@@ -152,10 +159,23 @@ describe("Cosmos Theme Library vertical slice", () => {
     expect(view).toContain('type="file"');
     expect(view).toContain('accept=".zip,application/zip"');
     expect(view).not.toContain("multiple");
+    expect(view).toContain('tabindex="-1"');
     expect(view).toContain("new ThemePackageImportApi(runtime.api)");
     expect(review).toContain("Ready to inspect");
     expect(review).toContain("Importing…");
     expect(review.split("<style scoped>")[0]).not.toMatch(/\d+%/);
+  });
+
+  it("returns through canonical Cosmos routes without a parallel navigation state", () => {
+    const view = sourceFor("./ThemeLibraryView.vue");
+
+    expect(view).toContain("useRouter()");
+    expect(view).toContain('destinationId === "cosmos"');
+    expect(view).toContain('router.push({ name: "cosmos" })');
+    expect(view).toContain('destinationId === "base"');
+    expect(view).toContain('router.push({ name: "base" })');
+    expect(view).not.toMatch(/\buseRoute\b/);
+    expect(view).not.toContain("route.query.state");
   });
 
   it("shows real success metadata and explicitly defers registration until reload", () => {

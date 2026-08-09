@@ -10,6 +10,7 @@
       :left-neighbor="leftNeighbor"
       :right-neighbor="rightNeighbor"
       :quick-travel-open="false"
+      @travel="$emit('travel', $event)"
     />
 
     <div class="theme-library-header__actions">
@@ -28,7 +29,10 @@
 <script setup lang="ts">
 import CosmosNavigation from "../../../components/cosmos/CosmosNavigation.vue";
 
-defineEmits<{ import: [] }>();
+defineEmits<{
+  import: [];
+  travel: [destinationId: string];
+}>();
 
 const leftNeighbor = { objectId: "cosmos", displayName: "Cosmos" } as const;
 const rightNeighbor = { objectId: "base", displayName: "Base" } as const;

@@ -2,6 +2,8 @@ import type { RouteRecordRaw } from "vue-router";
 
 import EnvironmentView from "../views/EnvironmentView";
 
+const ThemeLibraryView = () => import("../dev/theme-library/ThemeLibraryView.vue");
+
 export type EnvironmentKind =
   | "cosmos"
   | "base"
@@ -33,6 +35,12 @@ export const routeRecords = [
     name: "workspace",
     component: EnvironmentView,
     meta: { title: "Workspace", environment: "workspace" },
+  },
+  {
+    path: "/themes",
+    name: "theme-library",
+    component: ThemeLibraryView,
+    meta: { title: "Theme Library", environment: "cosmos" },
   },
   {
     path: "/dev/base-builder",
@@ -117,7 +125,7 @@ export const routeRecords = [
   {
     path: "/dev/theme-library",
     name: "dev-theme-library",
-    component: () => import("../dev/theme-library/ThemeLibraryView.vue"),
+    component: ThemeLibraryView,
     meta: {
       title: "Theme Library",
       environment: "cosmos",

@@ -14,6 +14,7 @@
     <nav class="project-cosmos-controls__destinations" aria-label="Runtime destinations">
       <button type="button" @click="$emit('open-base')"><span aria-hidden="true">⌂</span>Base</button>
       <button type="button" @click="$emit('open-companion')"><span aria-hidden="true">○</span>Companion</button>
+      <button type="button" @click="$emit('open-themes')"><span aria-hidden="true">◇</span>Themes</button>
     </nav>
   </div>
 </template>
@@ -30,6 +31,7 @@ defineEmits<{
   fit: [];
   "open-base": [];
   "open-companion": [];
+  "open-themes": [];
 }>();
 </script>
 

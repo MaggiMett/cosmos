@@ -5,13 +5,14 @@
     data-testid="theme-library-view"
   >
     <div class="theme-library-view__stars" aria-hidden="true" />
-    <ThemeLibrarySystemHeader @import="openImportPicker" />
+    <ThemeLibrarySystemHeader @import="openImportPicker" @travel="travelFromLibrary" />
 
     <input
       ref="importInput"
       class="theme-library-view__file-input"
       type="file"
       accept=".zip,application/zip"
+      tabindex="-1"
       aria-label="Choose Theme Pack ZIP"
       data-testid="theme-package-file-input"
       @change="selectImportFile"
@@ -82,6 +83,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 
 import { useCosmosRuntime } from "../../runtime/plugin";
 import { ThemePackageImportApi } from "../../runtime/themePackageImportApi";
@@ -102,6 +104,7 @@ import {
 } from "./themeLibraryProjection";
 
 const runtime = useCosmosRuntime();
+const router = useRouter();
 const importInput = ref<HTMLInputElement | null>(null);
 const presentation = ref<ThemeLibraryPresentation>({ phase: "loading" });
 const themeCount = computed(() =>
@@ -120,6 +123,14 @@ function selectImportFile(event: Event): void {
   const file = input.files?.item(0) ?? null;
   if (file) themeImport.selectFile(file);
   input.value = "";
+}
+
+function travelFromLibrary(destinationId: string): void {
+  if (destinationId === "cosmos") {
+    void router.push({ name: "cosmos" });
+  } else if (destinationId === "base") {
+    void router.push({ name: "base" });
+  }
 }
 
 async function activateTheme(themeId: string): Promise<void> {

@@ -67,6 +67,7 @@
       @fit="fit"
       @open-base="openBase"
       @open-companion="openCompanion"
+      @open-themes="openThemes"
     />
     <CompanionWindowHost
       ref="companionWindowHost"
@@ -180,6 +181,10 @@ function openCompanion(): void {
 
 function openBase(): void {
   void router.push("/base");
+}
+
+function openThemes(): void {
+  void router.push({ name: "theme-library" });
 }
 
 onMounted(() => {
