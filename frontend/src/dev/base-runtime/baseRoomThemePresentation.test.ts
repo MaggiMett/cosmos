@@ -35,13 +35,13 @@ const backgroundSlot = "base.slot.background";
 const workspaceSlot = "base.slot.left-workspace";
 
 describe("controlled Base Room Theme presentation", () => {
-  it("keeps Core as default and enables Theme only for the exact value", () => {
-    expect(resolveBaseThemeVisuals(undefined)).toBe("core");
+  it("uses Theme by default and keeps only exact Core as rollback", () => {
+    expect(resolveBaseThemeVisuals(undefined)).toBe("theme");
     expect(resolveBaseThemeVisuals("core")).toBe("core");
-    expect(resolveBaseThemeVisuals("unexpected")).toBe("core");
-    expect(resolveBaseThemeVisuals("THEME")).toBe("core");
+    expect(resolveBaseThemeVisuals("unexpected")).toBe("theme");
+    expect(resolveBaseThemeVisuals("THEME")).toBe("theme");
     expect(resolveBaseThemeVisuals("theme")).toBe("theme");
-    expect(configuredBaseThemeVisuals).toBe("core");
+    expect(configuredBaseThemeVisuals).toBe("theme");
   });
 
   it("does not load Package or Catalog presentation while Core mode is active", async () => {

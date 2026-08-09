@@ -1,8 +1,8 @@
 export type BaseThemeVisuals = "core" | "theme";
 
-/** Theme art is opt-in until the controlled visual cutover is accepted. */
+/** Core visuals remain an explicit rollback for the productive Theme path. */
 export function resolveBaseThemeVisuals(value: unknown): BaseThemeVisuals {
-  return value === "theme" ? "theme" : "core";
+  return value === "core" ? "core" : "theme";
 }
 
 export const configuredBaseThemeVisuals = resolveBaseThemeVisuals(

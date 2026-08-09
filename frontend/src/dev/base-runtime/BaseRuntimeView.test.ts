@@ -197,7 +197,7 @@ describe("Base Room Runtime visual slice", () => {
     expect(gate).toContain("validationStatus.valid");
   });
 
-  it("keeps Theme visuals opt-in and independent from both existing rollout switches", () => {
+  it("uses Theme visuals by default and keeps all rollout switches independent", () => {
     const view = sourceFor("./BaseRuntimeView.vue");
     const switchSource = readFileSync(
       fileURLToPath(new URL("./baseThemeVisuals.ts", import.meta.url)),
@@ -208,11 +208,12 @@ describe("Base Room Runtime visual slice", () => {
       "utf8",
     );
 
-    expect(switchSource).toContain('value === "theme" ? "theme" : "core"');
+    expect(switchSource).toContain('value === "core" ? "core" : "theme"');
     expect(switchSource).toContain("VITE_BASE_THEME_VISUALS");
     expect(switchSource).not.toContain("VITE_BASE_ROOM_RENDERER");
     expect(switchSource).not.toContain("VITE_BASE_PRESENTER");
     expect(roomSwitch).not.toContain("VITE_BASE_THEME_VISUALS");
+    expect(view).toContain("themeVisuals: configuredBaseThemeVisuals");
     expect(view).toContain("loadBaseRoomThemePresentation({");
     expect(view).toContain(':theme-presentation="themePresentation"');
     expect(view).toContain(':data-theme-visuals="themePresentation ? \'theme\' : \'core\'"');
