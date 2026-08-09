@@ -33,26 +33,25 @@ describe("real Base Main Room Room-Composition Shadow projection", () => {
   it("preserves real Workspace Slot and target IDs without fixture identities", () => {
     const result = runBaseMainRoomShadowMode({ baseSnapshot: snapshot() });
 
-    expect(result.runtimeReference?.workspaceSlotIds).toEqual([
-      "runtime.slot.knowledge",
-      "runtime.slot.creation",
-    ]);
-    expect(result.runtimeReference?.workspaceTargetIds).toEqual([
-      "runtime.workspace.knowledge",
-      "runtime.workspace.creation",
-    ]);
     expect(result.runtimeBindings?.filter((entry) => entry.kind === "workspace")).toEqual([
       expect.objectContaining({
         objectInstanceId: "runtime.slot.knowledge",
-        representedObjectId: "runtime.slot.knowledge",
-        targetObjectId: "runtime.workspace.knowledge",
+        workspaceSlotId: "runtime.slot.knowledge",
+        workspaceId: "runtime.workspace.knowledge",
+        functionContainerRole: "knowledge-workspace",
       }),
       expect.objectContaining({
         objectInstanceId: "runtime.slot.creation",
-        representedObjectId: "runtime.slot.creation",
-        targetObjectId: "runtime.workspace.creation",
+        workspaceSlotId: "runtime.slot.creation",
+        workspaceId: "runtime.workspace.creation",
+        functionContainerRole: "creation-workspace",
       }),
     ]);
+    expect(result.runtimeBindings?.filter((entry) => entry.kind === "workspace")).toEqual(
+      expect.not.arrayContaining([
+        expect.objectContaining({ targetObjectId: expect.anything() }),
+      ]),
+    );
     expect(result.snapshot.objectInstances.map((entry) => entry.instanceId)).not.toEqual(
       expect.arrayContaining([
         "core.scene.base.left-workspace",
@@ -64,15 +63,12 @@ describe("real Base Main Room Room-Composition Shadow projection", () => {
   it("preserves the real Door and destination Room IDs as a read-only connection", () => {
     const result = runBaseMainRoomShadowMode({ baseSnapshot: snapshot() });
 
-    expect(result.runtimeReference).toMatchObject({
-      doorId: "runtime.door.main-workshop",
-      doorTargetRoomId: "runtime.room.workshop",
-    });
     expect(result.runtimeBindings).toContainEqual(
       expect.objectContaining({
         kind: "room-transition",
-        representedObjectId: "runtime.door.main-workshop",
-        targetObjectId: "runtime.room.workshop",
+        doorId: "runtime.door.main-workshop",
+        targetRoomId: "runtime.room.workshop",
+        functionContainerRole: "room-transition",
       }),
     );
     expect(result.snapshot.roomConnections).toEqual([
@@ -88,7 +84,6 @@ describe("real Base Main Room Room-Composition Shadow projection", () => {
     const result = runBaseMainRoomShadowMode({ baseSnapshot: snapshot() });
 
     expect(result.runtimeReference).toMatchObject({
-      companionId: "runtime.companion.guide",
       petId: "runtime.pet.resident",
     });
     expect(result.snapshot.objectInstances.map((entry) => entry.instanceId)).toContain(
@@ -97,6 +92,46 @@ describe("real Base Main Room Room-Composition Shadow projection", () => {
     expect(result.snapshot.objectInstances.map((entry) => entry.instanceId)).not.toContain(
       "runtime.pet.resident",
     );
+    expect(result.runtimeBindings).toContainEqual(
+      expect.objectContaining({
+        kind: "companion",
+        companionId: "runtime.companion.guide",
+        functionContainerRole: "companion-interaction",
+      }),
+    );
+  });
+
+  it("projects Foreground and Ambient as passive presentation Surfaces", () => {
+    const result = runBaseMainRoomShadowMode({ baseSnapshot: snapshot() });
+    const foreground = result.snapshot.surfaces.find(
+      (surface) => surface.surfaceId === "base.surface.foreground",
+    );
+    const ambient = result.snapshot.surfaces.find(
+      (surface) => surface.surfaceId === "base.surface.ambient",
+    );
+
+    expect(foreground).toMatchObject({
+      surfaceKind: "architecture",
+      layerBandId: "foreground",
+      pointerPolicy: "passive",
+    });
+    expect(ambient).toMatchObject({
+      surfaceKind: "architecture",
+      layerBandId: "ambient-front",
+      pointerPolicy: "passive",
+    });
+    expect(result.snapshot.shell.placementSurfaces.map((surface) => surface.surfaceId)).not.toEqual(
+      expect.arrayContaining(["base.surface.foreground", "base.surface.ambient"]),
+    );
+    expect(result.snapshot.functionContainers.some((container) =>
+      ["base.surface.foreground", "base.surface.ambient"].includes(
+        container.attachedObjectInstanceId,
+      ),
+    )).toBe(false);
+    expect(foreground).not.toHaveProperty("interactionBounds");
+    expect(foreground).not.toHaveProperty("functionBinding");
+    expect(ambient).not.toHaveProperty("interactionBounds");
+    expect(ambient).not.toHaveProperty("functionBinding");
   });
 
   it("keeps existing Function Container roles, Bounds, layers and Core fallbacks", () => {
@@ -126,14 +161,10 @@ describe("real Base Main Room Room-Composition Shadow projection", () => {
 
     const result = runBaseMainRoomShadowMode({ baseSnapshot: value });
 
-    expect(result.runtimeReference?.workspaceTargetIds).toEqual([
-      "runtime.workspace.knowledge",
-      null,
-    ]);
     expect(result.runtimeBindings).toContainEqual(
       expect.objectContaining({
-        representedObjectId: "runtime.slot.creation",
-        targetObjectId: null,
+        workspaceSlotId: "runtime.slot.creation",
+        workspaceId: null,
       }),
     );
     expect(result.parity.status).toBe("equal");
@@ -164,7 +195,7 @@ describe("real Base Main Room Room-Composition Shadow projection", () => {
     )).toBe(true);
   });
 
-  it("uses blocking-difference for a missing function or wrong Runtime target", () => {
+  it("uses blocking-difference for a missing function or wrong Workspace target", () => {
     const projection = projectBaseMainRoomToRoomCompositionShadow(snapshot());
     const result = runBaseMainRoomShadowMode({ baseSnapshot: snapshot() });
     const missing = deepClone(result.snapshot) as ImmutableRoomSnapshot;
@@ -185,12 +216,12 @@ describe("real Base Main Room Room-Composition Shadow projection", () => {
 
     const wrongTarget = deepClone(projection);
     const workspace = (wrongTarget.runtimeBindings as unknown as Array<{
-      representedObjectId: string;
-      targetObjectId: string | null;
+      kind: string;
+      workspaceId: string | null;
     }>).find(
-      (binding) => binding.representedObjectId === "runtime.slot.knowledge",
+      (binding) => binding.kind === "workspace",
     )!;
-    workspace.targetObjectId = "runtime.workspace.wrong";
+    workspace.workspaceId = "runtime.workspace.wrong";
     const wrongTargetParity = compareBaseRuntimeRoomShadowProjection(
       wrongTarget,
       result.snapshot,
@@ -199,6 +230,60 @@ describe("real Base Main Room Room-Composition Shadow projection", () => {
     expect(wrongTargetParity.status).toBe("blocking-difference");
     expect(wrongTargetParity.differences).toEqual([
       expect.objectContaining({ category: "workspace-assignment" }),
+    ]);
+  });
+
+  it("blocks wrong Room targets and Door or Companion identities", () => {
+    const source = projectBaseMainRoomToRoomCompositionShadow(snapshot());
+    const result = runBaseMainRoomShadowMode({ baseSnapshot: snapshot() });
+
+    for (const [field, value, category] of [
+      ["targetRoomId", "runtime.room.wrong", "room-transition"],
+      ["doorId", "runtime.door.wrong", "room-transition"],
+      ["companionId", "runtime.companion.wrong", "companion"],
+    ] as const) {
+      const altered = deepClone(source);
+      const binding = (altered.runtimeBindings as unknown as Array<Record<string, unknown>>)
+        .find((candidate) => field === "companionId"
+          ? candidate.kind === "companion"
+          : candidate.kind === "room-transition")!;
+      binding[field] = value;
+      const parity = compareBaseRuntimeRoomShadowProjection(
+        altered,
+        result.snapshot,
+        compareLegacyBaseToRoomSnapshot(altered.compatibility, result.snapshot),
+      );
+
+      expect(parity.status).toBe("blocking-difference");
+      expect(parity.differences).toContainEqual(
+        expect.objectContaining({ category }),
+      );
+    }
+  });
+
+  it("classifies passive presentation differences with existing compatible rules", () => {
+    const projection = projectBaseMainRoomToRoomCompositionShadow(snapshot());
+    const result = runBaseMainRoomShadowMode({ baseSnapshot: snapshot() });
+    const altered = deepClone(result.snapshot) as ImmutableRoomSnapshot;
+    altered.surfaces = altered.surfaces.filter(
+      (surface) => surface.surfaceId !== "base.surface.foreground",
+    );
+    const structural = compareLegacyBaseToRoomSnapshot(
+      projection.compatibility,
+      altered,
+    );
+    const parity = compareBaseRuntimeRoomShadowProjection(
+      projection,
+      altered,
+      structural,
+    );
+
+    expect(parity.status).toBe("compatible-difference");
+    expect(parity.differences).toEqual([
+      expect.objectContaining({
+        category: "decoration",
+        legacyId: "base.surface.foreground",
+      }),
     ]);
   });
 
@@ -228,6 +313,9 @@ describe("real Base Main Room Room-Composition Shadow projection", () => {
     expect(JSON.stringify(value)).toBe(before);
     expect(Object.isFrozen(value)).toBe(false);
     expect(Object.isFrozen(result)).toBe(true);
+    expect(Object.isFrozen(result.snapshot.surfaces)).toBe(true);
+    expect(Object.isFrozen(result.snapshot.surfaces[0])).toBe(true);
+    expect(Object.isFrozen(result.runtimeBindings)).toBe(true);
     expect(result).not.toHaveProperty("writeBack");
     expect(result).not.toHaveProperty("persist");
   });

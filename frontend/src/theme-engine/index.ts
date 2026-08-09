@@ -211,10 +211,15 @@ export {
   projectBaseMainRoomToRoomCompositionShadow,
 } from "./baseRuntimeRoomShadowProjection";
 export type {
+  BaseRuntimeBaseExitBinding,
+  BaseRuntimeCompanionBinding,
   BaseRuntimeMainRoomReference,
   BaseRuntimeMainRoomShadowProjection,
+  BaseRuntimeRoomTransitionBinding,
+  BaseRuntimeSnapshotReadModel,
   BaseRuntimeShadowBinding,
   BaseRuntimeShadowBindingKind,
+  BaseRuntimeWorkspaceBinding,
 } from "./baseRuntimeRoomShadowProjection";
 export {
   RoomCompositionResolver,

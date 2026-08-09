@@ -125,7 +125,16 @@ export function adaptBaseMainRoomV1(
   );
   const architectureSurfaces = template.surfaces
     .filter((surface) =>
-      ["background", "rear", "left", "right", "floor", "ceiling"].includes(
+      [
+        "background",
+        "rear",
+        "left",
+        "right",
+        "floor",
+        "ceiling",
+        "foreground",
+        "ambient",
+      ].includes(
         surface.surfaceRole,
       ),
     )
@@ -229,7 +238,10 @@ export function adaptBaseMainRoomV1(
     const containerId = `core.function-container.compat.${suffix}`;
     const containerInstanceId = `core.function-container-instance.compat.${suffix}`;
     const family = familyFor(node.payload.functionalZoneId);
-    const functionType = functionTypeFor(node.payload.descriptorBinding.descriptorRole);
+    const functionType = functionTypeFor(
+      node.payload.descriptorBinding.descriptorRole,
+      node.payload.functionalZoneId,
+    );
     const origin = shapeOrigin(node.payload.visualBounds);
     const placement = placementFor(node.payload.functionalZoneId, origin);
 
@@ -440,6 +452,9 @@ function architectureKind(
   if (surface.surfaceRole === "floor") return "floor";
   if (surface.surfaceRole === "ceiling") return "ceiling";
   if (surface.surfaceRole === "background") return "background-opening";
+  if (["foreground", "ambient"].includes(surface.surfaceRole)) {
+    return "architecture";
+  }
   return "wall";
 }
 
@@ -475,8 +490,15 @@ function familyFor(zoneId: string): CatalogObjectFamily {
   return "architecture-object";
 }
 
-function functionTypeFor(descriptorRole: string): FunctionType {
-  if (descriptorRole === "workspace.open") return "knowledge-workspace";
+function functionTypeFor(
+  descriptorRole: string,
+  functionalZoneId: string,
+): FunctionType {
+  if (descriptorRole === "workspace.open") {
+    return functionalZoneId === BASE_FUNCTIONAL_ZONE_IDS.rightWorkspace
+      ? "creation-workspace"
+      : "knowledge-workspace";
+  }
   if (descriptorRole === "companion.open") return "companion-interaction";
   if (descriptorRole === "base.close") return "base-exit";
   return "room-transition";

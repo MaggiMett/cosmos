@@ -1,6 +1,3 @@
-import type { DeepReadonly } from "vue";
-
-import type { BaseSnapshot } from "../runtime/baseRuntime";
 import {
   adaptBaseMainRoomV1,
   type BaseRoomCompatibilityAdapterInput,
@@ -9,6 +6,7 @@ import {
   compareBaseRuntimeRoomShadowProjection,
   projectBaseMainRoomToRoomCompositionShadow,
   type BaseRuntimeMainRoomReference,
+  type BaseRuntimeSnapshotReadModel,
   type BaseRuntimeShadowBinding,
 } from "./baseRuntimeRoomShadowProjection";
 import { cloneAndFreeze } from "./immutable";
@@ -30,7 +28,7 @@ import type { BaseComposition } from "./roomCompositionTypes";
 export interface RunBaseRoomShadowModeInput {
   legacy?: BaseRoomCompatibilityAdapterInput;
   skins?: RoomSkinResolutionInput;
-  baseSnapshot?: DeepReadonly<BaseSnapshot>;
+  baseSnapshot?: BaseRuntimeSnapshotReadModel;
 }
 
 export interface RoomShadowModeResult {

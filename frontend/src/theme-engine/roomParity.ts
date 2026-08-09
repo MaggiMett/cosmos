@@ -55,6 +55,8 @@ export function compareLegacyBaseToRoomSnapshot(
     ]),
   );
 
+  comparePassivePresentation(legacy, snapshot, differences);
+
   for (const record of legacy.parity.objects) {
     compareFunctionalRecord(
       record,
@@ -100,6 +102,66 @@ export function compareLegacyBaseToRoomSnapshot(
     differences: Object.freeze(differences.map((entry) => Object.freeze(entry))),
     comparedFunctionalObjects: legacy.parity.objects.length,
   });
+}
+
+function comparePassivePresentation(
+  legacy: Readonly<BaseRoomCompatibilityProjection>,
+  snapshot: Readonly<ImmutableRoomSnapshot>,
+  differences: RoomParityDifference[],
+): void {
+  const legacyPassive = legacy.parity.surfaces.filter(isPassivePresentationRecord);
+  const expectedIds = new Set(legacyPassive.map((surface) => surface.legacySurfaceId));
+  const snapshotById = new Map(
+    snapshot.surfaces.map((surface) => [surface.surfaceId, surface]),
+  );
+
+  for (const expected of legacyPassive) {
+    const actual = snapshotById.get(expected.legacySurfaceId);
+    if (!actual) {
+      differences.push({
+        severity: "compatible-difference",
+        category: "decoration",
+        legacyId: expected.legacySurfaceId,
+        message: `Passive presentation Surface "${expected.legacySurfaceId}" is missing`,
+      });
+      continue;
+    }
+    if (
+      actual.pointerPolicy !== "passive" ||
+      actual.layerBandId !== expected.layer ||
+      !sameValue(actual.geometry, expected.geometry)
+    ) {
+      differences.push({
+        severity: "compatible-difference",
+        category: "decoration",
+        legacyId: expected.legacySurfaceId,
+        snapshotId: actual.surfaceId,
+        message: `Passive presentation Surface "${expected.legacySurfaceId}" differs without changing function`,
+      });
+    }
+  }
+
+  for (const actual of snapshot.surfaces) {
+    if (!isPassivePresentationLayer(actual.layerBandId) || expectedIds.has(actual.surfaceId)) {
+      continue;
+    }
+    differences.push({
+      severity: "compatible-difference",
+      category: "decoration",
+      snapshotId: actual.surfaceId,
+      message: `Snapshot adds passive presentation Surface "${actual.surfaceId}"`,
+    });
+  }
+}
+
+function isPassivePresentationRecord(
+  surface: BaseRoomCompatibilityProjection["parity"]["surfaces"][number],
+): boolean {
+  return isPassivePresentationLayer(surface.layer);
+}
+
+function isPassivePresentationLayer(layer: string): boolean {
+  return layer === "foreground" || layer.startsWith("ambient");
 }
 
 function compareFunctionalRecord(

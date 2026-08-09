@@ -1,5 +1,3 @@
-import type { DeepReadonly } from "vue";
-
 import type {
   BaseRoom,
   BaseSnapshot,
@@ -15,34 +13,76 @@ import type { RoomParityDifference, RoomParityResult } from "./roomParity";
 import type { ImmutableRoomSnapshot } from "./roomSnapshotResolver";
 import type {
   FunctionContainerInstance,
+  FunctionType,
   ObjectInstance,
   RoomConnection,
 } from "./roomCompositionTypes";
 
-export type BaseRuntimeShadowBindingKind =
-  | "workspace"
-  | "room-transition"
-  | "companion"
-  | "base-exit";
+type ReadonlySnapshotValue<T> = T extends (...args: never[]) => unknown
+  ? T
+  : T extends readonly (infer Item)[]
+    ? readonly ReadonlySnapshotValue<Item>[]
+    : T extends object
+      ? { readonly [Key in keyof T]: ReadonlySnapshotValue<T[Key]> }
+      : T;
 
-export interface BaseRuntimeShadowBinding {
-  kind: BaseRuntimeShadowBindingKind;
+export type BaseRuntimeSnapshotReadModel = ReadonlySnapshotValue<BaseSnapshot>;
+
+interface BaseRuntimeShadowBindingBase {
   descriptorRole: string;
   objectInstanceId: string;
   containerInstanceId: string;
-  representedObjectId: string;
-  targetObjectId: string | null;
 }
+
+export interface BaseRuntimeWorkspaceBinding
+  extends BaseRuntimeShadowBindingBase {
+  kind: "workspace";
+  descriptorRole: "workspace.open";
+  functionContainerRole: Extract<
+    FunctionType,
+    "knowledge-workspace" | "creation-workspace"
+  >;
+  workspaceSlotId: string;
+  workspaceId: string | null;
+}
+
+export interface BaseRuntimeRoomTransitionBinding
+  extends BaseRuntimeShadowBindingBase {
+  kind: "room-transition";
+  descriptorRole: "base.open" | "room.transition";
+  functionContainerRole: "room-transition";
+  doorId: string;
+  targetRoomId: string;
+}
+
+export interface BaseRuntimeCompanionBinding
+  extends BaseRuntimeShadowBindingBase {
+  kind: "companion";
+  descriptorRole: "companion.open";
+  functionContainerRole: "companion-interaction";
+  companionId: string;
+}
+
+export interface BaseRuntimeBaseExitBinding
+  extends BaseRuntimeShadowBindingBase {
+  kind: "base-exit";
+  descriptorRole: "base.close";
+  functionContainerRole: "base-exit";
+  baseId: string;
+}
+
+export type BaseRuntimeShadowBinding =
+  | BaseRuntimeWorkspaceBinding
+  | BaseRuntimeRoomTransitionBinding
+  | BaseRuntimeCompanionBinding
+  | BaseRuntimeBaseExitBinding;
+
+export type BaseRuntimeShadowBindingKind = BaseRuntimeShadowBinding["kind"];
 
 export interface BaseRuntimeMainRoomReference {
   baseObjectId: string;
   roomId: string;
   roomName: string;
-  workspaceSlotIds: readonly string[];
-  workspaceTargetIds: readonly (string | null)[];
-  doorId: string | null;
-  doorTargetRoomId: string | null;
-  companionId: string | null;
   petId: string | null;
   bindings: readonly Readonly<BaseRuntimeShadowBinding>[];
 }
@@ -67,7 +107,7 @@ interface BindingAssignment {
  * geometry. The result is ephemeral, immutable and has no Runtime write path.
  */
 export function projectBaseMainRoomToRoomCompositionShadow(
-  snapshot: DeepReadonly<BaseSnapshot>,
+  snapshot: BaseRuntimeSnapshotReadModel,
 ): Readonly<BaseRuntimeMainRoomShadowProjection> {
   const room = snapshot.rooms.find((candidate) => candidate.slug === "main");
   if (!room) {
@@ -92,15 +132,6 @@ export function projectBaseMainRoomToRoomCompositionShadow(
       baseObjectId: snapshot.base.objectId,
       roomId: room.objectId,
       roomName: room.displayName,
-      workspaceSlotIds: room.workspaceSlots.map((slot) => slot.objectId),
-      workspaceTargetIds: room.workspaceSlots.map(
-        (slot) => slot.workspace?.objectId ?? null,
-      ),
-      doorId: connectedDoorTarget(snapshot, room.objectId)
-        ? snapshot.door.objectId
-        : null,
-      doorTargetRoomId: connectedDoorTarget(snapshot, room.objectId),
-      companionId: snapshot.companion?.objectId ?? null,
       petId: snapshot.pet?.objectId ?? null,
       bindings: sourceBindings,
     },
@@ -129,7 +160,7 @@ export function compareBaseRuntimeRoomShadowProjection(
   }
 
   const projectedBindings = new Map(
-    projection.runtimeBindings.map((binding) => [binding.representedObjectId, binding]),
+    projection.runtimeBindings.map((binding) => [bindingIdentity(binding), binding]),
   );
   const snapshotFunctions = new Map(
     snapshot.functionContainers.map((container) => [
@@ -139,26 +170,24 @@ export function compareBaseRuntimeRoomShadowProjection(
   );
 
   for (const expected of projection.source.bindings) {
-    const actual = projectedBindings.get(expected.representedObjectId);
+    const expectedIdentity = bindingIdentity(expected);
+    const actual = projectedBindings.get(expectedIdentity);
     if (!actual) {
       differences.push({
         severity: "blocking-difference",
         category: categoryFor(expected.kind),
-        legacyId: expected.representedObjectId,
-        message: `Runtime function "${expected.representedObjectId}" has no projected binding`,
+        legacyId: expectedIdentity,
+        message: `Runtime function "${expectedIdentity}" has no projected binding`,
       });
       continue;
     }
-    if (
-      actual.objectInstanceId !== expected.objectInstanceId ||
-      actual.targetObjectId !== expected.targetObjectId
-    ) {
+    if (!sameRuntimeBinding(expected, actual)) {
       differences.push({
         severity: "blocking-difference",
         category: categoryFor(expected.kind),
-        legacyId: expected.representedObjectId,
+        legacyId: expectedIdentity,
         snapshotId: actual.objectInstanceId,
-        message: `Runtime target differs for "${expected.representedObjectId}": expected "${formatTarget(expected.targetObjectId)}", projected "${formatTarget(actual.targetObjectId)}"`,
+        message: `Runtime target differs for "${expectedIdentity}": expected "${formatBindingTarget(expected)}", projected "${formatBindingTarget(actual)}"`,
       });
     }
     const container = snapshotFunctions.get(actual.containerInstanceId);
@@ -166,14 +195,15 @@ export function compareBaseRuntimeRoomShadowProjection(
       !container ||
       container.attachedObjectInstanceId !== actual.objectInstanceId ||
       container.descriptorRole !== expected.descriptorRole ||
-      container.actionRole !== expected.descriptorRole
+      container.actionRole !== expected.descriptorRole ||
+      container.definition.functionType !== expected.functionContainerRole
     ) {
       differences.push({
         severity: "blocking-difference",
         category: categoryFor(expected.kind),
-        legacyId: expected.representedObjectId,
+        legacyId: expectedIdentity,
         snapshotId: actual.objectInstanceId,
-        message: `Runtime binding for "${expected.representedObjectId}" is not preserved by the resolved Function Container`,
+        message: `Runtime binding for "${expectedIdentity}" is not preserved by the resolved Function Container`,
       });
     }
   }
@@ -181,7 +211,7 @@ export function compareBaseRuntimeRoomShadowProjection(
   for (const binding of projection.runtimeBindings) {
     if (
       projection.source.bindings.some(
-        (expected) => expected.representedObjectId === binding.representedObjectId,
+        (expected) => bindingIdentity(expected) === bindingIdentity(binding),
       )
     ) {
       continue;
@@ -190,7 +220,7 @@ export function compareBaseRuntimeRoomShadowProjection(
       severity: "blocking-difference",
       category: categoryFor(binding.kind),
       snapshotId: binding.objectInstanceId,
-      message: `Shadow projection adds unknown Runtime binding "${binding.representedObjectId}"`,
+      message: `Shadow projection adds unknown Runtime binding "${bindingIdentity(binding)}"`,
     });
   }
 
@@ -209,8 +239,8 @@ export function compareBaseRuntimeRoomShadowProjection(
 }
 
 function assignRuntimeBindings(
-  snapshot: DeepReadonly<BaseSnapshot>,
-  room: DeepReadonly<BaseRoom>,
+  snapshot: BaseRuntimeSnapshotReadModel,
+  room: ReadonlySnapshotValue<BaseRoom>,
   compatibility: Readonly<BaseRoomCompatibilityProjection>,
 ): BindingAssignment[] {
   const records = compatibility.parity.objects;
@@ -222,14 +252,13 @@ function assignRuntimeBindings(
 
   for (let index = 0; index < Math.min(workspaces.length, slots.length); index += 1) {
     const slot = slots[index]!;
+    const record = workspaces[index]!;
     assignments.push({
-      record: workspaces[index]!,
-      binding: binding(
-        "workspace",
-        "workspace.open",
-        slot.objectId,
-        slot.objectId,
-        slot.workspace?.objectId ?? null,
+      record,
+      binding: workspaceBinding(
+        record,
+        compatibility,
+        slot,
       ),
     });
   }
@@ -241,13 +270,7 @@ function assignRuntimeBindings(
   if (doorTargetRoomId && doorRecord) {
     assignments.push({
       record: doorRecord,
-      binding: binding(
-        "room-transition",
-        "base.open",
-        snapshot.door.objectId,
-        snapshot.door.objectId,
-        doorTargetRoomId,
-      ),
+      binding: roomTransitionBinding(snapshot.door.objectId, doorTargetRoomId),
     });
   }
 
@@ -257,13 +280,7 @@ function assignRuntimeBindings(
   if (snapshot.companion && companionRecord) {
     assignments.push({
       record: companionRecord,
-      binding: binding(
-        "companion",
-        "companion.open",
-        snapshot.companion.objectId,
-        snapshot.companion.objectId,
-        snapshot.companion.objectId,
-      ),
+      binding: companionBinding(snapshot.companion.objectId),
     });
   }
 
@@ -273,49 +290,39 @@ function assignRuntimeBindings(
   if (exitRecord) {
     assignments.push({
       record: exitRecord,
-      binding: binding(
-        "base-exit",
-        "base.close",
-        snapshot.base.objectId,
-        snapshot.base.objectId,
-        snapshot.base.objectId,
-      ),
+      binding: baseExitBinding(snapshot.base.objectId),
     });
   }
   return assignments;
 }
 
 function expectedRuntimeBindings(
-  snapshot: DeepReadonly<BaseSnapshot>,
-  room: DeepReadonly<BaseRoom>,
+  snapshot: BaseRuntimeSnapshotReadModel,
+  room: ReadonlySnapshotValue<BaseRoom>,
   compatibility: Readonly<BaseRoomCompatibilityProjection>,
 ): BaseRuntimeShadowBinding[] {
   const projected = assignRuntimeBindings(snapshot, room, compatibility).map(
     (assignment) => assignment.binding,
   );
   const representedIds = new Set(
-    projected.map((bindingValue) => bindingValue.representedObjectId),
+    projected.map(bindingIdentity),
   );
   for (const slot of room.workspaceSlots) {
     if (representedIds.has(slot.objectId)) continue;
-    projected.push(
-      binding(
-        "workspace",
-        "workspace.open",
-        slot.objectId,
-        slot.objectId,
-        slot.workspace?.objectId ?? null,
-      ),
+    const fallbackRecord = compatibility.parity.objects.find(
+      (record) => record.descriptorRole === "workspace.open",
     );
+    if (!fallbackRecord) continue;
+    projected.push(workspaceBinding(fallbackRecord, compatibility, slot));
   }
   return projected.sort((left, right) =>
-    compareText(left.representedObjectId, right.representedObjectId),
+    compareText(bindingIdentity(left), bindingIdentity(right)),
   );
 }
 
 function remapCompatibilityProjection(
-  snapshot: DeepReadonly<BaseSnapshot>,
-  room: DeepReadonly<BaseRoom>,
+  snapshot: BaseRuntimeSnapshotReadModel,
+  room: ReadonlySnapshotValue<BaseRoom>,
   compatibility: Readonly<BaseRoomCompatibilityProjection>,
   assignments: readonly BindingAssignment[],
 ): BaseRoomCompatibilityProjection {
@@ -355,10 +362,9 @@ function remapCompatibilityProjection(
 
     parityObjects.push({
       ...deepClone(assignment.record),
-      legacyNodeId: assignment.binding.representedObjectId,
+      legacyNodeId: bindingIdentity(assignment.binding),
       objectInstanceId: assignment.binding.objectInstanceId,
-      descriptorId:
-        assignment.binding.targetObjectId ?? assignment.binding.representedObjectId,
+      descriptorId: bindingTarget(assignment.binding) ?? bindingIdentity(assignment.binding),
     });
   }
 
@@ -402,25 +408,102 @@ function remapCompatibilityProjection(
   };
 }
 
-function binding(
-  kind: BaseRuntimeShadowBindingKind,
-  descriptorRole: string,
-  objectInstanceId: string,
-  representedObjectId: string,
-  targetObjectId: string | null,
-): BaseRuntimeShadowBinding {
+function workspaceBinding(
+  record: CompatibilityBoundsRecord,
+  compatibility: Readonly<BaseRoomCompatibilityProjection>,
+  slot: ReadonlySnapshotValue<WorkspaceSlot>,
+): BaseRuntimeWorkspaceBinding {
+  const definition = compatibility.functionContainers.find(
+    (container) => container.containerId === record.functionContainerId,
+  );
+  const functionContainerRole = definition?.functionType;
+  if (
+    functionContainerRole !== "knowledge-workspace" &&
+    functionContainerRole !== "creation-workspace"
+  ) {
+    throw new BaseRuntimeRoomShadowProjectionError(
+      `Workspace "${slot.objectId}" has no compatible Function Container role`,
+    );
+  }
   return {
-    kind,
-    descriptorRole,
-    objectInstanceId,
-    containerInstanceId: `${objectInstanceId}.shadow-function`,
-    representedObjectId,
-    targetObjectId,
+    kind: "workspace",
+    descriptorRole: "workspace.open",
+    functionContainerRole,
+    objectInstanceId: slot.objectId,
+    containerInstanceId: `${slot.objectId}.shadow-function`,
+    workspaceSlotId: slot.objectId,
+    workspaceId: slot.workspace?.objectId ?? null,
   };
 }
 
+function roomTransitionBinding(
+  doorId: string,
+  targetRoomId: string,
+): BaseRuntimeRoomTransitionBinding {
+  return {
+    kind: "room-transition",
+    descriptorRole: "base.open",
+    functionContainerRole: "room-transition",
+    objectInstanceId: doorId,
+    containerInstanceId: `${doorId}.shadow-function`,
+    doorId,
+    targetRoomId,
+  };
+}
+
+function companionBinding(companionId: string): BaseRuntimeCompanionBinding {
+  return {
+    kind: "companion",
+    descriptorRole: "companion.open",
+    functionContainerRole: "companion-interaction",
+    objectInstanceId: companionId,
+    containerInstanceId: `${companionId}.shadow-function`,
+    companionId,
+  };
+}
+
+function baseExitBinding(baseId: string): BaseRuntimeBaseExitBinding {
+  return {
+    kind: "base-exit",
+    descriptorRole: "base.close",
+    functionContainerRole: "base-exit",
+    objectInstanceId: baseId,
+    containerInstanceId: `${baseId}.shadow-function`,
+    baseId,
+  };
+}
+
+function bindingIdentity(bindingValue: BaseRuntimeShadowBinding): string {
+  if (bindingValue.kind === "workspace") return bindingValue.workspaceSlotId;
+  if (bindingValue.kind === "room-transition") return bindingValue.doorId;
+  if (bindingValue.kind === "companion") return bindingValue.companionId;
+  return bindingValue.baseId;
+}
+
+function bindingTarget(bindingValue: BaseRuntimeShadowBinding): string | null {
+  if (bindingValue.kind === "workspace") return bindingValue.workspaceId;
+  if (bindingValue.kind === "room-transition") return bindingValue.targetRoomId;
+  if (bindingValue.kind === "companion") return bindingValue.companionId;
+  return bindingValue.baseId;
+}
+
+function sameRuntimeBinding(
+  expected: BaseRuntimeShadowBinding,
+  actual: BaseRuntimeShadowBinding,
+): boolean {
+  return (
+    expected.kind === actual.kind &&
+    expected.descriptorRole === actual.descriptorRole &&
+    expected.functionContainerRole === actual.functionContainerRole &&
+    expected.objectInstanceId === actual.objectInstanceId &&
+    expected.containerInstanceId === actual.containerInstanceId &&
+    bindingIdentity(expected) === bindingIdentity(actual) &&
+    bindingTarget(expected) === bindingTarget(actual)
+  );
+}
+
 function connectedDoorTarget(
-  snapshot: DeepReadonly<BaseSnapshot>,
+  snapshot: BaseRuntimeSnapshotReadModel,
   roomId: string,
 ): string | null {
   if (!snapshot.door) return null;
@@ -430,7 +513,7 @@ function connectedDoorTarget(
 }
 
 function roomConnection(
-  snapshot: DeepReadonly<BaseSnapshot>,
+  snapshot: BaseRuntimeSnapshotReadModel,
   roomId: string,
 ): RoomConnection[] {
   const targetRoomId = connectedDoorTarget(snapshot, roomId);
@@ -445,8 +528,8 @@ function roomConnection(
 }
 
 function compareWorkspaceSlots(
-  left: DeepReadonly<WorkspaceSlot>,
-  right: DeepReadonly<WorkspaceSlot>,
+  left: ReadonlySnapshotValue<WorkspaceSlot>,
+  right: ReadonlySnapshotValue<WorkspaceSlot>,
 ): number {
   return (
     sideOrder(left.placement) - sideOrder(right.placement) ||
@@ -470,8 +553,8 @@ function categoryFor(
   return "base-exit";
 }
 
-function formatTarget(value: string | null): string {
-  return value ?? "unavailable";
+function formatBindingTarget(bindingValue: BaseRuntimeShadowBinding): string {
+  return bindingTarget(bindingValue) ?? "unavailable";
 }
 
 function compareDifference(
