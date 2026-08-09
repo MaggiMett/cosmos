@@ -3,6 +3,10 @@ import {
   createThemeRuntimeReadSnapshot,
   type ThemeRuntimeReadSnapshot,
 } from "./themeRuntimeReadSnapshot";
+import type {
+  PersistedThemeActivationState,
+  ThemeActivationPersistence,
+} from "./themeRuntimePersistence";
 import { TransitionRuntime } from "./transitionRuntime";
 
 export interface ThemePresenter {
@@ -18,7 +22,8 @@ export type ThemeActivationErrorCode =
   | "invalid_preflight"
   | "stale_preparation"
   | "apply_failed"
-  | "rollback_failed";
+  | "rollback_failed"
+  | "persistence_failed";
 
 export class ThemeActivationError extends Error {
   constructor(
@@ -57,6 +62,7 @@ export class ThemeRuntime {
     private readonly transitions: TransitionRuntime,
     private readonly fallbackThemeId: string,
     private readonly presenter: ThemePresenter = new DomThemePresenter(),
+    private readonly persistence: ThemeActivationPersistence | null = null,
   ) {
     const fallback = this.registry.resolve(this.fallbackThemeId);
     assertRuntimeReady(fallback);
@@ -88,8 +94,62 @@ export class ThemeRuntime {
     });
   }
 
+  async restoreAtStartup(initialThemeId: string): Promise<Readonly<ThemeDefinition>> {
+    let persisted: Readonly<PersistedThemeActivationState> | null = null;
+    let persistenceReadFailed = false;
+    if (this.persistence) {
+      try {
+        persisted = await this.persistence.load();
+      } catch {
+        persistenceReadFailed = true;
+      }
+    }
+
+    const persistedLastKnownGoodId = this.registeredThemeId(
+      persisted?.lastKnownGoodThemeId,
+    );
+    if (persisted) {
+      this.lastKnownGoodThemeId = persistedLastKnownGoodId ?? this.fallbackThemeId;
+    }
+
+    const candidateId = persistenceReadFailed
+      ? this.fallbackThemeId
+      : persisted
+        ? (this.registeredThemeId(persisted.activeThemeId) ??
+          persistedLastKnownGoodId ??
+          this.fallbackThemeId)
+        : (this.registeredThemeId(initialThemeId) ?? this.fallbackThemeId);
+
+    try {
+      return await this.applyPreparedThemeInternal(
+        this.prepareActivation(candidateId),
+        !persistenceReadFailed,
+      );
+    } catch (error) {
+      if (this.activeDefinition) return this.activeDefinition;
+      if (candidateId !== this.fallbackThemeId) {
+        try {
+          return await this.applyPreparedThemeInternal(
+            this.prepareActivation(this.fallbackThemeId),
+            !persistenceReadFailed,
+          );
+        } catch {
+          if (this.activeDefinition) return this.activeDefinition;
+        }
+      }
+      throw error;
+    }
+  }
+
   applyPreparedTheme(
     prepared: Readonly<PreparedThemeActivation>,
+  ): Promise<Readonly<ThemeDefinition>> {
+    return this.applyPreparedThemeInternal(prepared, true);
+  }
+
+  private applyPreparedThemeInternal(
+    prepared: Readonly<PreparedThemeActivation>,
+    persist: boolean,
   ): Promise<Readonly<ThemeDefinition>> {
     const requested = this.registry.resolve(prepared.themeId);
     assertRuntimeReady(requested);
@@ -115,6 +175,7 @@ export class ThemeRuntime {
         }
 
         this.commit(requested);
+        if (persist) await this.persistCommittedState();
         return requested;
       },
     });
@@ -128,13 +189,16 @@ export class ThemeRuntime {
       kind: "theme",
       targetId: lastKnownGood.objectId,
       run: async () => {
+        let restored: Readonly<ThemeDefinition>;
         try {
           await this.presenter.apply(lastKnownGood);
           this.activeDefinition = lastKnownGood;
-          return lastKnownGood;
+          restored = lastKnownGood;
         } catch (error) {
-          return this.restoreCoreFallback(lastKnownGood, error);
+          restored = await this.restoreCoreFallback(lastKnownGood, error);
         }
+        await this.persistCommittedState();
+        return restored;
       },
     });
   }
@@ -185,6 +249,8 @@ export class ThemeRuntime {
       await this.restoreCoreFallback(rollbackDefinition, rollbackError);
     }
 
+    await this.persistCommittedState();
+
     throw new ThemeActivationError(
       "apply_failed",
       `Theme could not be applied and was rolled back: ${requested.objectId}`,
@@ -217,6 +283,34 @@ export class ThemeRuntime {
         "rollback_failed",
         `Could not restore Core fallback Theme: ${fallback.objectId}`,
         { cause: fallbackError },
+      );
+    }
+  }
+
+  private registeredThemeId(themeId: string | undefined): string | null {
+    if (!themeId) return null;
+    try {
+      return this.registry.resolve(themeId).objectId;
+    } catch {
+      return null;
+    }
+  }
+
+  private async persistCommittedState(): Promise<void> {
+    if (!this.persistence || !this.activeDefinition) return;
+    try {
+      await this.persistence.save(
+        Object.freeze({
+          schemaVersion: 1,
+          activeThemeId: this.activeDefinition.objectId,
+          lastKnownGoodThemeId: this.lastKnownGoodThemeId,
+        }),
+      );
+    } catch (error) {
+      throw new ThemeActivationError(
+        "persistence_failed",
+        `Theme ${this.activeDefinition.objectId} is active for this session but could not be persisted.`,
+        { cause: error },
       );
     }
   }

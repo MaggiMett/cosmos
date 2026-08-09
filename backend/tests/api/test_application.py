@@ -20,6 +20,53 @@ def test_foundation_api_health_and_readiness(tmp_path: Path) -> None:
     assert settings.database_path.exists()
 
 
+def test_theme_runtime_state_uses_existing_persistence_and_survives_restart(tmp_path: Path) -> None:
+    settings = RuntimeSettings(runtime_path=tmp_path / "Runtime", port=0)
+    state = {
+        "schemaVersion": 1,
+        "activeThemeId": "cosmos.theme.aurora",
+        "lastKnownGoodThemeId": "cosmos.theme.cosmos",
+    }
+
+    with TestClient(create_app(settings)) as client:
+        empty = client.get("/runtime-state/theme")
+        saved = client.put("/runtime-state/theme", json={**state, "tokens": {"unsafe": "value"}})
+
+    with TestClient(create_app(settings)) as restarted_client:
+        restored = restarted_client.get("/runtime-state/theme")
+
+    assert empty.status_code == 200
+    assert empty.json() == {
+        "schemaVersion": 1,
+        "activeThemeId": None,
+        "lastKnownGoodThemeId": None,
+    }
+    assert saved.status_code == 200
+    assert saved.json() == state
+    assert restored.status_code == 200
+    assert restored.json() == state
+    assert "tokens" not in restored.json()
+
+
+def test_theme_runtime_state_rejects_incomplete_activation_records(tmp_path: Path) -> None:
+    settings = RuntimeSettings(runtime_path=tmp_path / "Runtime", port=0)
+
+    with TestClient(create_app(settings)) as client:
+        response = client.put(
+            "/runtime-state/theme",
+            json={
+                "schemaVersion": 1,
+                "activeThemeId": "cosmos.theme.aurora",
+                "lastKnownGoodThemeId": None,
+            },
+        )
+        restored = client.get("/runtime-state/theme")
+
+    assert response.status_code == 422
+    assert response.json()["code"] == "validation_failed"
+    assert restored.json()["activeThemeId"] is None
+
+
 def test_cosmos_map_api_restores_state_and_handles_companion_without_ai(tmp_path: Path) -> None:
     settings = RuntimeSettings(runtime_path=tmp_path / "Runtime", port=0)
 

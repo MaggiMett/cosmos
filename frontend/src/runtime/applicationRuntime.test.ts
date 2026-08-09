@@ -8,7 +8,7 @@ describe("ApplicationRuntime", () => {
   it("loads the Theme before accepting backend readiness", async () => {
     const order: string[] = [];
     const themes = {
-      activate: vi.fn(async () => {
+      restoreAtStartup: vi.fn(async () => {
         order.push("theme");
       }),
     } as unknown as ThemeRuntime;
@@ -31,7 +31,7 @@ describe("ApplicationRuntime", () => {
       .fn()
       .mockResolvedValueOnce({ ok: false, error: { message: "Backend unavailable" } })
       .mockResolvedValueOnce({ ok: true, data: { service: "cosmos", status: "ready" } });
-    const themes = { activate: vi.fn().mockResolvedValue({}) } as unknown as ThemeRuntime;
+    const themes = { restoreAtStartup: vi.fn().mockResolvedValue({}) } as unknown as ThemeRuntime;
     const runtime = new ApplicationRuntime({ get } as unknown as CosmosApiClient, themes, "theme");
 
     await expect(runtime.start()).rejects.toThrow("Backend unavailable");
@@ -46,7 +46,7 @@ describe("ApplicationRuntime", () => {
     const waiting = new Promise<void>((resolve) => {
       release = resolve;
     });
-    const themes = { activate: vi.fn(() => waiting) } as unknown as ThemeRuntime;
+    const themes = { restoreAtStartup: vi.fn(() => waiting) } as unknown as ThemeRuntime;
     const api = {
       get: vi.fn().mockResolvedValue({ ok: true, data: { service: "cosmos", status: "ready" } }),
     } as unknown as CosmosApiClient;
@@ -57,7 +57,7 @@ describe("ApplicationRuntime", () => {
     release?.();
     await Promise.all([first, second]);
 
-    expect(themes.activate).toHaveBeenCalledTimes(1);
+    expect(themes.restoreAtStartup).toHaveBeenCalledTimes(1);
     expect(api.get).toHaveBeenCalledTimes(1);
   });
 });

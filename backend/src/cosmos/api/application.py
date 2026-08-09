@@ -5,6 +5,7 @@ import binascii
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import replace
+from datetime import UTC, datetime
 
 from starlette.applications import Starlette
 from starlette.middleware.cors import CORSMiddleware
@@ -17,6 +18,14 @@ from cosmos.bootstrap import CosmosRuntime
 from cosmos.config import RuntimeSettings
 from cosmos.runtime import RuntimeContext
 from cosmos.services import RuntimeServiceError
+
+THEME_RUNTIME_STATE_SCOPE = "cosmos.theme"
+THEME_RUNTIME_STATE_KEY = "activation"
+EMPTY_THEME_RUNTIME_STATE = {
+    "schemaVersion": 1,
+    "activeThemeId": None,
+    "lastKnownGoodThemeId": None,
+}
 
 
 async def health(_: Request) -> JSONResponse:
@@ -42,6 +51,28 @@ async def cosmos_map(request: Request) -> JSONResponse:
 async def base_snapshot(request: Request) -> JSONResponse:
     try:
         return JSONResponse(request.app.state.runtime.base.snapshot(_local_owner_context()))
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
+async def theme_runtime_state(request: Request) -> JSONResponse:
+    if request.method == "GET":
+        value = request.app.state.runtime.runtime_state.get(
+            THEME_RUNTIME_STATE_SCOPE,
+            THEME_RUNTIME_STATE_KEY,
+            EMPTY_THEME_RUNTIME_STATE,
+        )
+        return JSONResponse(_theme_runtime_state_payload(value))
+
+    try:
+        payload = _theme_runtime_state_payload(await _json_object(request), require_ids=True)
+        request.app.state.runtime.runtime_state.set(
+            THEME_RUNTIME_STATE_SCOPE,
+            THEME_RUNTIME_STATE_KEY,
+            payload,
+            datetime.now(UTC),
+        )
+        return JSONResponse(payload)
     except RuntimeServiceError as error:
         return _service_error(error)
 
@@ -510,6 +541,7 @@ def create_app(
             Route("/ready", readiness),
             Route("/cosmos/map", cosmos_map),
             Route("/base", base_snapshot),
+            Route("/runtime-state/theme", theme_runtime_state, methods=["GET", "PUT"]),
             Route("/cosmos/camera", update_camera, methods=["PUT"]),
             Route("/cosmos/selection", update_selection, methods=["PUT"]),
             Route("/objects/{object_id:str}/position", move_node, methods=["PUT"]),
@@ -667,6 +699,35 @@ def _number(payload: dict[str, object], key: str) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise RuntimeServiceError("validation_failed", f"{key} must be a number.")
     return float(value)
+
+
+def _theme_runtime_state_payload(
+    value: object,
+    *,
+    require_ids: bool = False,
+) -> dict[str, int | str | None]:
+    if not isinstance(value, dict) or value.get("schemaVersion") != 1:
+        if require_ids:
+            raise RuntimeServiceError("validation_failed", "Theme Runtime state must use schemaVersion 1.")
+        return dict(EMPTY_THEME_RUNTIME_STATE)
+
+    active_theme_id = value.get("activeThemeId")
+    last_known_good_theme_id = value.get("lastKnownGoodThemeId")
+    valid_active = isinstance(active_theme_id, str) and bool(active_theme_id.strip())
+    valid_last_known_good = isinstance(last_known_good_theme_id, str) and bool(
+        last_known_good_theme_id.strip()
+    )
+    if require_ids and (not valid_active or not valid_last_known_good):
+        raise RuntimeServiceError(
+            "validation_failed",
+            "Theme Runtime state requires activeThemeId and lastKnownGoodThemeId.",
+        )
+
+    return {
+        "schemaVersion": 1,
+        "activeThemeId": active_theme_id if valid_active else None,
+        "lastKnownGoodThemeId": last_known_good_theme_id if valid_last_known_good else None,
+    }
 
 
 def _string(payload: dict[str, object], key: str) -> str:

@@ -10,6 +10,7 @@ import { NotificationRuntime } from "./notificationRuntime";
 import { ObjectInteractionRuntime } from "./objectInteractionRuntime";
 import { ThemeRegistry } from "./themeRegistry";
 import { ThemeRuntime } from "./themeRuntime";
+import { ApiThemeActivationPersistence } from "./themeRuntimePersistence";
 import { ToolRuntime } from "./toolRuntime";
 import { TransitionRuntime } from "./transitionRuntime";
 import { WindowRuntime } from "./windowRuntime";
@@ -42,7 +43,13 @@ export function createCosmosFrontendRuntime(apiBaseUrl?: string): CosmosFrontend
   const transitions = new TransitionRuntime();
   const registry = new ThemeRegistry();
   registry.register(cosmosTheme);
-  const themes = new ThemeRuntime(registry, transitions, cosmosTheme.objectId);
+  const themes = new ThemeRuntime(
+    registry,
+    transitions,
+    cosmosTheme.objectId,
+    undefined,
+    new ApiThemeActivationPersistence(api),
+  );
   const windows = new WindowRuntime();
   const tools = new ToolRuntime(windows, api);
   const cosmosMap = new CosmosMapRuntime(api);

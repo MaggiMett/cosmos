@@ -13,7 +13,8 @@ import {
 export type ThemeLibraryActivationFailureKind =
   | "preflight-rejected"
   | "apply-failed"
-  | "rollback-failed";
+  | "rollback-failed"
+  | "persistence-failed";
 
 export interface ThemeLibraryActivationFailure {
   readonly kind: ThemeLibraryActivationFailureKind;
@@ -120,6 +121,13 @@ function activationFailure(
     return Object.freeze({
       kind: "preflight-rejected",
       message: "The theme changed before activation. Please try again.",
+    });
+  }
+
+  if (error instanceof ThemeActivationError && error.code === "persistence_failed") {
+    return Object.freeze({
+      kind: "persistence-failed",
+      message: "The theme is active for this session, but the selection could not be saved.",
     });
   }
 

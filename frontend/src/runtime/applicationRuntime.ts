@@ -48,7 +48,7 @@ export class ApplicationRuntime {
     this.mutableState.error = null;
     try {
       this.mutableState.phase = "loading_theme";
-      await this.themes.activate(this.initialThemeId);
+      await this.themes.restoreAtStartup(this.initialThemeId);
 
       this.mutableState.phase = "checking_backend";
       const readiness = await this.api.get<ReadinessResponse>("/ready");

@@ -156,6 +156,8 @@ describe("Cosmos Theme Library vertical slice", () => {
     expect(combined).not.toContain("/api");
     expect(combined).not.toContain("localStorage");
     expect(combined).not.toContain("sessionStorage");
+    expect(combined).not.toContain("ApiThemeActivationPersistence");
+    expect(combined).not.toContain("/runtime-state/theme");
     expect(combined).not.toContain("<img");
     expect(combined).not.toContain("Marketplace");
     expect(combined).not.toContain("Community");

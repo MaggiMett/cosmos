@@ -68,6 +68,7 @@ class CosmosRuntime:
     notifications: NotificationService
     projects: ProjectService
     relationships: RelationshipService
+    runtime_state: RuntimeStateRepository
     companion: CompanionService
     base: BaseService
     tools: ToolService
@@ -123,6 +124,7 @@ class CosmosRuntime:
             notifications=notifications,
             projects=projects,
             relationships=relationships,
+            runtime_state=runtime_state,
             companion=companion,
             base=base,
             tools=tools,

@@ -210,6 +210,27 @@ describe("Theme Library safe activation adapter", () => {
     expect(outcome.failure?.message).not.toContain("internal rollback details");
   });
 
+  it("reports persistence failure while retaining the committed Runtime projection", async () => {
+    const runtime = runtimeWith({
+      applyPreparedTheme: vi.fn(async () => {
+        throw new ThemeActivationError("persistence_failed", "internal persistence details");
+      }),
+      readSnapshot: vi.fn(() => snapshot(inactiveThemeId)),
+    });
+
+    const outcome = await activateThemeInLibrary(runtime, inactiveThemeId);
+
+    expect(outcome.failure).toEqual({
+      kind: "persistence-failed",
+      message: "The theme is active for this session, but the selection could not be saved.",
+    });
+    expect(outcome.presentation).toMatchObject({
+      phase: "success",
+      activeTheme: { themeId: inactiveThemeId },
+    });
+    expect(outcome.failure?.message).not.toContain("internal persistence details");
+  });
+
   it("clears transient state after failure so the Library can retry", async () => {
     const applyPreparedTheme = vi
       .fn()
@@ -241,5 +262,7 @@ describe("Theme Library safe activation adapter", () => {
     expect(source).not.toContain("sessionStorage");
     expect(source).not.toContain("fetch(");
     expect(source).not.toContain("CosmosApiClient");
+    expect(source).not.toContain("ApiThemeActivationPersistence");
+    expect(source).not.toContain("/runtime-state/theme");
   });
 });
