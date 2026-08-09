@@ -1,8 +1,10 @@
 <template>
   <div
     class="room-composition-renderer"
+    :class="`room-composition-renderer--${mode}`"
     data-testid="room-composition-shadow-renderer"
     :data-room-id="model.roomId"
+    :data-diagnostic-mode="mode"
     aria-hidden="true"
   >
     <svg
@@ -45,12 +47,7 @@
         :transform="item.kind === 'object' ? item.transform : undefined"
       >
         <RoomShadowShape :shape="item.shape" class="room-composition-renderer__visual" />
-        <template v-if="item.kind === 'object' && item.functionContainer">
-          <RoomShadowShape
-            v-if="item.interactionShape"
-            :shape="item.interactionShape"
-            class="room-composition-renderer__function-outline"
-          />
+        <template v-if="mode === 'visual' && item.kind === 'object' && item.functionContainer">
           <text
             class="room-composition-renderer__function-label"
             :x="labelPosition(item.shape).x"
@@ -59,6 +56,62 @@
             {{ item.functionContainer.definition.functionType }}
           </text>
         </template>
+      </g>
+
+      <g
+        v-if="mode !== 'visual'"
+        class="room-composition-renderer__diagnostic-layer"
+        data-testid="shadow-interaction-layer"
+      >
+        <g
+          v-for="target in interaction.targets"
+          :key="target.containerInstanceId"
+          class="room-composition-renderer__interaction-target"
+          :class="{
+            'room-composition-renderer__interaction-target--unavailable': !target.available,
+          }"
+          data-testid="shadow-interaction-target"
+          :data-container-id="target.containerInstanceId"
+          :data-function-role="target.functionRole"
+          :data-binding-id="target.bindingId"
+          :data-binding-target-id="target.bindingTargetId"
+          :data-focus-order="target.focusOrder"
+          :data-available="target.available"
+        >
+          <RoomShadowShape
+            :shape="target.interactionBounds"
+            class="room-composition-renderer__interaction-bounds"
+          />
+          <circle
+            v-if="mode === 'focus'"
+            class="room-composition-renderer__focus-marker"
+            :cx="labelPosition(target.interactionBounds).x"
+            :cy="labelPosition(target.interactionBounds).y - 24"
+            r="17"
+          />
+          <text
+            v-if="mode === 'focus'"
+            class="room-composition-renderer__focus-number"
+            :x="labelPosition(target.interactionBounds).x"
+            :y="labelPosition(target.interactionBounds).y - 19"
+          >
+            {{ target.focusOrder }}
+          </text>
+          <text
+            class="room-composition-renderer__interaction-label"
+            :x="labelPosition(target.interactionBounds).x"
+            :y="labelPosition(target.interactionBounds).y + (mode === 'focus' ? 12 : -4)"
+          >
+            {{ target.semanticLabel }}
+          </text>
+          <text
+            class="room-composition-renderer__binding-label"
+            :x="labelPosition(target.interactionBounds).x"
+            :y="labelPosition(target.interactionBounds).y + (mode === 'focus' ? 31 : 15)"
+          >
+            {{ bindingLabel(target) }}
+          </text>
+        </g>
       </g>
     </svg>
   </div>
@@ -71,9 +124,16 @@ import type { ImmutableRoomSnapshot } from "../../theme-engine/roomSnapshotResol
 import type { BoundsShape, Point } from "../../theme-engine/types";
 import RoomShadowShape from "./RoomShadowShape.vue";
 import { projectRoomCompositionForShadowRender } from "./roomCompositionRenderProjection";
+import type {
+  RoomCompositionInteractionProjection,
+  RoomShadowDiagnosticMode,
+  RoomShadowInteractionTarget,
+} from "./roomCompositionInteractionProjection";
 
 const props = defineProps<{
   snapshot: Readonly<ImmutableRoomSnapshot>;
+  interaction: Readonly<RoomCompositionInteractionProjection>;
+  mode: RoomShadowDiagnosticMode;
 }>();
 
 const model = computed(() => projectRoomCompositionForShadowRender(props.snapshot));
@@ -86,6 +146,12 @@ function labelPosition(shape: BoundsShape): Point {
   const x = shape.points.reduce((total, point) => total + point.x, 0) / shape.points.length;
   const y = shape.points.reduce((total, point) => total + point.y, 0) / shape.points.length;
   return { x, y };
+}
+
+function bindingLabel(target: Readonly<RoomShadowInteractionTarget>): string {
+  return target.bindingTargetId
+    ? `${target.bindingId} → ${target.bindingTargetId}`
+    : `${target.bindingId} · unavailable`;
 }
 </script>
 
@@ -152,6 +218,11 @@ function labelPosition(shape: BoundsShape): Point {
   stroke: rgba(190, 224, 238, 0.34);
 }
 
+.room-composition-renderer--interaction .room-composition-renderer__item,
+.room-composition-renderer--focus .room-composition-renderer__item {
+  opacity: 0.42;
+}
+
 .room-composition-renderer__function--room-transition .room-composition-renderer__visual {
   fill: rgba(25, 39, 50, 0.98);
   stroke: rgba(217, 167, 101, 0.48);
@@ -168,11 +239,60 @@ function labelPosition(shape: BoundsShape): Point {
   stroke: rgba(168, 140, 231, 0.48);
 }
 
-.room-composition-renderer__function-outline {
+.room-composition-renderer__diagnostic-layer,
+.room-composition-renderer__interaction-target {
+  pointer-events: none;
+}
+
+.room-composition-renderer__interaction-bounds {
   fill: transparent;
-  stroke: rgba(229, 237, 242, 0.38);
+  stroke: rgba(98, 200, 234, 0.82);
+  stroke-width: 3;
+  stroke-dasharray: 12 8;
+  vector-effect: non-scaling-stroke;
+}
+
+.room-composition-renderer--focus .room-composition-renderer__interaction-bounds {
+  stroke: rgba(168, 140, 231, 0.88);
+  stroke-dasharray: 5 7;
+}
+
+.room-composition-renderer__interaction-target--unavailable {
+  opacity: 0.44;
+}
+
+.room-composition-renderer__focus-marker {
+  fill: rgba(8, 14, 23, 0.96);
+  stroke: rgba(229, 237, 242, 0.84);
   stroke-width: 2;
-  stroke-dasharray: 10 8;
+}
+
+.room-composition-renderer__focus-number,
+.room-composition-renderer__interaction-label,
+.room-composition-renderer__binding-label {
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: rgba(4, 8, 14, 0.94);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+}
+
+.room-composition-renderer__focus-number {
+  fill: #f2eee7;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.room-composition-renderer__interaction-label {
+  fill: var(--cosmos-color-text, #e5edf2);
+  font-size: 15px;
+  letter-spacing: 0.04em;
+}
+
+.room-composition-renderer__binding-label {
+  fill: var(--cosmos-color-muted, #83949f);
+  font-size: 10px;
+  letter-spacing: 0.03em;
 }
 
 .room-composition-renderer__function-label {
