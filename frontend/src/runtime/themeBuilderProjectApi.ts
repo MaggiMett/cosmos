@@ -2,6 +2,7 @@ import {
   validateThemeBuilderProject,
   type ThemeBuilderProject,
   type ThemeBuilderProjectMetadata,
+  type ExactVersionedRef,
 } from "../theme-engine";
 import { CosmosApiClient, cosmosApiClient } from "./apiClient";
 import type { ApiResult } from "./contracts";
@@ -29,14 +30,15 @@ export class ThemeBuilderProjectApi {
     }
   }
 
-  async saveMetadata(
+  async saveDraft(
     builderProjectId: string,
     expectedRevision: number,
     metadata: ThemeBuilderProjectMetadata,
+    assetRefs: readonly ExactVersionedRef[],
   ): Promise<ApiResult<Readonly<ThemeBuilderProject>>> {
     return this.project(await this.client.put(
       `/theme-builder/projects/${encodeURIComponent(builderProjectId)}`,
-      { expectedRevision, metadata },
+      { expectedRevision, metadata, assetRefs },
     ));
   }
 

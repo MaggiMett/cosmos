@@ -63,10 +63,22 @@
           </p>
         </section>
 
+        <ThemeBoardAssets :items="assetItems" @add="openAssetPicker" @remove="removeAsset" />
+        <p v-if="assetCommandError" class="theme-board__error" role="alert">{{ assetCommandError }}</p>
+
         <HeroCard unavailable />
         <MoodboardGrid :items="[]" />
       </template>
     </div>
+
+    <BuilderAssetPicker
+      v-if="pickerOpen"
+      :records="pickerRecords"
+      :loading="catalogLoading"
+      :error="catalogError"
+      @close="pickerOpen = false"
+      @add="addAsset"
+    />
 
     <template #context>
       <div v-if="snapshot" class="theme-board-context">
@@ -97,13 +109,22 @@ import { computed, reactive, shallowRef, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { themeBuilderProjectApi } from "../../runtime/themeBuilderProjectApi";
+import { assetCatalogApi, type PersistedAssetCatalogRecord } from "../../runtime/assetCatalogApi";
+import type { ExactVersionedRef } from "../../theme-engine";
+import BuilderAssetPicker from "./components/BuilderAssetPicker.vue";
 import ContinueWorking from "./components/ContinueWorking.vue";
 import HeroCard from "./components/HeroCard.vue";
 import MoodboardGrid from "./components/MoodboardGrid.vue";
 import ThemeBuilderShell from "./components/ThemeBuilderShell.vue";
 import ThemeCoverage from "./components/ThemeCoverage.vue";
+import ThemeBoardAssets from "./components/ThemeBoardAssets.vue";
 import { projectContinueWorking, projectThemeCoverage } from "./themeBoardProjection";
 import { ThemeBuilderSession, type ThemeBuilderSessionSnapshot } from "./themeBuilderSession";
+import {
+  BuilderAssetCatalogIndex,
+  BuilderAssetReferenceError,
+  projectBuilderAssets,
+} from "./themeBuilderAssetReferences";
 
 type Phase = "empty" | "loading" | "error" | "success";
 
@@ -113,6 +134,11 @@ const phase = shallowRef<Phase>("empty");
 const loadError = shallowRef("");
 const createError = shallowRef("");
 const creating = shallowRef(false);
+const pickerOpen = shallowRef(false);
+const catalogLoading = shallowRef(false);
+const catalogError = shallowRef("");
+const assetCommandError = shallowRef("");
+const catalogRecords = shallowRef<readonly Readonly<PersistedAssetCatalogRecord>[]>([]);
 const snapshot = shallowRef<Readonly<ThemeBuilderSessionSnapshot>>();
 let session: ThemeBuilderSession | undefined;
 const form = reactive({ name: "", description: "", author: "" });
@@ -120,6 +146,15 @@ const createForm = reactive({ name: "", description: "", author: "" });
 
 const coverageItems = computed(() => snapshot.value ? projectThemeCoverage(snapshot.value.project) : []);
 const workingItems = computed(() => snapshot.value ? projectContinueWorking(snapshot.value.project, snapshot.value.dirty) : []);
+const assetItems = computed(() => snapshot.value
+  ? projectBuilderAssets(snapshot.value.project, catalogRecords.value, !catalogLoading.value && !catalogError.value)
+  : []);
+const assetCatalogIndex = computed(() => new BuilderAssetCatalogIndex(catalogRecords.value));
+const pickerRecords = computed(() => assetCatalogIndex.value.records.filter((record) =>
+  !snapshot.value?.project.assetRefs.some((reference) =>
+    reference.id === record.visualAsset.id && reference.version === record.visualAsset.version,
+  ),
+));
 
 watch(() => route.query.builderProjectId, loadFromRoute, { immediate: true });
 
@@ -142,6 +177,19 @@ async function loadFromRoute(): Promise<void> {
   session = new ThemeBuilderSession(result.data);
   syncSnapshot();
   phase.value = "success";
+  await loadCatalog();
+}
+
+async function loadCatalog(): Promise<void> {
+  catalogLoading.value = true;
+  catalogError.value = "";
+  const result = await assetCatalogApi.list();
+  catalogLoading.value = false;
+  if (!result.ok) {
+    catalogError.value = result.error.message;
+    return;
+  }
+  catalogRecords.value = result.data;
 }
 
 async function createProject(): Promise<void> {
@@ -160,6 +208,35 @@ function updateMetadata(): void {
   if (!session || !form.name.trim()) return;
   session.execute({ type: "update-theme-metadata", metadata: form });
   syncSnapshot();
+}
+
+function openAssetPicker(): void {
+  assetCommandError.value = "";
+  pickerOpen.value = true;
+  if (catalogError.value) void loadCatalog();
+}
+
+function addAsset(assetId: string): void {
+  if (!session) return;
+  try {
+    session.execute({ type: "add-asset-reference", assetId }, assetCatalogIndex.value);
+    assetCommandError.value = "";
+    pickerOpen.value = false;
+    syncSnapshot();
+  } catch (error) {
+    assetCommandError.value = error instanceof BuilderAssetReferenceError ? error.message : "The Asset could not be referenced.";
+  }
+}
+
+function removeAsset(reference: Readonly<ExactVersionedRef>): void {
+  if (!session) return;
+  try {
+    session.execute({ type: "remove-asset-reference", reference });
+    assetCommandError.value = "";
+    syncSnapshot();
+  } catch (error) {
+    assetCommandError.value = error instanceof BuilderAssetReferenceError ? error.message : "The reference could not be removed.";
+  }
 }
 
 async function save(): Promise<void> {

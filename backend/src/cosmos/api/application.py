@@ -183,12 +183,13 @@ async def theme_builder_project(request: Request) -> JSONResponse:
                 "expectedRevision must be an integer.",
             )
         return JSONResponse(
-            service.save_metadata(
+            service.save_draft(
                 project_id,
                 expected_revision=expected_revision,
                 name=_string(metadata, "name"),
                 description=_optional_string(metadata, "description"),
                 author=_optional_string(metadata, "author"),
+                asset_refs=_array(payload, "assetRefs"),
                 context=context,
             )
         )

@@ -118,7 +118,15 @@ class CosmosRuntime:
             asset_catalog_repository,
             settings.runtime_path,
         )
-        theme_builder = ThemeBuilderService(objects)
+        resources = ResourceService(
+            projects,
+            objects,
+            events,
+            persistence,
+            asset_catalog_repository,
+            settings.runtime_path,
+        )
+        theme_builder = ThemeBuilderService(objects, resources)
         tools = ToolService(objects, ToolRuntime(objects.contract), events)
         workspaces = WorkspaceService(objects, runtime_state, tools, events)
         jobs = JobService(JobRepository(persistence), events)
@@ -157,14 +165,7 @@ class CosmosRuntime:
             ),
             core_tools=CoreToolCatalog(objects),
             jobs=jobs,
-            resources=ResourceService(
-                projects,
-                objects,
-                events,
-                persistence,
-                asset_catalog_repository,
-                settings.runtime_path,
-            ),
+            resources=resources,
             knowledge=knowledge,
             reviews=ReviewService(objects),
             journeyman=JourneymanService(objects, providers, jobs),

@@ -13,6 +13,8 @@ const files = [
   "./components/MoodboardGrid.vue",
   "./components/ContinueWorking.vue",
   "./components/ThemeCoverage.vue",
+  "./components/ThemeBoardAssets.vue",
+  "./components/BuilderAssetPicker.vue",
 ] as const;
 
 function sourceFor(path: (typeof files)[number]): string {
@@ -44,6 +46,8 @@ describe("Theme Board vertical slice", () => {
     expect(source).toContain("<MoodboardGrid");
     expect(source).toContain("<ContinueWorking");
     expect(source).toContain("<ThemeCoverage");
+    expect(source).toContain("<ThemeBoardAssets");
+    expect(source).toContain("<BuilderAssetPicker");
     expect(source).toContain('studio-label="Theme Board"');
   });
 
@@ -74,5 +78,9 @@ describe("Theme Board vertical slice", () => {
     expect(source).not.toContain("Orbital Window");
     expect(source).not.toContain("fetch(");
     expect(source).not.toContain("ThemeRuntime");
+    expect(source).toContain("assetCatalogApi.list()");
+    expect(source).toContain('type: "add-asset-reference"');
+    expect(source).toContain('type: "remove-asset-reference"');
+    expect(source).not.toContain("assetCatalogApi.promote");
   });
 });

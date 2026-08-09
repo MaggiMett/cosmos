@@ -14,16 +14,19 @@ describe("ThemeBuilderProjectApi", () => {
     const api = new ThemeBuilderProjectApi(new CosmosApiClient("http://cosmos.test"));
 
     await api.get("user.theme-builder-project.test");
-    await api.saveMetadata("user.theme-builder-project.test", 1, {
+    await api.saveDraft("user.theme-builder-project.test", 1, {
       name: "Test Theme", description: "A test draft.", author: "Tester",
-    });
+    }, [{ id: "personal.visual-asset.real", version: "1.0.0" }]);
 
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
       "http://cosmos.test/theme-builder/projects/user.theme-builder-project.test",
     );
     const request = fetchMock.mock.calls[1]?.[1] as RequestInit;
     expect(request.method).toBe("PUT");
-    expect(JSON.parse(String(request.body))).toMatchObject({ expectedRevision: 1 });
+    expect(JSON.parse(String(request.body))).toMatchObject({
+      expectedRevision: 1,
+      assetRefs: [{ id: "personal.visual-asset.real", version: "1.0.0" }],
+    });
   });
 });
 

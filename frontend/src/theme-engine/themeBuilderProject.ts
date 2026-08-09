@@ -1,5 +1,6 @@
 import type { CatalogObject, RoomShell } from "./roomCompositionTypes";
-import type { SkinPack, ThemeManifest, VersionedRef } from "./types";
+import type { ExactVersionedRef } from "./assetCatalogTypes";
+import type { SkinPack, ThemeManifest } from "./types";
 import { cloneAndFreeze } from "./immutable";
 
 export interface ThemeBuilderProjectMetadata {
@@ -31,7 +32,7 @@ export interface ThemeBuilderProject {
   packageVersion: string;
   manifestDraft: ThemeManifest;
   artifacts: ThemeBuilderProjectArtifacts;
-  assetRefs: readonly VersionedRef[];
+  assetRefs: readonly ExactVersionedRef[];
 }
 
 export function validateThemeBuilderProject(value: unknown): Readonly<ThemeBuilderProject> {
@@ -50,7 +51,8 @@ export function validateThemeBuilderProject(value: unknown): Readonly<ThemeBuild
     !Array.isArray(project.artifacts.skinPacks) ||
     !Array.isArray(project.artifacts.roomShells) ||
     !Array.isArray(project.artifacts.catalogObjects) ||
-    !Array.isArray(project.assetRefs)
+    !Array.isArray(project.assetRefs) ||
+    !validAssetReferences(project.assetRefs)
   ) invalid();
   if (
     project.manifestDraft.themeId !== project.themeId ||
@@ -62,6 +64,18 @@ export function validateThemeBuilderProject(value: unknown): Readonly<ThemeBuild
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function validAssetReferences(value: readonly unknown[]): boolean {
+  const seen = new Set<string>();
+  return value.every((item) => {
+    if (!isRecord(item) || Object.keys(item).length !== 2) return false;
+    if (typeof item.id !== "string" || typeof item.version !== "string") return false;
+    const identity = `${item.id}@${item.version}`;
+    if (seen.has(identity)) return false;
+    seen.add(identity);
+    return true;
+  });
 }
 
 function invalid(): never {

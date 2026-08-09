@@ -10,6 +10,7 @@ from cosmos.domain.objects import JSONValue
 from cosmos.runtime import RuntimeContext
 from cosmos.services.errors import RuntimeServiceError, require_permission
 from cosmos.services.object_service import CreateObjectCommand, ObjectService
+from cosmos.services.resource_service import ResourceService
 
 THEME_BUILDER_PROJECT_TAG = "ThemeBuilderProject"
 THEME_BUILDER_CONTRACT_VERSION = "1.0.0"
@@ -28,8 +29,9 @@ _SEMVER = re.compile(
 class ThemeBuilderService:
     """Authoritative Object-Service boundary for versioned Theme Builder projects."""
 
-    def __init__(self, objects: ObjectService) -> None:
+    def __init__(self, objects: ObjectService, resources: ResourceService) -> None:
         self._objects = objects
+        self._resources = resources
 
     def create(
         self,
@@ -104,7 +106,7 @@ class ThemeBuilderService:
             key=lambda document: (str(document["createdAt"]), str(document["builderProjectId"])),
         )
 
-    def save_metadata(
+    def save_draft(
         self,
         builder_project_id: str,
         *,
@@ -112,6 +114,7 @@ class ThemeBuilderService:
         name: str,
         description: str,
         author: str,
+        asset_refs: list[object],
         context: RuntimeContext,
     ) -> dict[str, JSONValue]:
         require_permission(context.permissions, "drafts.write")
@@ -133,12 +136,19 @@ class ThemeBuilderService:
                 f"Theme Builder Project revision conflict: expected {expected_revision}.",
             )
 
+        validated_asset_refs = self._validated_asset_refs(
+            current.get("assetRefs"),
+            asset_refs,
+            context,
+        )
+
         updated = deepcopy(current)
         updated["revision"] = expected_revision + 1
         updated["updatedAt"] = datetime.now(UTC).isoformat()
         updated["name"] = metadata["name"]
         updated["description"] = metadata["description"]
         updated["author"] = metadata["author"]
+        updated["assetRefs"] = validated_asset_refs
         manifest = updated["manifestDraft"]
         if not isinstance(manifest, dict):
             raise RuntimeServiceError("theme_builder_project_invalid", "Manifest draft is invalid.")
@@ -161,6 +171,54 @@ class ThemeBuilderService:
             context=context,
         )
         return _document_payload(saved)
+
+    def _validated_asset_refs(
+        self,
+        current_value: JSONValue | None,
+        proposed_value: list[object],
+        context: RuntimeContext,
+    ) -> list[JSONValue]:
+        current = _asset_references(current_value)
+        proposed = _asset_references(proposed_value)
+        current_keys = {(str(item["id"]), str(item["version"])) for item in current}
+        added_keys = {
+            (str(item["id"]), str(item["version"]))
+            for item in proposed
+            if (str(item["id"]), str(item["version"])) not in current_keys
+        }
+        if not added_keys:
+            return proposed
+
+        catalog: dict[tuple[str, str], tuple[bool, bool]] = {}
+        for record in self._resources.list_asset_catalog(context):
+            entry = record.get("catalogEntry")
+            resource = record.get("resource")
+            if not isinstance(entry, dict) or not isinstance(resource, dict):
+                continue
+            reference = entry.get("visualAssetRef")
+            if not isinstance(reference, dict):
+                continue
+            asset_id = reference.get("id")
+            version = reference.get("version")
+            if isinstance(asset_id, str) and isinstance(version, str):
+                catalog[(asset_id, version)] = (
+                    entry.get("deprecated") is not True,
+                    resource.get("available") is True,
+                )
+
+        for key in sorted(added_keys):
+            state = catalog.get(key)
+            if state is None:
+                raise RuntimeServiceError(
+                    "theme_builder_asset_reference_invalid",
+                    f'Visual Asset "{key[0]}@{key[1]}" is not cataloged.',
+                )
+            if not all(state):
+                raise RuntimeServiceError(
+                    "theme_builder_asset_reference_unavailable",
+                    f'Visual Asset "{key[0]}@{key[1]}" is not currently usable.',
+                )
+        return proposed
 
     def _project(self, builder_project_id: str, context: RuntimeContext) -> CosmosObject:
         try:
@@ -291,8 +349,7 @@ def _validate_document(document: dict[str, JSONValue], expected_id: str) -> None
         _invalid("Builder artifact collections are invalid.")
     if any(not isinstance(artifacts[key], list) for key in artifacts):
         _invalid("Builder artifact collections must be arrays.")
-    if not isinstance(document.get("assetRefs"), list):
-        _invalid("assetRefs must be an array.")
+    _asset_references(document.get("assetRefs"))
     manifest = document.get("manifestDraft")
     if not isinstance(manifest, dict):
         _invalid("Manifest draft must be an object.")
@@ -315,3 +372,28 @@ def _validate_document(document: dict[str, JSONValue], expected_id: str) -> None
 
 def _invalid(message: str) -> None:
     raise RuntimeServiceError("theme_builder_project_invalid", message)
+
+
+def _asset_references(value: object) -> list[JSONValue]:
+    if not isinstance(value, list):
+        _invalid("assetRefs must be an array.")
+    normalized: list[JSONValue] = []
+    identities: set[tuple[str, str]] = set()
+    for item in value:
+        if not isinstance(item, dict) or set(item) != {"id", "version"}:
+            _invalid("Each Builder Asset Reference must contain only id and version.")
+        asset_id = item.get("id")
+        version = item.get("version")
+        if not isinstance(asset_id, str) or not _NAMESPACED_ID.fullmatch(asset_id):
+            _invalid("Builder Asset Reference id must be namespaced.")
+        if not isinstance(version, str) or not _SEMVER.fullmatch(version):
+            _invalid("Builder Asset Reference version must be semantic.")
+        identity = (asset_id, version)
+        if identity in identities:
+            raise RuntimeServiceError(
+                "theme_builder_asset_reference_duplicate",
+                f'Duplicate Builder Asset Reference: "{asset_id}@{version}".',
+            )
+        identities.add(identity)
+        normalized.append({"id": asset_id, "version": version})
+    return normalized

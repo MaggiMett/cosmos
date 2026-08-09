@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { validateThemeBuilderProject } from "../../theme-engine";
 import { ThemeBuilderSession } from "./themeBuilderSession";
+import { BuilderAssetCatalogIndex, BuilderAssetReferenceError } from "./themeBuilderAssetReferences";
 
 describe("ThemeBuilderSession", () => {
   it("executes the one typed command with undo, redo and branch truncation", () => {
@@ -25,7 +26,7 @@ describe("ThemeBuilderSession", () => {
     const session = new ThemeBuilderSession(projectFixture());
     session.execute({ type: "update-theme-metadata", metadata: { name: "Saved", description: "", author: "" } });
     const accepted = await session.save({
-      saveMetadata: async (_id, expectedRevision) => ({
+      saveDraft: async (_id, expectedRevision) => ({
         ok: true,
         data: validateThemeBuilderProject({ ...rawFixture(), revision: expectedRevision + 1, name: "Saved",
           description: "", author: "", manifestDraft: { ...rawFixture().manifestDraft,
@@ -37,7 +38,7 @@ describe("ThemeBuilderSession", () => {
     expect(session.snapshot.dirty).toBe(false);
 
     session.execute({ type: "update-theme-metadata", metadata: { name: "Conflict", description: "", author: "" } });
-    await session.save({ saveMetadata: async () => ({ ok: false, error: {
+    await session.save({ saveDraft: async () => ({ ok: false, error: {
       kind: "http", status: 409, code: "theme_builder_project_revision_conflict", message: "Conflict",
     } }) });
     expect(session.snapshot.saveConflict?.status).toBe(409);
@@ -48,7 +49,7 @@ describe("ThemeBuilderSession", () => {
     const session = new ThemeBuilderSession(projectFixture());
     session.execute({ type: "update-theme-metadata", metadata: { name: "One", description: "", author: "" } });
     session.execute({ type: "update-theme-metadata", metadata: { name: "Two", description: "", author: "" } });
-    await session.save({ saveMetadata: async () => ({ ok: true, data: validateThemeBuilderProject({
+    await session.save({ saveDraft: async () => ({ ok: true, data: validateThemeBuilderProject({
       ...rawFixture(), revision: 2, name: "Two", description: "", author: "",
       manifestDraft: { ...rawFixture().manifestDraft, displayName: "Two", description: "" },
     }) }) });
@@ -56,13 +57,76 @@ describe("ThemeBuilderSession", () => {
     session.undo();
     session.execute({ type: "update-theme-metadata", metadata: { name: "Branch", description: "", author: "" } });
     let sentRevision = 0;
-    await session.save({ saveMetadata: async (_id, revision) => {
+    await session.save({ saveDraft: async (_id, revision) => {
       sentRevision = revision;
       return { ok: false, error: { kind: "http", message: "Stop" } };
     } });
     expect(sentRevision).toBe(2);
   });
+
+  it("adds and removes validated exact references through the shared immutable history", () => {
+    const session = new ThemeBuilderSession(projectFixture());
+    const catalog = new BuilderAssetCatalogIndex([catalogRecord()]);
+    session.execute({ type: "update-theme-metadata", metadata: { name: "Edited", description: "", author: "" } });
+    session.execute({ type: "add-asset-reference", assetId: "personal.visual-asset.real" }, catalog);
+    const added = session.snapshot.project;
+    expect(added.assetRefs).toEqual([{ id: "personal.visual-asset.real", version: "1.0.0" }]);
+    expect(Object.isFrozen(added.assetRefs)).toBe(true);
+    expect(session.snapshot.dirty).toBe(true);
+    session.execute({ type: "remove-asset-reference", reference: added.assetRefs[0]! });
+    expect(session.snapshot.project.assetRefs).toEqual([]);
+    session.undo();
+    expect(session.snapshot.project.assetRefs).toHaveLength(1);
+    session.undo();
+    expect(session.snapshot.project.assetRefs).toEqual([]);
+    expect(session.snapshot.project.name).toBe("Edited");
+    session.redo();
+    expect(session.snapshot.project.assetRefs).toHaveLength(1);
+  });
+
+  it("rejects unknown, unavailable and duplicate catalog references deterministically", () => {
+    const session = new ThemeBuilderSession(projectFixture());
+    const catalog = new BuilderAssetCatalogIndex([catalogRecord(), catalogRecord(false, "personal.visual-asset.offline")]);
+    expect(() => session.execute({ type: "add-asset-reference", assetId: "unknown.asset" }, catalog))
+      .toThrow(BuilderAssetReferenceError);
+    expect(() => session.execute({ type: "add-asset-reference", assetId: "personal.visual-asset.offline" }, catalog))
+      .toThrow("not currently usable");
+    session.execute({ type: "add-asset-reference", assetId: "personal.visual-asset.real" }, catalog);
+    expect(() => session.execute({ type: "add-asset-reference", assetId: "personal.visual-asset.real" }, catalog))
+      .toThrow("already referenced");
+  });
+
+  it("saves current references in the same revision request and retains asset undo history", async () => {
+    const session = new ThemeBuilderSession(projectFixture());
+    session.execute(
+      { type: "add-asset-reference", assetId: "personal.visual-asset.real" },
+      new BuilderAssetCatalogIndex([catalogRecord()]),
+    );
+    let sentReferences: readonly { id: string; version: string }[] = [];
+    await session.save({ saveDraft: async (_id, _revision, _metadata, assetRefs) => {
+      sentReferences = assetRefs;
+      return { ok: true, data: validateThemeBuilderProject({
+        ...rawFixture(), revision: 2, assetRefs,
+      }) };
+    } });
+    expect(sentReferences).toEqual([{ id: "personal.visual-asset.real", version: "1.0.0" }]);
+    expect(session.snapshot.dirty).toBe(false);
+    session.undo();
+    expect(session.snapshot.project.assetRefs).toEqual([]);
+    expect(session.snapshot.dirty).toBe(true);
+    session.redo();
+    expect(session.snapshot.project.assetRefs).toHaveLength(1);
+  });
 });
+
+function catalogRecord(resourceAvailable = true, id = "personal.visual-asset.real") {
+  return {
+    visualAsset: { id, version: "1.0.0" },
+    catalogEntry: { displayName: "Real Asset", category: "personal.category.decoration", deprecated: false },
+    resourceAvailable,
+    ...(resourceAvailable ? { previewUrl: `/api/assets/${id}` } : {}),
+  } as never;
+}
 
 function projectFixture() { return validateThemeBuilderProject(rawFixture()); }
 function rawFixture() {
