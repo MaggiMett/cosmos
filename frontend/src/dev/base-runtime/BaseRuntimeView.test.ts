@@ -211,6 +211,12 @@ describe("Base Room Runtime visual slice", () => {
     expect(scene).not.toContain("@keydown");
     expect(scene).not.toContain("@keyup");
     expect(scene).toContain(":focus-visible");
+    expect(scene).toContain(".room-composition-runtime-scene__target:disabled span");
+    expect(scene).toContain(":deep(.room-composition-renderer__function-label)");
+    expect(scene).toContain("display: none");
+    expect(scene).toContain("border-style: dashed");
+    expect(scene).toContain("opacity: 0.72");
+    expect(scene).toContain("opacity: 1");
   });
 
   it("keeps backgroundOnly Composition aria-hidden, inert and without controls", () => {

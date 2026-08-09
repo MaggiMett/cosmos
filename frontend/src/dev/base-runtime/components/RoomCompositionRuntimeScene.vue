@@ -153,6 +153,10 @@ function openRoomContextMenu(event: MouseEvent): void {
   box-shadow: none;
 }
 
+.room-composition-runtime-scene :deep(.room-composition-renderer__function-label) {
+  display: none;
+}
+
 .room-composition-runtime-scene__interactions {
   position: absolute;
   z-index: 18;
@@ -188,7 +192,7 @@ function openRoomContextMenu(event: MouseEvent): void {
   background: rgba(4, 9, 15, 0.72);
   font-size: 0.66rem;
   letter-spacing: 0.04em;
-  opacity: 0;
+  opacity: 0.72;
   transition: opacity 160ms ease;
 }
 
@@ -210,10 +214,23 @@ function openRoomContextMenu(event: MouseEvent): void {
 }
 
 .room-composition-runtime-scene__target:disabled {
+  border-color: rgba(148, 166, 176, 0.42);
   border-style: dashed;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      rgba(148, 166, 176, 0.07) 0 9px,
+      transparent 9px 19px
+    ),
+    rgba(4, 9, 15, 0.18);
   cursor: default;
-  opacity: 0.34;
+  opacity: 0.72;
   pointer-events: none;
+}
+
+.room-composition-runtime-scene__target:disabled span {
+  color: var(--cosmos-color-muted, #83949f);
+  opacity: 1;
 }
 
 .room-composition-runtime-scene__target--room-transition {
