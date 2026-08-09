@@ -181,9 +181,10 @@ describe("Room Composition visual acceptance and default readiness", () => {
   });
 
   it("keeps both presenter rollback levels independent and functional", () => {
-    expect(resolveBaseRoomRenderer(undefined)).toBe("presenter");
+    expect(resolveBaseRoomRenderer(undefined)).toBe("composition");
     expect(resolveBaseRoomRenderer("presenter")).toBe("presenter");
     expect(resolveBaseRoomRenderer("composition")).toBe("composition");
+    expect(resolveBaseRoomRenderer("unexpected")).toBe("composition");
     expect(resolveBasePresenter("legacy")).toBe("legacy");
     expect(resolveBasePresenter("new")).toBe("new");
   });

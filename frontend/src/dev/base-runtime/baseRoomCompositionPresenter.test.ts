@@ -17,13 +17,13 @@ import {
 } from "./baseRoomRenderer";
 
 describe("controlled productive Room Composition renderer gate", () => {
-  it("keeps presenter as the default and enables Composition only explicitly", () => {
-    expect(resolveBaseRoomRenderer(undefined)).toBe("presenter");
+  it("promotes Composition by default and keeps presenter as the exact rollback", () => {
+    expect(resolveBaseRoomRenderer(undefined)).toBe("composition");
     expect(resolveBaseRoomRenderer("presenter")).toBe("presenter");
-    expect(resolveBaseRoomRenderer("unexpected")).toBe("presenter");
-    expect(resolveBaseRoomRenderer("COMPOSITION")).toBe("presenter");
+    expect(resolveBaseRoomRenderer("unexpected")).toBe("composition");
+    expect(resolveBaseRoomRenderer("COMPOSITION")).toBe("composition");
     expect(resolveBaseRoomRenderer("composition")).toBe("composition");
-    expect(configuredBaseRoomRenderer).toBe("presenter");
+    expect(configuredBaseRoomRenderer).toBe("composition");
   });
 
   it("keeps the previous presenter renderer when Composition is disabled", () => {
@@ -165,6 +165,37 @@ describe("controlled productive Room Composition renderer gate", () => {
     });
   });
 
+  it("falls back for blocking Visual parity", () => {
+    const result = resolveBaseRoomCompositionPresenter(
+      true,
+      snapshot(),
+      "room.main.real",
+      {
+        compareVisualParity: (input) => ({
+          roomId: input.room.objectId,
+          roomType: input.room.slug,
+          status: "blocking-difference",
+          differences: [{
+            severity: "blocking-difference",
+            category: "clipping",
+            message: "A Function Container is clipped.",
+          }],
+          roomBounds: { width: 1600, height: 1000 },
+          architectureRoles: [],
+          expectedFunctionCount: 5,
+          visibleFunctionCount: 4,
+          coreFallbackComplete: true,
+          overflowFree: false,
+        }),
+      },
+    );
+
+    expect(result).toEqual({
+      status: "fallback",
+      reason: "blocking-visual-parity",
+    });
+  });
+
   it("falls back for an invalid Snapshot or Resolver failure", () => {
     const base = snapshot();
     const resolved = runBaseRoomShadowMode({
@@ -198,6 +229,15 @@ describe("controlled productive Room Composition renderer gate", () => {
 
     expect(invalid).toEqual({ status: "fallback", reason: "invalid-snapshot" });
     expect(failed).toEqual({ status: "fallback", reason: "resolution-error" });
+  });
+
+  it("falls back when the existing Visual projection fails internally", () => {
+    expect(resolveBaseRoomCompositionPresenter(
+      true,
+      snapshot(),
+      "room.main.real",
+      { compareVisualParity: () => { throw new Error("visual projection failed"); } },
+    )).toEqual({ status: "fallback", reason: "resolution-error" });
   });
 
   it("falls back for an unknown real Room ID", () => {

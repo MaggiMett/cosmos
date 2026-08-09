@@ -38,6 +38,9 @@ describe("controlled Base presenter rollout", () => {
     expect(source("./basePresenter.ts")).not.toContain("VITE_BASE_ROOM_RENDERER");
     expect(roomRendererSource).toContain("VITE_BASE_ROOM_RENDERER");
     expect(roomRendererSource).not.toContain("VITE_BASE_PRESENTER");
+    expect(roomRendererSource).toContain(
+      'value === "presenter" ? "presenter" : "composition"',
+    );
     expect(presenterSource).not.toContain("configuredBaseRoomRenderer");
   });
 

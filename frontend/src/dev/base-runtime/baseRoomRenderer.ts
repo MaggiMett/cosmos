@@ -1,8 +1,8 @@
 export type BaseRoomRenderer = "presenter" | "composition";
 
-/** Only the explicit `composition` value enables the guarded renderer. */
+/** Only the explicit `presenter` value activates the renderer rollback. */
 export function resolveBaseRoomRenderer(value: unknown): BaseRoomRenderer {
-  return value === "composition" ? "composition" : "presenter";
+  return value === "presenter" ? "presenter" : "composition";
 }
 
 export const configuredBaseRoomRenderer = resolveBaseRoomRenderer(

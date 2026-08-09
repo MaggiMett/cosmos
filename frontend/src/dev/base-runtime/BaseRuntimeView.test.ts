@@ -172,7 +172,7 @@ describe("Base Room Runtime visual slice", () => {
     expect(diagnostics).not.toContain("fetch(");
   });
 
-  it("keeps the previous presenter renderer as default and gates Composition explicitly", () => {
+  it("uses Composition by default and keeps the previous presenter as explicit rollback", () => {
     const view = sourceFor("./BaseRuntimeView.vue");
     const switchSource = readFileSync(
       fileURLToPath(new URL("./baseRoomRenderer.ts", import.meta.url)),
@@ -183,7 +183,7 @@ describe("Base Room Runtime visual slice", () => {
       "utf8",
     );
 
-    expect(switchSource).toContain('value === "composition" ? "composition" : "presenter"');
+    expect(switchSource).toContain('value === "presenter" ? "presenter" : "composition"');
     expect(switchSource).toContain("VITE_BASE_ROOM_RENDERER");
     expect(view).toContain("configuredBaseRoomRenderer");
     expect(view).toContain("resolveBaseRoomCompositionPresenter(");
@@ -193,6 +193,7 @@ describe("Base Room Runtime visual slice", () => {
     expect(view).toContain("v-else-if=\"presentation.phase === 'success'\"");
     expect(gate).toContain('shadow.parity.status === "blocking-difference"');
     expect(gate).toContain('interactions.parity.status === "blocking-difference"');
+    expect(gate).toContain('visualParity.status === "blocking-difference"');
     expect(gate).toContain("validationStatus.valid");
   });
 
