@@ -116,6 +116,46 @@ class ObjectRepository:
                 ),
             )
 
+    def compare_and_swap_property(
+        self,
+        value: CosmosObject,
+        property_name: str,
+        expected_value: JSONValue,
+    ) -> bool:
+        """Atomically replaces one property and its Object identity when the stored value still matches."""
+
+        replacement = value.properties[property_name]
+        with self._persistence.connect() as connection:
+            cursor = connection.execute(
+                """
+                UPDATE object_properties
+                SET value_json = ?
+                WHERE object_id = ? AND property_name = ? AND value_json = ?
+                """,
+                (
+                    json.dumps(replacement, sort_keys=True),
+                    value.identity.object_id,
+                    property_name,
+                    json.dumps(expected_value, sort_keys=True),
+                ),
+            )
+            if cursor.rowcount != 1:
+                return False
+            connection.execute(
+                """
+                UPDATE objects SET
+                    display_name = ?, description = ?, lifecycle_state = ?
+                WHERE object_id = ?
+                """,
+                (
+                    value.identity.display_name,
+                    value.identity.description,
+                    value.identity.lifecycle_state,
+                    value.identity.object_id,
+                ),
+            )
+        return True
+
     def replace_user_tags(self, value: CosmosObject) -> None:
         with self._persistence.connect() as connection:
             connection.execute(

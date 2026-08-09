@@ -290,4 +290,12 @@ def create_version_one_object_contract() -> ObjectContract:
             ),
         ),
     )
+    contract.register_system_tag(
+        "ThemeBuilderProject",
+        PropertySchema(
+            "cosmos.schema.theme-builder-project",
+            1,
+            (PropertyDefinition("builder_document", PropertyKind.OBJECT, {}),),
+        ),
+    )
     return contract

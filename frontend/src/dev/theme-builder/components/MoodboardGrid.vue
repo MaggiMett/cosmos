@@ -1,6 +1,7 @@
 <template>
   <section class="moodboard" aria-labelledby="moodboard-title" data-testid="moodboard-grid">
     <h2 id="moodboard-title" class="builder-serif">Moodboard</h2>
+    <p v-if="items.length === 0" class="moodboard__empty">Not part of this Builder Project contract.</p>
     <div class="moodboard__grid">
       <article
         v-for="(item, index) in items"
@@ -35,6 +36,16 @@ defineProps<{ items: readonly MoodboardItem[] }>();
 .moodboard h2 {
   margin: 0;
   font-size: 1.06rem;
+}
+
+.moodboard__empty {
+  min-height: 70px;
+  margin: 0;
+  padding: 22px;
+  border: 1px solid var(--builder-border);
+  border-radius: var(--builder-radius-card);
+  color: var(--builder-faint);
+  font-size: 0.74rem;
 }
 
 .moodboard__grid {

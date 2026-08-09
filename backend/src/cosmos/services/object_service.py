@@ -119,6 +119,56 @@ class ObjectService:
         self._publish("ObjectDetailsChanged", updated, context)
         return updated
 
+    def compare_and_swap_property(
+        self,
+        object_id: str,
+        *,
+        property_name: str,
+        expected_value: JSONValue,
+        replacement_value: JSONValue,
+        display_name: str,
+        description: str,
+        conflict_code: str,
+        context: RuntimeContext,
+    ) -> CosmosObject:
+        """Validates and atomically swaps one Object-owned document property."""
+
+        require_permission(context.permissions, "objects.write")
+        existing = self.repository.get(object_id)
+        if existing is None:
+            raise RuntimeServiceError("object_not_found", f"Object not found: {object_id}")
+        if property_name not in existing.properties:
+            raise RuntimeServiceError(
+                "validation_failed",
+                f"Property has no active schema: {property_name}",
+            )
+        if existing.properties[property_name] != expected_value:
+            raise RuntimeServiceError(conflict_code, "The stored Object changed after it was loaded.")
+        if not display_name.strip():
+            raise RuntimeServiceError("validation_failed", "Object display name must not be empty.")
+
+        properties = dict(existing.properties)
+        properties[property_name] = replacement_value
+        try:
+            updated = self.contract.build(
+                replace(
+                    existing.identity,
+                    display_name=display_name.strip(),
+                    description=description.strip(),
+                ),
+                existing.system_tags,
+                properties,
+                user_tags=existing.user_tags,
+                primary_project_id=existing.primary_project_id,
+            )
+        except ObjectContractError as error:
+            raise RuntimeServiceError("validation_failed", str(error)) from error
+
+        if not self.repository.compare_and_swap_property(updated, property_name, expected_value):
+            raise RuntimeServiceError(conflict_code, "The stored Object changed after it was loaded.")
+        self._publish("ObjectPropertiesChanged", updated, context)
+        return updated
+
     def publish_created(self, value: CosmosObject, context: RuntimeContext) -> None:
         self._publish("ObjectCreated", value, context)
 

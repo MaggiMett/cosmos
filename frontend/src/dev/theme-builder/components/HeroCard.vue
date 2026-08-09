@@ -1,23 +1,27 @@
 <template>
-  <article class="hero-card" tabindex="0" data-testid="theme-board-hero">
+  <article class="hero-card" :tabindex="unavailable ? undefined : 0" data-testid="theme-board-hero">
     <div class="hero-card__placeholder" aria-hidden="true">
       <span />
       <i />
-      <small>Hero visual</small>
+      <small>{{ unavailable ? "Hero unavailable" : "Hero visual" }}</small>
     </div>
     <div class="hero-card__shade" />
     <footer class="hero-card__footer">
       <div>
-        <span>Main Room Study</span>
-        <small>Core fallback preview</small>
+        <span>{{ unavailable ? "No hero presentation" : "Hero presentation" }}</span>
+        <small>{{ unavailable ? "Not part of this Builder Project contract" : "Preview" }}</small>
       </div>
-      <div class="hero-card__actions">
+      <div v-if="!unavailable" class="hero-card__actions">
         <button type="button">Compare Core</button>
         <button type="button">Open Preview</button>
       </div>
     </footer>
   </article>
 </template>
+
+<script setup lang="ts">
+withDefaults(defineProps<{ unavailable?: boolean }>(), { unavailable: false });
+</script>
 
 <style scoped>
 .hero-card {

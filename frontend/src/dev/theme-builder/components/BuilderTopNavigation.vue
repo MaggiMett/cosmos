@@ -7,24 +7,33 @@
     </div>
 
     <div class="builder-topbar__history" aria-label="Save and history">
-      <span class="builder-topbar__saved">
+      <button
+        v-if="interactive"
+        type="button"
+        class="builder-topbar__save"
+        :disabled="!canSave || saving"
+        @click="$emit('save')"
+      >
+        {{ saving ? "Saving…" : dirty ? "Save" : "Saved" }}
+      </button>
+      <span v-else class="builder-topbar__saved">
         <BuilderIcon name="check" />
         Saved
       </span>
-      <button type="button" class="builder-topbar__icon-button" aria-label="Undo">
+      <button type="button" class="builder-topbar__icon-button" aria-label="Undo" :disabled="interactive && !canUndo" @click="$emit('undo')">
         <BuilderIcon name="undo" />
       </button>
-      <button type="button" class="builder-topbar__icon-button" aria-label="Redo">
+      <button type="button" class="builder-topbar__icon-button" aria-label="Redo" :disabled="interactive && !canRedo" @click="$emit('redo')">
         <BuilderIcon name="redo" />
       </button>
     </div>
 
     <div class="builder-topbar__actions">
-      <button type="button" class="builder-topbar__button">
+      <button type="button" class="builder-topbar__button" :disabled="interactive">
         <BuilderIcon name="spark" />
         Theme Check
       </button>
-      <button type="button" class="builder-topbar__button builder-topbar__button--primary">
+      <button type="button" class="builder-topbar__button builder-topbar__button--primary" :disabled="interactive">
         <BuilderIcon name="eye" />
         Preview Theme
       </button>
@@ -35,7 +44,24 @@
 <script setup lang="ts">
 import BuilderIcon from "./BuilderIcon.vue";
 
-defineProps<{ studioLabel: string }>();
+withDefaults(defineProps<{
+  studioLabel: string;
+  interactive?: boolean;
+  dirty?: boolean;
+  saving?: boolean;
+  canSave?: boolean;
+  canUndo?: boolean;
+  canRedo?: boolean;
+}>(), {
+  interactive: false,
+  dirty: false,
+  saving: false,
+  canSave: false,
+  canUndo: false,
+  canRedo: false,
+});
+
+defineEmits<{ save: []; undo: []; redo: [] }>();
 </script>
 
 <style scoped>
@@ -100,7 +126,8 @@ defineProps<{ studioLabel: string }>();
 }
 
 .builder-topbar__icon-button,
-.builder-topbar__button {
+.builder-topbar__button,
+.builder-topbar__save {
   border: 1px solid transparent;
   border-radius: var(--builder-radius-control);
   background: transparent;
@@ -110,6 +137,19 @@ defineProps<{ studioLabel: string }>();
     border-color var(--builder-control-transition),
     background var(--builder-control-transition),
     color var(--builder-control-transition);
+}
+
+.builder-topbar__save {
+  min-width: 76px;
+  min-height: 34px;
+  margin-right: 10px;
+  border-color: var(--builder-border);
+  color: var(--builder-text);
+}
+
+.builder-topbar button:disabled {
+  cursor: default;
+  opacity: 0.42;
 }
 
 .builder-topbar__icon-button {

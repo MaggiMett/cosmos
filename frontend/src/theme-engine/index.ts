@@ -248,6 +248,8 @@ export type {
 } from "./roomSnapshotResolver";
 export type * from "./roomCompositionTypes";
 export type * from "./types";
+export type * from "./themeBuilderProject";
+export { validateThemeBuilderProject } from "./themeBuilderProject";
 export {
   RendererMaterialChannelRegistry,
   rendererMaterialChannelRegistry,

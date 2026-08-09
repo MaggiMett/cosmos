@@ -61,14 +61,18 @@ describe("Theme Board vertical slice", () => {
     expect(source).not.toContain("useCosmosRuntime");
   });
 
-  it("uses explicit neutral presentation data without asset or backend wiring", () => {
+  it("loads an explicit persistent project and contains no fixture artifacts", () => {
     const source = sourceFor("./ThemeBoardView.vue");
 
-    expect(source).toContain("Open draft");
-    expect(source).toContain("Current session");
-    expect(source).toContain("fallback");
+    expect(source).toContain("route.query.builderProjectId");
+    expect(source).toContain("themeBuilderProjectApi.get(projectId)");
+    expect(source).toContain("ThemeBuilderSession");
+    expect(source).toContain("Create a Theme Builder Project");
+    expect(source).toContain("HeroCard unavailable");
+    expect(source).toContain('MoodboardGrid :items="[]"');
+    expect(source).not.toContain("Main Room Shell");
+    expect(source).not.toContain("Orbital Window");
     expect(source).not.toContain("fetch(");
-    expect(source).not.toContain("/api");
-    expect(source).not.toContain("AssetCatalogRegistry");
+    expect(source).not.toContain("ThemeRuntime");
   });
 });

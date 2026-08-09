@@ -145,6 +145,57 @@ async def theme_package_import(request: Request) -> JSONResponse:
         return JSONResponse(error.result(), status_code=status_code)
 
 
+async def theme_builder_projects(request: Request) -> JSONResponse:
+    try:
+        service = request.app.state.runtime.theme_builder
+        context = _local_owner_context()
+        if request.method == "GET":
+            return JSONResponse({"items": service.list(context)})
+        payload = await _json_object(request)
+        return JSONResponse(
+            service.create(
+                name=_string(payload, "name"),
+                description=_optional_string(payload, "description"),
+                author=_optional_string(payload, "author"),
+                context=context,
+            ),
+            status_code=201,
+        )
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
+async def theme_builder_project(request: Request) -> JSONResponse:
+    try:
+        service = request.app.state.runtime.theme_builder
+        context = _local_owner_context()
+        project_id = request.path_params["builder_project_id"]
+        if request.method == "GET":
+            return JSONResponse(service.get(project_id, context))
+        payload = await _json_object(request)
+        metadata = payload.get("metadata")
+        if not isinstance(metadata, dict):
+            raise RuntimeServiceError("validation_failed", "metadata must be an object.")
+        expected_revision = payload.get("expectedRevision")
+        if isinstance(expected_revision, bool) or not isinstance(expected_revision, int):
+            raise RuntimeServiceError(
+                "validation_failed",
+                "expectedRevision must be an integer.",
+            )
+        return JSONResponse(
+            service.save_metadata(
+                project_id,
+                expected_revision=expected_revision,
+                name=_string(metadata, "name"),
+                description=_optional_string(metadata, "description"),
+                author=_optional_string(metadata, "author"),
+                context=context,
+            )
+        )
+    except RuntimeServiceError as error:
+        return _service_error(error)
+
+
 async def update_camera(request: Request) -> JSONResponse:
     try:
         payload = await _json_object(request)
@@ -612,6 +663,12 @@ def create_app(
             Route("/runtime-state/theme", theme_runtime_state, methods=["GET", "PUT"]),
             Route("/theme-packages", theme_packages, methods=["GET", "POST"]),
             Route("/theme-packages/import", theme_package_import, methods=["POST"]),
+            Route("/theme-builder/projects", theme_builder_projects, methods=["GET", "POST"]),
+            Route(
+                "/theme-builder/projects/{builder_project_id:str}",
+                theme_builder_project,
+                methods=["GET", "PUT"],
+            ),
             Route("/cosmos/camera", update_camera, methods=["PUT"]),
             Route("/cosmos/selection", update_selection, methods=["PUT"]),
             Route("/objects/{object_id:str}/position", move_node, methods=["PUT"]),
@@ -809,6 +866,13 @@ def _string(payload: dict[str, object], key: str) -> str:
 
 def _text(payload: dict[str, object], key: str) -> str:
     value = payload.get(key)
+    if not isinstance(value, str):
+        raise RuntimeServiceError("validation_failed", f"{key} must be a string.")
+    return value
+
+
+def _optional_string(payload: dict[str, object], key: str) -> str:
+    value = payload.get(key, "")
     if not isinstance(value, str):
         raise RuntimeServiceError("validation_failed", f"{key} must be a string.")
     return value

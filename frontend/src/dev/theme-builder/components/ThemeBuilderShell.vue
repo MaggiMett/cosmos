@@ -1,7 +1,18 @@
 <template>
   <main class="theme-builder-surface builder-shell" data-testid="theme-builder-shell">
     <StudioRail :active-studio="activeStudio" />
-    <BuilderTopNavigation :studio-label="studioLabel" />
+    <BuilderTopNavigation
+      :studio-label="studioLabel"
+      :interactive="interactive"
+      :dirty="dirty"
+      :saving="saving"
+      :can-save="canSave"
+      :can-undo="canUndo"
+      :can-redo="canRedo"
+      @save="$emit('save')"
+      @undo="$emit('undo')"
+      @redo="$emit('redo')"
+    />
     <section class="builder-shell__canvas" data-testid="builder-canvas-layout">
       <slot />
     </section>
@@ -18,7 +29,15 @@ import StudioRail from "./StudioRail.vue";
 defineProps<{
   activeStudio: string;
   studioLabel: string;
+  interactive?: boolean;
+  dirty?: boolean;
+  saving?: boolean;
+  canSave?: boolean;
+  canUndo?: boolean;
+  canRedo?: boolean;
 }>();
+
+defineEmits<{ save: []; undo: []; redo: [] }>();
 </script>
 
 <style scoped>
