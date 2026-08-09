@@ -133,6 +133,15 @@ export const routeRecords = [
     },
   },
   {
+    path: "/dev/room-composition-preview",
+    name: "dev-room-composition-preview",
+    component: () => import("../dev/room-composition-preview/RoomCompositionPreviewView.vue"),
+    meta: {
+      title: "Room Composition Shadow Preview",
+      environment: "base",
+    },
+  },
+  {
     path: "/dev/cosmos-project",
     name: "dev-cosmos-project",
     component: () => import("../dev/cosmos-project/CosmosProjectView.vue"),

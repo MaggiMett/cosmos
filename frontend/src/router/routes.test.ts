@@ -213,6 +213,23 @@ describe("Cosmos routing", () => {
     expect(String(baseRuntimeRecord?.component)).toContain("BaseRuntimeView.vue");
   });
 
+  it("resolves the Room Composition Shadow Preview without changing productive Base routes", () => {
+    const router = createCosmosRouter({ history: createMemoryHistory() });
+    const preview = router.resolve("/dev/room-composition-preview");
+    const previewRecord = routeRecords.find(
+      (record) => record.name === "dev-room-composition-preview",
+    );
+
+    expect(preview.name).toBe("dev-room-composition-preview");
+    expect(preview.meta).toMatchObject({
+      title: "Room Composition Shadow Preview",
+      environment: "base",
+    });
+    expect(preview.meta.developmentPreview).not.toBe(true);
+    expect(String(previewRecord?.component)).toContain("RoomCompositionPreviewView.vue");
+    expect(router.resolve("/base").name).toBe("base");
+  });
+
   it("resolves Project Cosmos inside the normal ApplicationShell boundary", () => {
     const router = createCosmosRouter({ history: createMemoryHistory() });
     const projectCosmos = router.resolve("/dev/cosmos-project");
