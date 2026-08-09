@@ -1,6 +1,8 @@
 import type { CosmosApiClient } from "./apiClient";
 import { ThemeRegistry, type ThemeDefinition } from "./themeRegistry";
-import type { ThemeManifest, TypedToken } from "../theme-engine/types";
+import type { SkinPack, ThemeManifest, TypedToken } from "../theme-engine/types";
+import { cloneAndFreeze } from "../theme-engine/immutable";
+import { validateAssetPath } from "../theme-engine/assetRegistry";
 import {
   compareVersions,
   parseVersion,
@@ -22,6 +24,7 @@ export interface InstalledThemePackageRecord {
   readonly source: Readonly<{ kind: "prevalidated"; provenance: string }>;
   readonly manifestDigest: string;
   readonly manifest: unknown;
+  readonly skinPacks?: readonly unknown[];
   readonly installedAt: string;
   readonly updatedAt: string;
 }
@@ -56,6 +59,10 @@ export interface ThemePackageStartupLoader {
   load(): Promise<Readonly<ThemePackageLoadReport>>;
 }
 
+export interface ThemePackagePresentationSource {
+  readPresentationSkinPacks(themeId: string): readonly Readonly<SkinPack>[];
+}
+
 export class ApiThemePackageRecordSource implements ThemePackageRecordSource {
   constructor(private readonly api: CosmosApiClient) {}
 
@@ -73,10 +80,14 @@ interface ValidatedCandidate {
   readonly record: Readonly<InstalledThemePackageRecord>;
   readonly manifest: Readonly<ThemeManifest>;
   readonly definition: Readonly<ThemeDefinition>;
+  readonly skinPacks: readonly Readonly<SkinPack>[];
 }
 
-export class InstalledThemePackageLoader implements ThemePackageStartupLoader {
+export class InstalledThemePackageLoader
+  implements ThemePackageStartupLoader, ThemePackagePresentationSource
+{
   private report: Readonly<ThemePackageLoadReport> | null = null;
+  private readonly presentationSkinPacks = new Map<string, readonly Readonly<SkinPack>[]>();
 
   constructor(
     private readonly source: ThemePackageRecordSource,
@@ -86,6 +97,10 @@ export class InstalledThemePackageLoader implements ThemePackageStartupLoader {
 
   get lastReport(): Readonly<ThemePackageLoadReport> | null {
     return this.report;
+  }
+
+  readPresentationSkinPacks(themeId: string): readonly Readonly<SkinPack>[] {
+    return this.presentationSkinPacks.get(themeId) ?? Object.freeze([]);
   }
 
   async load(): Promise<Readonly<ThemePackageLoadReport>> {
@@ -163,6 +178,7 @@ export class InstalledThemePackageLoader implements ThemePackageStartupLoader {
 
       try {
         this.registry.register(selected.definition);
+        this.presentationSkinPacks.set(selected.manifest.themeId, selected.skinPacks);
         registeredThemeIds.push(themeId);
         diagnostics.push(
           diagnostic(selected.record, "registered", `Theme ${themeId} is available.`),
@@ -218,6 +234,7 @@ async function validateCandidate(
 
   const { validateThemeManifest } = await import("../theme-engine/validation");
   const manifest = validateThemeManifest(record.manifest);
+  const skinPacks = await validateInstalledSkinPacks(record, manifest);
   if (
     manifest.themeId !== record.themeId ||
     manifest.version !== record.packageVersion ||
@@ -245,6 +262,7 @@ async function validateCandidate(
     record,
     manifest,
     definition: themeDefinitionFromManifest(record, manifest, coreTokens),
+    skinPacks,
   });
 }
 
@@ -266,6 +284,7 @@ function validateRecordEnvelope(value: unknown): Readonly<InstalledThemePackageR
     "source",
     "manifestDigest",
     "manifest",
+    "skinPacks",
     "installedAt",
     "updatedAt",
   ]);
@@ -291,6 +310,70 @@ function validateRecordEnvelope(value: unknown): Readonly<InstalledThemePackageR
     throw new Error("Installed Theme Package record envelope is invalid.");
   }
   return Object.freeze(record as InstalledThemePackageRecord);
+}
+
+async function validateInstalledSkinPacks(
+  record: Readonly<InstalledThemePackageRecord>,
+  manifest: Readonly<ThemeManifest>,
+): Promise<readonly Readonly<SkinPack>[]> {
+  if (record.skinPacks === undefined) return Object.freeze([]);
+  if (!Array.isArray(record.skinPacks)) {
+    throw new Error(`Theme Package ${record.packageId} skinPacks must be an array.`);
+  }
+  const { validateSkinPack } = await import("../theme-engine/validation");
+  const identities = new Set<string>();
+  const skinPacks = await Promise.all(
+    record.skinPacks.map(async (value, index) => {
+      if (!value || typeof value !== "object" || Array.isArray(value)) {
+        throw new Error(`Theme Package ${record.packageId} skinPacks[${index}] is invalid.`);
+      }
+      const artifact = value as Record<string, unknown>;
+      if (
+        Object.keys(artifact).some(
+          (key) => !["path", "sha256", "packId", "packVersion", "skinPack"].includes(key),
+        ) ||
+        Object.keys(artifact).length !== 5 ||
+        typeof artifact.path !== "string" ||
+        typeof artifact.sha256 !== "string" ||
+        !/^[a-f0-9]{64}$/.test(artifact.sha256) ||
+        typeof artifact.packId !== "string" ||
+        typeof artifact.packVersion !== "string"
+      ) {
+        throw new Error(`Theme Package ${record.packageId} skinPacks[${index}] envelope is invalid.`);
+      }
+      validateAssetPath(artifact.path);
+      if (await createThemeManifestDigest(artifact.skinPack) !== artifact.sha256) {
+        throw new Error(`Theme Package ${record.packageId} SkinPack integrity validation failed.`);
+      }
+      const skinPack = validateSkinPack(artifact.skinPack);
+      if (skinPack.packId !== artifact.packId || skinPack.version !== artifact.packVersion) {
+        throw new Error(`Theme Package ${record.packageId} SkinPack identity is inconsistent.`);
+      }
+      if (
+        !manifest.packRefs.some(
+          (reference) =>
+            reference.id === skinPack.packId &&
+            satisfiesVersionRange(skinPack.version, reference.versionRange),
+        )
+      ) {
+        throw new Error(`Theme Package ${record.packageId} SkinPack is not referenced by its manifest.`);
+      }
+      const identity = `${skinPack.packId}@${skinPack.version}`;
+      if (identities.has(identity)) {
+        throw new Error(`Theme Package ${record.packageId} contains a duplicate SkinPack.`);
+      }
+      identities.add(identity);
+      return cloneAndFreeze(skinPack);
+    }),
+  );
+  return Object.freeze(
+    skinPacks
+      .sort(
+        (left, right) =>
+          left.packId.localeCompare(right.packId) || compareVersions(left.version, right.version),
+      )
+      .map((skinPack) => skinPack),
+  );
 }
 
 function themeDefinitionFromManifest(

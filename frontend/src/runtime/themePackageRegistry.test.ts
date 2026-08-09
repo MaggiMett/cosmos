@@ -65,6 +65,33 @@ function manifest(
   };
 }
 
+function installedSkinPack() {
+  return {
+    schemaVersion: 1,
+    packId: "max.skin-pack.aurora",
+    version: "1.0.0",
+    packageKind: "skin-pack",
+    displayName: "Aurora SkinPack",
+    compatibility: { themeEngine: "^1.0.0" },
+    assets: [],
+    skins: [
+      {
+        skinId: "max.skin.aurora.base",
+        version: "1.0.0",
+        displayName: "Aurora Base",
+        target: {
+          presentationGroup: "base-interior",
+          templateRef: { id: "base.main-room.v1", versionRange: "^1.0.0" },
+        },
+        assetBindings: [],
+        tokens: {},
+        materials: [],
+        stateVariants: [],
+      },
+    ],
+  } as const;
+}
+
 async function record(
   themeManifest = manifest(),
   packageId = "max.theme-package.aurora",
@@ -128,6 +155,72 @@ describe("Installed Theme Package startup loader", () => {
     });
     expect(report.registeredThemeIds).toEqual([installed.themeId]);
     expect(loader.lastReport).toBe(report);
+  });
+
+  it("loads installed SkinPacks through the existing Package read boundary", async () => {
+    const registry = coreRegistry();
+    const pack = installedSkinPack();
+    const packageManifest = {
+      ...manifest(),
+      packRefs: [{ id: pack.packId, versionRange: "^1.0.0" }],
+    } satisfies ThemeManifest;
+    const installed = {
+      ...(await record(packageManifest)),
+      skinPacks: [
+        {
+          path: "skin-packs/max.skin-pack.aurora/1.0.0/skin-pack.json",
+          sha256: await createThemeManifestDigest(pack),
+          packId: pack.packId,
+          packVersion: pack.version,
+          skinPack: pack,
+        },
+      ],
+    };
+    const loader = new InstalledThemePackageLoader(
+      new StaticSource([installed]),
+      registry,
+      cosmosTheme.objectId,
+    );
+
+    await loader.load();
+
+    const loaded = loader.readPresentationSkinPacks(installed.themeId);
+    expect(loaded).toEqual([pack]);
+    expect(Object.isFrozen(loaded)).toBe(true);
+    expect(Object.isFrozen(loaded[0]?.skins)).toBe(true);
+    expect(loader.readPresentationSkinPacks("max.theme.unknown")).toEqual([]);
+  });
+
+  it("isolates an installed SkinPack digest mismatch before Theme registration", async () => {
+    const registry = coreRegistry();
+    const pack = installedSkinPack();
+    const packageManifest = {
+      ...manifest(),
+      packRefs: [{ id: pack.packId, versionRange: "^1.0.0" }],
+    } satisfies ThemeManifest;
+    const installed = {
+      ...(await record(packageManifest)),
+      skinPacks: [
+        {
+          path: "skin-packs/max.skin-pack.aurora/1.0.0/skin-pack.json",
+          sha256: "0".repeat(64),
+          packId: pack.packId,
+          packVersion: pack.version,
+          skinPack: pack,
+        },
+      ],
+    };
+    const loader = new InstalledThemePackageLoader(
+      new StaticSource([installed]),
+      registry,
+      cosmosTheme.objectId,
+    );
+
+    const report = await loader.load();
+
+    expect(report.diagnostics).toContainEqual(expect.objectContaining({ status: "invalid" }));
+    expect(registry.has(installed.themeId)).toBe(false);
+    expect(loader.readPresentationSkinPacks(installed.themeId)).toEqual([]);
   });
 
   it("is idempotent across ApplicationRuntime retries", async () => {

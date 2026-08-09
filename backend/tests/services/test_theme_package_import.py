@@ -81,6 +81,87 @@ def test_valid_package_installs_assets_persists_and_does_not_activate(tmp_path: 
     assert "assetBytes" not in restored_package
 
 
+def test_valid_skin_pack_is_validated_persisted_and_available_after_restart(tmp_path: Path) -> None:
+    settings = RuntimeSettings(runtime_path=tmp_path / "Runtime", port=0)
+    asset = _asset("max.visual.aurora", SAFE_SVG)
+    skin_pack = _skin_pack(asset)
+    archive = _package_archive_with_skin_pack(asset, skin_pack)
+
+    with TestClient(create_app(settings)) as client:
+        imported = _import(client, archive)
+        installed = client.get("/theme-packages").json()["items"][0]
+
+    with TestClient(create_app(settings)) as restarted:
+        restored = restarted.get("/theme-packages").json()["items"][0]
+
+    assert imported.status_code == 201
+    assert installed["skinPacks"][0]["packId"] == "max.skin-pack.aurora"
+    assert installed["skinPacks"][0]["skinPack"] == skin_pack
+    assert restored["skinPacks"] == installed["skinPacks"]
+
+
+def test_skin_pack_digest_mismatch_rejects_the_entire_package(tmp_path: Path) -> None:
+    asset = _asset("max.visual.aurora", SAFE_SVG)
+    skin_pack = _skin_pack(asset)
+    archive = _package_archive_with_skin_pack(asset, skin_pack, skin_digest="0" * 64)
+
+    with TestClient(create_app(RuntimeSettings(runtime_path=tmp_path / "Runtime", port=0))) as client:
+        response = _import(client, archive)
+        packages = client.get("/theme-packages")
+        catalog = client.get("/asset-catalog")
+
+    assert response.status_code == 422
+    assert response.json()["diagnostics"][0]["code"] == "theme_package_skin_pack_integrity_failed"
+    assert packages.json() == {"items": []}
+    assert catalog.json() == {"items": []}
+
+
+def test_invalid_skin_pack_schema_rejects_the_entire_package(tmp_path: Path) -> None:
+    asset = _asset("max.visual.aurora", SAFE_SVG)
+    skin_pack = _skin_pack(asset)
+    skin_pack.pop("skins")
+    archive = _package_archive_with_skin_pack(asset, skin_pack)
+
+    with TestClient(create_app(RuntimeSettings(runtime_path=tmp_path / "Runtime", port=0))) as client:
+        response = _import(client, archive)
+
+    assert response.status_code == 422
+    assert response.json()["diagnostics"][0]["code"] == "theme_package_skin_pack_schema_invalid"
+
+
+def test_skin_pack_missing_asset_reference_rejects_the_entire_package(tmp_path: Path) -> None:
+    asset = _asset("max.visual.aurora", SAFE_SVG)
+    skin_pack = _skin_pack(asset)
+    skin_pack["assets"][0]["assetId"] = "max.visual.missing"
+    skin_pack["skins"][0]["assetBindings"][0]["assetId"] = "max.visual.missing"
+    archive = _package_archive_with_skin_pack(asset, skin_pack)
+
+    with TestClient(create_app(RuntimeSettings(runtime_path=tmp_path / "Runtime", port=0))) as client:
+        response = _import(client, archive)
+
+    assert response.status_code == 422
+    assert response.json()["diagnostics"][0]["code"] == "theme_package_skin_pack_asset_missing"
+
+
+def test_skin_pack_path_traversal_and_executable_fields_are_rejected(tmp_path: Path) -> None:
+    asset = _asset("max.visual.aurora", SAFE_SVG)
+    skin_pack = _skin_pack(asset)
+    manifest = _manifest(changes={"packRefs": [{"id": "max.skin-pack.aurora", "versionRange": "^1.0.0"}]})
+    descriptor = _descriptor(manifest, [asset])
+    descriptor["skinPacks"] = [{"path": "../skin-pack.json", "sha256": "0" * 64}]
+    unsafe_path = _raw_archive(descriptor, manifest, [asset])
+
+    executable_pack = {**skin_pack, "script": "javascript:alert(1)"}
+    executable = _package_archive_with_skin_pack(asset, executable_pack)
+    settings = RuntimeSettings(runtime_path=tmp_path / "Runtime", port=0)
+    with TestClient(create_app(settings)) as client:
+        path_response = _import(client, unsafe_path)
+        executable_response = _import(client, executable)
+
+    assert path_response.json()["diagnostics"][0]["code"] == "theme_package_path_invalid"
+    assert executable_response.json()["diagnostics"][0]["code"] == "theme_package_executable_content"
+
+
 @pytest.mark.parametrize(
     ("manifest_changes", "omit_manifest", "code"),
     [
@@ -425,6 +506,89 @@ def _descriptor(
     }
 
 
+def _skin_pack(asset: dict[str, Any]) -> dict[str, Any]:
+    visual = asset["visualAsset"]
+    return {
+        "schemaVersion": 1,
+        "packId": "max.skin-pack.aurora",
+        "version": "1.0.0",
+        "packageKind": "skin-pack",
+        "displayName": "Aurora Base Skin",
+        "compatibility": {"themeEngine": "^1.0.0"},
+        "assets": [
+            {
+                "assetId": visual["id"],
+                "kind": visual["kind"],
+                "format": visual["format"],
+                "mimeType": visual["mimeType"],
+                "path": visual["path"],
+                "sha256": visual["sha256"],
+                "byteSize": visual["byteSize"],
+                "width": visual["width"],
+                "height": visual["height"],
+                "alpha": visual["alpha"],
+            }
+        ],
+        "skins": [
+            {
+                "skinId": "max.skin.aurora.base",
+                "version": "1.0.0",
+                "displayName": "Aurora Base",
+                "target": {
+                    "presentationGroup": "base-interior",
+                    "templateRef": {"id": "base.main-room.v1", "versionRange": "^1.0.0"},
+                },
+                "assetBindings": [
+                    {
+                        "bindingId": "max.binding.aurora.background",
+                        "slotId": "base.slot.background",
+                        "assetId": visual["id"],
+                    }
+                ],
+                "tokens": {},
+                "materials": [
+                    {
+                        "channelId": "core.material.dom-surface",
+                        "parameters": {
+                            "core.material.fill": "#102030",
+                            "core.material.opacity": 0.9,
+                        },
+                    }
+                ],
+                "stateVariants": [
+                    {
+                        "stateId": "default",
+                        "assetBindingIds": ["max.binding.aurora.background"],
+                    }
+                ],
+            }
+        ],
+    }
+
+
+def _package_archive_with_skin_pack(
+    asset: dict[str, Any],
+    skin_pack: dict[str, Any],
+    *,
+    skin_digest: str | None = None,
+) -> bytes:
+    manifest = _manifest(changes={"packRefs": [{"id": "max.skin-pack.aurora", "versionRange": "^1.0.0"}]})
+    descriptor = _descriptor(manifest, [asset])
+    skin_path = "skin-packs/max.skin-pack.aurora/1.0.0/skin-pack.json"
+    descriptor["skinPacks"] = [
+        {
+            "path": skin_path,
+            "sha256": skin_digest or canonical_manifest_digest(skin_pack),
+        }
+    ]
+    return _raw_archive(
+        descriptor,
+        manifest,
+        [asset],
+        skin_packs=[(skin_path, skin_pack)],
+    )
+
+
 def _package_archive(
     *,
     package_id: str = "max.theme-package.aurora",
@@ -450,6 +614,7 @@ def _raw_archive(
     manifest: dict[str, Any] | None,
     assets: list[dict[str, Any]] | None = None,
     extra_entries: list[tuple[str, bytes]] | None = None,
+    skin_packs: list[tuple[str, dict[str, Any]]] | None = None,
 ) -> bytes:
     stream = io.BytesIO()
     with zipfile.ZipFile(stream, "w", compression=zipfile.ZIP_DEFLATED) as archive:
@@ -461,6 +626,8 @@ def _raw_archive(
             archive.writestr("theme-manifest.json", _json_bytes(manifest))
         for asset in assets or []:
             archive.writestr(asset["visualAsset"]["path"], asset["content"])
+        for path, skin_pack in skin_packs or []:
+            archive.writestr(path, _json_bytes(skin_pack))
         for path, content in extra_entries or []:
             archive.writestr(path, content)
     return stream.getvalue()

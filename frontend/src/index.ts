@@ -91,6 +91,7 @@ export type {
   ThemePackageLoadDiagnostic,
   ThemePackageLoadReport,
   ThemePackageLoadStatus,
+  ThemePackagePresentationSource,
   ThemePackageRecordSource,
   ThemePackageStartupLoader,
 } from "./runtime/themePackageRegistry";

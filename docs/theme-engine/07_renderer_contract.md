@@ -178,6 +178,21 @@ Initial trusted families:
 Implementation technology is not a theme API. Core may replace DOM with Canvas
 while preserving the renderer contract and output semantics.
 
+### 7.1 Initial DOM surface material channel
+
+The first closed renderer-owned material allowlist publishes
+`core.material.dom-surface`. It accepts only these namespaced parameters:
+
+- `core.material.fill`: hexadecimal color;
+- `core.material.stroke`: hexadecimal color;
+- `core.material.opacity`: finite number from `0` through `1`;
+- `core.material.texture-ref`: namespaced Asset ID that resolves through the validated
+  Asset Catalog/Resource boundary.
+
+Unknown channels or parameters remain unavailable. Values are validated into an immutable render
+input; Theme data is never forwarded as CSS source, custom properties, expressions, shaders, or
+scripts. This registry is a validation boundary only and does not render materials by itself.
+
 ## 8. Node renderer
 
 The Node renderer consumes:

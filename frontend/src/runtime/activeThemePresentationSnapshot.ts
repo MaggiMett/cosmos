@@ -10,6 +10,11 @@ import {
 } from "../theme-engine/coreDefaultBaseSkin";
 import { cloneAndFreeze } from "../theme-engine/immutable";
 import { TemplateRegistry, type RegisteredTemplate } from "../theme-engine/templateRegistry";
+import {
+  rendererMaterialChannelRegistry,
+  type RendererMaterialUnavailableReason,
+  type ResolvedRendererMaterialParameter,
+} from "../theme-engine/rendererMaterialChannels";
 import type {
   AssetBinding,
   AssetFormat,
@@ -31,6 +36,7 @@ import type {
 } from "./assetCatalogApi";
 import type { ThemeDefinition, ThemeDefinitionProvenance } from "./themeRegistry";
 import type { ThemeRuntime } from "./themeRuntime";
+import type { ThemePackagePresentationSource } from "./themePackageRegistry";
 
 export type ActiveThemePresentationResolutionStatus =
   | "resolved"
@@ -129,8 +135,9 @@ export interface ResolvedPresentationMaterial {
   readonly skinId: string;
   readonly templateId: string | null;
   readonly channelId: string;
-  readonly status: "unavailable";
-  readonly reason: "material-runtime-unavailable";
+  readonly status: "resolved" | "unavailable";
+  readonly parameters: readonly Readonly<ResolvedRendererMaterialParameter>[];
+  readonly reason: RendererMaterialUnavailableReason | null;
 }
 
 export type ActiveThemePresentationDiagnosticCode =
@@ -190,6 +197,7 @@ export interface ResolveActiveThemePresentationInput {
 export interface LoadActiveThemePresentationInput
   extends Omit<ResolveActiveThemePresentationInput, "assetCatalogRecords" | "assetCatalogStatus"> {
   readonly assetCatalog: Pick<AssetCatalogApi, "list">;
+  readonly skinPackSource?: Pick<ThemePackagePresentationSource, "readPresentationSkinPacks">;
 }
 
 interface SkinContext {
@@ -217,13 +225,31 @@ export async function loadActiveThemePresentationSnapshot(
   input: Readonly<LoadActiveThemePresentationInput>,
 ): Promise<Readonly<ActiveThemePresentationSnapshot>> {
   const result = await input.assetCatalog.list();
+  const activeThemeId = input.themeRuntime.readSnapshot().activeThemeId;
+  const installedSkinPacks = activeThemeId
+    ? input.skinPackSource?.readPresentationSkinPacks(activeThemeId) ?? []
+    : [];
   return resolveActiveThemePresentationSnapshot({
     themeRuntime: input.themeRuntime,
-    skinPacks: input.skinPacks,
+    skinPacks: mergeSkinPacks(input.skinPacks ?? [], installedSkinPacks),
     templateRegistry: input.templateRegistry,
     assetCatalogRecords: result.ok ? result.data : [],
     assetCatalogStatus: result.ok ? "available" : "unavailable",
   });
+}
+
+function mergeSkinPacks(
+  first: readonly Readonly<SkinPack>[],
+  second: readonly Readonly<SkinPack>[],
+): readonly Readonly<SkinPack>[] {
+  const values = new Map<string, Readonly<SkinPack>>();
+  for (const skinPack of [...first, ...second]) {
+    values.set(`${skinPack.packId}@${skinPack.version}`, skinPack);
+  }
+  return [...values.values()].sort(
+    (left, right) =>
+      left.packId.localeCompare(right.packId) || compareVersions(left.version, right.version),
+  );
 }
 
 /** Pure, deterministic projection over already loaded and validated Runtime data. */
@@ -292,7 +318,7 @@ export function resolveActiveThemePresentationSnapshot(
     state,
   );
   const skins = skinContexts.map((context) => projectSkin(context, assets, state));
-  const materials = skinContexts.flatMap((context) => projectMaterials(context, state));
+  const materials = skinContexts.flatMap((context) => projectMaterials(context, assets, state));
   const provenance = projectProvenance(definition);
   const tokens = projectTokens(definition, runtimeSnapshot.fallbackThemeId);
 
@@ -556,6 +582,30 @@ function resolveAssets(
       state.trace.push(trace("asset", binding.assetId, null, null, lookupStatus));
       addAssetDiagnostic(binding.assetId, lookupStatus, state);
     }
+    for (const material of context.skin.materials) {
+      for (const assetId of rendererMaterialChannelRegistry.referencedAssetIds(material)) {
+        if (output.some((asset) => asset.reference?.assetId === assetId)) continue;
+        const requestId = `${context.skin.skinId}:material:${material.channelId}:${assetId}`;
+        const record = records.find((candidate) => candidate.visualAsset.id === assetId);
+        const lookupStatus = lookupCatalogAsset(record, definition.objectId, catalogStatus);
+        const resolved = lookupStatus === "resolved" && record;
+        output.push({
+          requestId,
+          requestedAssetId: assetId,
+          templateId: context.skin.target.templateRef?.id ?? "unscoped",
+          slotId: `material:${material.channelId}`,
+          lookupStatus,
+          status: resolved ? "resolved" : lookupStatus === "invalid" ? "invalid" : "unavailable",
+          source: resolved ? context.source : null,
+          usedCoreFallback: false,
+          reference: resolved ? safeCatalogAsset(record) : null,
+        });
+        state.trace.push(
+          trace("asset", assetId, resolved ? assetId : null, resolved ? context.source : null, lookupStatus),
+        );
+        if (!resolved) addAssetDiagnostic(assetId, lookupStatus, state);
+      }
+    }
   }
   return output.sort((left, right) => left.requestId.localeCompare(right.requestId));
 }
@@ -649,24 +699,43 @@ function stateResult(
 
 function projectMaterials(
   context: SkinContext,
+  assets: readonly ResolvedPresentationAsset[],
   state: MutableResolution,
 ): ResolvedPresentationMaterial[] {
   return [...context.skin.materials]
     .sort((left, right) => left.channelId.localeCompare(right.channelId))
     .map((material: Readonly<Material>) => {
-      state.partial = true;
-      state.diagnostics.push({
-        code: "material-runtime-unavailable",
-        subjectId: `${context.skin.skinId}:${material.channelId}`,
-        message: `Material channel ${material.channelId} remains declarative until a compatible renderer contract is registered.`,
-      });
-      state.trace.push(trace("material", material.channelId, null, context.source, "unavailable"));
+      const resolution = rendererMaterialChannelRegistry.resolve(material, (assetId) =>
+        assets.find(
+          (asset) =>
+            asset.reference?.assetId === assetId &&
+            (asset.status === "resolved" || asset.status === "fallback"),
+        )?.reference ?? null,
+      );
+      if (resolution.status === "unavailable") {
+        state.partial = true;
+        state.diagnostics.push({
+          code: "material-runtime-unavailable",
+          subjectId: `${context.skin.skinId}:${material.channelId}`,
+          message: `Material channel ${material.channelId} is unavailable: ${resolution.reason}.`,
+        });
+      }
+      state.trace.push(
+        trace(
+          "material",
+          material.channelId,
+          resolution.status === "resolved" ? material.channelId : null,
+          context.source,
+          resolution.status,
+        ),
+      );
       return {
         skinId: context.skin.skinId,
         templateId: context.skin.target.templateRef?.id ?? null,
         channelId: material.channelId,
-        status: "unavailable" as const,
-        reason: "material-runtime-unavailable" as const,
+        status: resolution.status,
+        parameters: resolution.parameters,
+        reason: resolution.reason,
       };
     });
 }

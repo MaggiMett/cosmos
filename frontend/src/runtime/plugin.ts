@@ -12,6 +12,7 @@ import { ThemeRegistry } from "./themeRegistry";
 import {
   ApiThemePackageRecordSource,
   InstalledThemePackageLoader,
+  type ThemePackagePresentationSource,
   type ThemePackageStartupLoader,
 } from "./themePackageRegistry";
 import { ThemeRuntime } from "./themeRuntime";
@@ -30,7 +31,7 @@ export interface CosmosFrontendRuntime {
   notifications: NotificationRuntime;
   objectInteractions: ObjectInteractionRuntime;
   themes: ThemeRuntime;
-  themePackages: ThemePackageStartupLoader;
+  themePackages: ThemePackageStartupLoader & ThemePackagePresentationSource;
   tools: ToolRuntime;
   transitions: TransitionRuntime;
   windows: WindowRuntime;

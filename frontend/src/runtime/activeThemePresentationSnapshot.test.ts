@@ -88,7 +88,7 @@ function packageThemeDefinition(themeManifest = manifest()): ThemeDefinition {
 function skinPack(options: {
   requestedAssetId?: string;
   templateId?: string;
-  material?: boolean;
+  material?: "unknown" | "known" | "texture";
   withDefaultState?: boolean;
 } = {}): SkinPack {
   const bindingId = "max.binding.presentation.background";
@@ -99,7 +99,17 @@ function skinPack(options: {
     packageKind: "skin-pack",
     displayName: "Presentation Skin Pack",
     compatibility: { themeEngine: "^1.0.0" },
-    assets: [],
+    assets: [{
+      assetId: options.requestedAssetId ?? assetId,
+      kind: "image",
+      format: "png",
+      mimeType: "image/png",
+      path: `assets/${options.requestedAssetId ?? assetId}.png`,
+      sha256: "b".repeat(64),
+      byteSize: 128,
+      width: 64,
+      height: 64,
+    }],
     skins: [{
       skinId: "max.skin.presentation.base",
       version: "1.0.0",
@@ -117,9 +127,23 @@ function skinPack(options: {
         assetId: options.requestedAssetId ?? assetId,
       }],
       tokens: {},
-      materials: options.material
-        ? [{ channelId: "base.material.wall", parameters: { opacity: 0.8 } }]
-        : [],
+      materials:
+        options.material === "unknown"
+          ? [{ channelId: "base.material.wall", parameters: { "base.material.opacity": 0.8 } }]
+          : options.material === "known"
+            ? [{
+                channelId: "core.material.dom-surface",
+                parameters: {
+                  "core.material.fill": "#102030",
+                  "core.material.opacity": 0.8,
+                },
+              }]
+            : options.material === "texture"
+              ? [{
+                  channelId: "core.material.dom-surface",
+                  parameters: { "core.material.texture-ref": options.requestedAssetId ?? assetId },
+                }]
+              : [],
       stateVariants: options.withDefaultState
         ? [{ stateId: "default", assetBindingIds: [bindingId] }]
         : [],
@@ -298,6 +322,49 @@ describe("Active Theme Presentation Snapshot", () => {
     });
   });
 
+  it("loads and resolves an installed Package Skin through the Package read boundary", async () => {
+    const pack = skinPack();
+    const packageManifest = manifest(themeId, "1.2.0", [
+      { id: pack.packId, versionRange: "^1.0.0" },
+    ]);
+    const persisted = {
+      ...(await installedRecord(packageManifest)),
+      skinPacks: [{
+        path: "skin-packs/max.skin-pack.presentation/1.0.0/skin-pack.json",
+        sha256: await createThemeManifestDigest(pack),
+        packId: pack.packId,
+        packVersion: pack.version,
+        skinPack: pack,
+      }],
+    };
+    const registry = new ThemeRegistry();
+    registry.register(cosmosTheme);
+    const loader = new InstalledThemePackageLoader(
+      { listInstalled: vi.fn(async () => [persisted]) },
+      registry,
+      cosmosTheme.objectId,
+    );
+    await loader.load();
+    const runtime = new ThemeRuntime(registry, new TransitionRuntime(), cosmosTheme.objectId, { apply: vi.fn() });
+    await runtime.activate(themeId);
+
+    const snapshot = await loadActiveThemePresentationSnapshot({
+      themeRuntime: runtime,
+      skinPackSource: loader,
+      assetCatalog: { list: vi.fn(async () => ({ ok: true as const, data: [catalogRecord()] })) },
+    });
+
+    expect(snapshot.skins).toContainEqual(expect.objectContaining({
+      skinId: "max.skin.presentation.base",
+      source: "active-theme",
+      status: "resolved",
+    }));
+    expect(snapshot.assets).toContainEqual(expect.objectContaining({
+      requestedAssetId: assetId,
+      status: "resolved",
+    }));
+  });
+
   it("resolves a validated Catalog resource to a renderer-safe reference", async () => {
     const { runtime } = await activePackageRuntime();
     const snapshot = resolvePackage(runtime);
@@ -375,17 +442,35 @@ describe("Active Theme Presentation Snapshot", () => {
 
   it("keeps declared materials unavailable until a renderer-owned channel contract exists", async () => {
     const { runtime } = await activePackageRuntime();
-    const snapshot = resolvePackage(runtime, { packs: [skinPack({ material: true })] });
+    const snapshot = resolvePackage(runtime, { packs: [skinPack({ material: "unknown" })] });
 
     expect(snapshot.materials).toEqual([
       expect.objectContaining({
         channelId: "base.material.wall",
         status: "unavailable",
-        reason: "material-runtime-unavailable",
+        reason: "unknown-channel",
       }),
     ]);
-    expect(snapshot.materials[0]).not.toHaveProperty("parameters");
+    expect(snapshot.materials[0]?.parameters).toEqual([]);
     expect(snapshot.resolutionStatus).toBe("partial");
+  });
+
+  it("resolves renderer-allowlisted material values and safe texture references", async () => {
+    const { runtime } = await activePackageRuntime();
+    const values = resolvePackage(runtime, { packs: [skinPack({ material: "known" })] });
+    const texture = resolvePackage(runtime, { packs: [skinPack({ material: "texture" })] });
+
+    expect(values.materials).toContainEqual(expect.objectContaining({
+      channelId: "core.material.dom-surface",
+      status: "resolved",
+      reason: null,
+    }));
+    expect(texture.materials[0]?.parameters).toContainEqual(expect.objectContaining({
+      parameterId: "core.material.texture-ref",
+      kind: "asset-reference",
+      value: expect.objectContaining({ assetId }),
+    }));
+    expect(JSON.stringify(texture.materials)).not.toContain(`assets/${assetId}.png`);
   });
 
   it("does not project Function or Interaction authority from Skins", async () => {

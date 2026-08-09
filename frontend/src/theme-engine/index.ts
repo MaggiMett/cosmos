@@ -248,3 +248,13 @@ export type {
 } from "./roomSnapshotResolver";
 export type * from "./roomCompositionTypes";
 export type * from "./types";
+export {
+  RendererMaterialChannelRegistry,
+  rendererMaterialChannelRegistry,
+} from "./rendererMaterialChannels";
+export type {
+  RendererMaterialResolution,
+  RendererMaterialUnavailableReason,
+  ResolvedRendererMaterialParameter,
+  SafeMaterialAssetReference,
+} from "./rendererMaterialChannels";

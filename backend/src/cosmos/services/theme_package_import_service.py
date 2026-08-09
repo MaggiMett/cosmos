@@ -151,6 +151,13 @@ class _AssetPromotion:
     staged_path: Path | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class _SkinPackArtifact:
+    path: str
+    digest: str
+    skin_pack: dict[str, JSONValue]
+
+
 class ThemePackageImportService:
     """Quarantines, validates and atomically installs one declarative Theme ZIP."""
 
@@ -206,7 +213,13 @@ class ThemePackageImportService:
                         THEME_PACKAGE_DESCRIPTOR_PATH,
                         "Theme Package descriptor",
                     )
-                    package_id, package_version, manifest_reference, assets = _validate_descriptor(descriptor)
+                    (
+                        package_id,
+                        package_version,
+                        manifest_reference,
+                        assets,
+                        skin_pack_references,
+                    ) = _validate_descriptor(descriptor)
                     identity["packageId"] = package_id
                     identity["packageVersion"] = package_version
                     asset_count = len(assets)
@@ -240,7 +253,14 @@ class ThemePackageImportService:
                         assets,
                         theme_id,
                     )
-                    self._validate_expected_paths(entries, promotions)
+                    skin_packs = self._validate_skin_packs(
+                        archive,
+                        entries,
+                        skin_pack_references,
+                        manifest,
+                        promotions,
+                    )
+                    self._validate_expected_paths(entries, promotions, skin_packs)
             except zipfile.BadZipFile as error:
                 raise RuntimeServiceError(
                     "theme_package_archive_invalid",
@@ -260,6 +280,16 @@ class ThemePackageImportService:
                     },
                 }
             )
+            record["skinPacks"] = [
+                {
+                    "path": artifact.path,
+                    "sha256": artifact.digest,
+                    "packId": artifact.skin_pack["packId"],
+                    "packVersion": artifact.skin_pack["version"],
+                    "skinPack": artifact.skin_pack,
+                }
+                for artifact in skin_packs
+            ]
             installed, reused = self._install(record, promotions)
             return {
                 "success": True,
@@ -389,11 +419,10 @@ class ThemePackageImportService:
     ) -> dict[str, JSONValue]:
         info = entries.get(path)
         if info is None:
-            code = (
-                "theme_package_descriptor_missing"
-                if path == THEME_PACKAGE_DESCRIPTOR_PATH
-                else "theme_package_manifest_missing"
-            )
+            code = {
+                THEME_PACKAGE_DESCRIPTOR_PATH: "theme_package_descriptor_missing",
+                THEME_MANIFEST_PATH: "theme_package_manifest_missing",
+            }.get(path, "theme_package_skin_pack_missing")
             raise RuntimeServiceError(code, f"{label} is missing from the package root.")
         content = _read_bounded(archive, info, self.limits.maximum_metadata_bytes)
         try:
@@ -515,15 +544,70 @@ class ThemePackageImportService:
             )
         return promotions
 
+    def _validate_skin_packs(
+        self,
+        archive: zipfile.ZipFile,
+        entries: dict[str, zipfile.ZipInfo],
+        references: list[dict[str, str]],
+        manifest: dict[str, JSONValue],
+        promotions: list[_AssetPromotion],
+    ) -> list[_SkinPackArtifact]:
+        artifacts: list[_SkinPackArtifact] = []
+        identities: set[tuple[str, str]] = set()
+        manifest_refs = [
+            _versioned_ref(value, f"packRefs[{index}]")
+            for index, value in enumerate(_list(manifest["packRefs"], "packRefs"))
+        ]
+        available_assets = {
+            str(promotion.visual_asset["id"]): promotion.visual_asset for promotion in promotions
+        }
+        for index, reference in enumerate(references):
+            path = reference["path"]
+            skin_pack = self._read_json_entry(
+                archive,
+                entries,
+                path,
+                f"SkinPack {index + 1}",
+            )
+            digest = canonical_manifest_digest(skin_pack)
+            if digest != reference["sha256"]:
+                raise RuntimeServiceError(
+                    "theme_package_skin_pack_integrity_failed",
+                    f'SkinPack artifact "{path}" failed canonical digest validation.',
+                )
+            _validate_skin_pack(skin_pack)
+            pack_id = _required_string(skin_pack, "packId", "SkinPack")
+            pack_version = _required_string(skin_pack, "version", "SkinPack")
+            if not any(
+                item["id"] == pack_id and _version_satisfies(pack_version, item["versionRange"])
+                for item in manifest_refs
+            ):
+                raise RuntimeServiceError(
+                    "theme_package_skin_pack_unreferenced",
+                    f'SkinPack "{pack_id}@{pack_version}" is not referenced by the Theme Manifest.',
+                )
+            identity = (pack_id, pack_version)
+            if identity in identities:
+                raise RuntimeServiceError(
+                    "theme_package_skin_pack_conflict",
+                    "Theme Package contains duplicate SkinPack identities.",
+                )
+            identities.add(identity)
+            _validate_skin_pack_asset_closure(skin_pack, available_assets)
+            artifacts.append(_SkinPackArtifact(path=path, digest=digest, skin_pack=skin_pack))
+        return artifacts
+
     def _validate_expected_paths(
         self,
         entries: dict[str, zipfile.ZipInfo],
         promotions: list[_AssetPromotion],
+        skin_packs: list[_SkinPackArtifact],
     ) -> None:
         allowed = {
             THEME_PACKAGE_DESCRIPTOR_PATH,
             THEME_MANIFEST_PATH,
             *(promotion.resource_path for promotion in promotions),
+            *(artifact.path for artifact in skin_packs),
         }
         unexpected = sorted(set(entries) - allowed)
         if unexpected:
@@ -665,8 +749,21 @@ class ThemePackageImportService:
 
 def _validate_descriptor(
     value: dict[str, JSONValue],
-) -> tuple[str, str, dict[str, str], list[dict[str, JSONValue]]]:
-    if set(value) != {"schemaVersion", "packageId", "packageVersion", "manifest", "assets"}:
+) -> tuple[
+    str,
+    str,
+    dict[str, str],
+    list[dict[str, JSONValue]],
+    list[dict[str, str]],
+]:
+    required_fields = {
+        "schemaVersion",
+        "packageId",
+        "packageVersion",
+        "manifest",
+        "assets",
+    }
+    if not required_fields.issubset(value) or set(value) - (required_fields | {"skinPacks"}):
         raise RuntimeServiceError(
             "theme_package_descriptor_invalid",
             "Theme Package descriptor has missing or unsupported fields.",
@@ -692,11 +789,35 @@ def _validate_descriptor(
             "theme_package_descriptor_invalid",
             "Theme Package assets must be an array of declaration objects.",
         )
+    skin_pack_values = value.get("skinPacks", [])
+    if not isinstance(skin_pack_values, list) or any(not isinstance(item, dict) for item in skin_pack_values):
+        raise RuntimeServiceError(
+            "theme_package_descriptor_invalid",
+            "Theme Package skinPacks must be an array of artifact references.",
+        )
+    skin_pack_references: list[dict[str, str]] = []
+    seen_paths: set[str] = set()
+    for index, item in enumerate(skin_pack_values):
+        if set(item) != {"path", "sha256"}:
+            raise RuntimeServiceError(
+                "theme_package_descriptor_invalid",
+                f"skinPacks[{index}] requires path and sha256 only.",
+            )
+        path = _validate_archive_path(_string(item["path"], f"skinPacks[{index}].path"), False)
+        digest = _digest(item["sha256"], f"skinPacks[{index}].sha256")
+        if path in {THEME_PACKAGE_DESCRIPTOR_PATH, THEME_MANIFEST_PATH} or path.casefold() in seen_paths:
+            raise RuntimeServiceError(
+                "theme_package_skin_pack_conflict",
+                "Theme Package contains a duplicate or reserved SkinPack artifact path.",
+            )
+        seen_paths.add(path.casefold())
+        skin_pack_references.append({"path": path, "sha256": digest})
     return (
         package_id,
         package_version,
         {"path": manifest_path, "sha256": manifest_digest},
         assets_value,
+        skin_pack_references,
     )
 
 
@@ -818,6 +939,403 @@ def _validate_theme_manifest(value: dict[str, JSONValue]) -> None:
                         f"metadata.keywords[{index}] must not be empty.",
                     )
     _reject_executable_content(value)
+
+
+def _validate_skin_pack(value: dict[str, JSONValue]) -> None:
+    _reject_executable_content(value)
+    try:
+        _validate_skin_pack_contract(value)
+    except RuntimeServiceError as error:
+        if error.code in {
+            "theme_package_incompatible",
+            "theme_package_executable_content",
+            "theme_package_skin_pack_schema_invalid",
+        }:
+            raise
+        raise RuntimeServiceError(
+            "theme_package_skin_pack_schema_invalid",
+            f"SkinPack schema validation failed: {error}",
+        ) from error
+
+
+def _validate_skin_pack_contract(value: dict[str, JSONValue]) -> None:
+    required = {
+        "schemaVersion",
+        "packId",
+        "version",
+        "packageKind",
+        "displayName",
+        "compatibility",
+        "assets",
+        "skins",
+    }
+    optional = {"$schema", "description", "dependencies", "license", "author"}
+    _strict_fields(value, required, optional, "SkinPack")
+    if value["schemaVersion"] != 1:
+        raise RuntimeServiceError(
+            "theme_package_skin_pack_schema_invalid",
+            "SkinPack schemaVersion is not supported.",
+        )
+    _namespaced_id(value["packId"], "SkinPack.packId")
+    _semver(value["version"], "SkinPack.version")
+    if value["packageKind"] not in {"skin-pack", "single-skin"}:
+        _skin_pack_invalid("SkinPack.packageKind is invalid.")
+    _bounded_string(value["displayName"], "SkinPack.displayName", 120)
+    if "description" in value:
+        _bounded_string(value["description"], "SkinPack.description", 2000)
+    compatibility = _object(value["compatibility"], "SkinPack.compatibility")
+    _strict_fields(compatibility, {"themeEngine"}, {"cosmos"}, "SkinPack.compatibility")
+    if not _version_satisfies(
+        THEME_ENGINE_VERSION,
+        _version_range(compatibility["themeEngine"], "SkinPack.compatibility.themeEngine"),
+    ):
+        raise RuntimeServiceError(
+            "theme_package_incompatible",
+            f"SkinPack is incompatible with Theme Engine {THEME_ENGINE_VERSION}.",
+        )
+    if "cosmos" in compatibility:
+        _version_range(compatibility["cosmos"], "SkinPack.compatibility.cosmos")
+    if "dependencies" in value:
+        _versioned_refs(value["dependencies"], "SkinPack.dependencies")
+    assets = _list(value["assets"], "SkinPack.assets", maximum=4096)
+    for index, asset in enumerate(assets):
+        _validate_skin_asset(_object(asset, f"SkinPack.assets[{index}]"), index)
+    skins = _list(value["skins"], "SkinPack.skins", minimum=1, maximum=4096)
+    if value["packageKind"] == "single-skin" and len(skins) != 1:
+        _skin_pack_invalid("single-skin packages must contain exactly one Skin.")
+    for index, skin in enumerate(skins):
+        _validate_skin(_object(skin, f"SkinPack.skins[{index}]"), index)
+    for field, maximum in (("license", 200), ("author", 120), ("$schema", 2000)):
+        if field in value:
+            _bounded_string(value[field], f"SkinPack.{field}", maximum)
+
+
+def _validate_skin_asset(value: dict[str, JSONValue], index: int) -> None:
+    required = {
+        "assetId",
+        "kind",
+        "format",
+        "mimeType",
+        "path",
+        "sha256",
+        "byteSize",
+        "width",
+        "height",
+    }
+    optional = {
+        "colorSpace",
+        "alpha",
+        "density",
+        "accessibilityDescription",
+        "media",
+    }
+    field = f"SkinPack.assets[{index}]"
+    _strict_fields(value, required, optional, field)
+    _namespaced_id(value["assetId"], f"{field}.assetId")
+    kind = _enum(value["kind"], {"image", "vector", "video"}, f"{field}.kind")
+    format_value = _enum(value["format"], {"png", "webp", "svg", "webm", "mp4"}, f"{field}.format")
+    mime_type = _enum(
+        value["mimeType"],
+        {"image/png", "image/webp", "image/svg+xml", "video/webm", "video/mp4"},
+        f"{field}.mimeType",
+    )
+    _validate_archive_path(_string(value["path"], f"{field}.path"), False)
+    _digest(value["sha256"], f"{field}.sha256")
+    _integer(value["byteSize"], f"{field}.byteSize", 1, 64 * 1024 * 1024)
+    _integer(value["width"], f"{field}.width", 1, 8192)
+    _integer(value["height"], f"{field}.height", 1, 8192)
+    expected = {
+        "png": ("image", "image/png"),
+        "webp": ("image", "image/webp"),
+        "svg": ("vector", "image/svg+xml"),
+        "webm": ("video", "video/webm"),
+        "mp4": ("video", "video/mp4"),
+    }[format_value]
+    if (kind, mime_type) != expected:
+        _skin_pack_invalid(f"{field} media kind, format and MIME type do not agree.")
+    if kind != "video" and int(value["byteSize"]) > 16 * 1024 * 1024:
+        _skin_pack_invalid(f"{field}.byteSize exceeds the static asset limit.")
+    if "colorSpace" in value:
+        _enum(value["colorSpace"], {"srgb", "display-p3", "unknown"}, f"{field}.colorSpace")
+    if "alpha" in value and not isinstance(value["alpha"], bool):
+        _skin_pack_invalid(f"{field}.alpha must be a boolean.")
+    if "density" in value:
+        _number(value["density"], f"{field}.density", minimum=0, maximum=8, exclusive_minimum=True)
+    if "accessibilityDescription" in value:
+        _bounded_string(value["accessibilityDescription"], f"{field}.accessibilityDescription", 500)
+    if kind == "video":
+        _validate_skin_media(_object(value.get("media"), f"{field}.media"), field)
+    elif "media" in value:
+        _skin_pack_invalid(f"{field}.media is valid only for video assets.")
+
+
+def _validate_skin_media(value: dict[str, JSONValue], field: str) -> None:
+    required = {
+        "posterAssetId",
+        "reducedMotionAssetId",
+        "loop",
+        "autoplay",
+        "muted",
+        "playbackRate",
+        "lazyLoad",
+    }
+    _strict_fields(value, required, set(), f"{field}.media")
+    _namespaced_id(value["posterAssetId"], f"{field}.media.posterAssetId")
+    _namespaced_id(value["reducedMotionAssetId"], f"{field}.media.reducedMotionAssetId")
+    for name in ("loop", "autoplay", "muted"):
+        if not isinstance(value[name], bool):
+            _skin_pack_invalid(f"{field}.media.{name} must be a boolean.")
+    _number(value["playbackRate"], f"{field}.media.playbackRate", minimum=0.25, maximum=4)
+    _enum(value["lazyLoad"], {"eager", "viewport", "on-demand"}, f"{field}.media.lazyLoad")
+    if value["autoplay"] is True and value["muted"] is not True:
+        _skin_pack_invalid(f"{field}.media autoplay requires muted playback.")
+
+
+def _validate_skin(value: dict[str, JSONValue], index: int) -> None:
+    required = {
+        "skinId",
+        "version",
+        "displayName",
+        "target",
+        "assetBindings",
+        "tokens",
+        "materials",
+        "stateVariants",
+    }
+    optional = {"systemTerms", "boundsOverrides", "animations"}
+    field = f"SkinPack.skins[{index}]"
+    _strict_fields(value, required, optional, field)
+    _namespaced_id(value["skinId"], f"{field}.skinId")
+    _semver(value["version"], f"{field}.version")
+    _bounded_string(value["displayName"], f"{field}.displayName", 120)
+    _validate_skin_target(_object(value["target"], f"{field}.target"), field)
+    bindings = _list(value["assetBindings"], f"{field}.assetBindings", maximum=512)
+    for binding_index, binding in enumerate(bindings):
+        _validate_asset_binding(_object(binding, f"{field}.assetBindings[{binding_index}]"), field)
+    _tokens(value["tokens"])
+    materials = _list(value["materials"], f"{field}.materials", maximum=128)
+    for material_index, material in enumerate(materials):
+        _validate_material(_object(material, f"{field}.materials[{material_index}]"), field)
+    variants = _list(value["stateVariants"], f"{field}.stateVariants", maximum=128)
+    for variant_index, variant in enumerate(variants):
+        _validate_state_variant(_object(variant, f"{field}.stateVariants[{variant_index}]"), field)
+    if "systemTerms" in value:
+        _system_terms(value["systemTerms"])
+    if "boundsOverrides" in value:
+        for bound_index, bound in enumerate(_list(value["boundsOverrides"], f"{field}.boundsOverrides")):
+            _validate_bounds_override(_object(bound, f"{field}.boundsOverrides[{bound_index}]"), field)
+    if "animations" in value:
+        for animation_index, animation in enumerate(_list(value["animations"], f"{field}.animations")):
+            _validate_animation(_object(animation, f"{field}.animations[{animation_index}]"), field)
+
+
+def _validate_skin_target(value: dict[str, JSONValue], field: str) -> None:
+    _strict_fields(
+        value, {"presentationGroup"}, {"templateRef", "rendererRef", "targetRoles"}, f"{field}.target"
+    )
+    _enum(value["presentationGroup"], _PRESENTATION_GROUPS, f"{field}.target.presentationGroup")
+    for name in ("templateRef", "rendererRef"):
+        if name in value:
+            _versioned_ref(value[name], f"{field}.target.{name}")
+    if "targetRoles" in value:
+        roles = _list(value["targetRoles"], f"{field}.target.targetRoles")
+        _unique_namespaced_ids(roles, f"{field}.target.targetRoles")
+
+
+def _validate_asset_binding(value: dict[str, JSONValue], field: str) -> None:
+    required = {"bindingId", "slotId", "assetId"}
+    optional = {"fit", "alignment", "opacity", "tint", "states"}
+    _strict_fields(value, required, optional, f"{field}.assetBinding")
+    for name in required:
+        _namespaced_id(value[name], f"{field}.assetBinding.{name}")
+    if "fit" in value:
+        _enum(value["fit"], {"contain", "cover", "fill", "none"}, f"{field}.assetBinding.fit")
+    if "alignment" in value:
+        _enum(
+            value["alignment"],
+            {
+                "center",
+                "top",
+                "right",
+                "bottom",
+                "left",
+                "top-left",
+                "top-right",
+                "bottom-left",
+                "bottom-right",
+            },
+            f"{field}.assetBinding.alignment",
+        )
+    if "opacity" in value:
+        _number(value["opacity"], f"{field}.assetBinding.opacity", minimum=0, maximum=1)
+    if "tint" in value:
+        _bounded_string(value["tint"], f"{field}.assetBinding.tint", 100)
+    if "states" in value:
+        _unique_symbols(
+            _list(value["states"], f"{field}.assetBinding.states"), f"{field}.assetBinding.states"
+        )
+
+
+def _validate_material(value: dict[str, JSONValue], field: str) -> None:
+    _strict_fields(value, {"channelId", "parameters"}, set(), f"{field}.material")
+    _namespaced_id(value["channelId"], f"{field}.material.channelId")
+    parameters = _object(value["parameters"], f"{field}.material.parameters")
+    if len(parameters) > 128:
+        _skin_pack_invalid(f"{field}.material.parameters exceeds 128 properties.")
+    for name, parameter in parameters.items():
+        _namespaced_id(name, f"{field}.material.parameters key")
+        _validate_json_value(parameter, f"{field}.material.parameters.{name}")
+
+
+def _validate_state_variant(value: dict[str, JSONValue], field: str) -> None:
+    optional = {"assetBindingIds", "tokenOverrides", "materialOverrides", "animationId"}
+    _strict_fields(value, {"stateId"}, optional, f"{field}.stateVariant")
+    _symbol(value["stateId"], f"{field}.stateVariant.stateId")
+    if "assetBindingIds" in value:
+        _unique_namespaced_ids(
+            _list(value["assetBindingIds"], f"{field}.stateVariant.assetBindingIds"),
+            f"{field}.stateVariant.assetBindingIds",
+        )
+    if "tokenOverrides" in value:
+        _tokens(value["tokenOverrides"])
+    if "materialOverrides" in value:
+        for material in _list(value["materialOverrides"], f"{field}.stateVariant.materialOverrides"):
+            _validate_material(_object(material, f"{field}.stateVariant.materialOverride"), field)
+    if "animationId" in value:
+        _namespaced_id(value["animationId"], f"{field}.stateVariant.animationId")
+
+
+def _validate_skin_pack_asset_closure(
+    skin_pack: dict[str, JSONValue],
+    available_assets: dict[str, dict[str, JSONValue]],
+) -> None:
+    declared_assets = _list(skin_pack["assets"], "SkinPack.assets")
+    local_assets: dict[str, dict[str, JSONValue]] = {}
+    for index, value in enumerate(declared_assets):
+        asset = _object(value, f"SkinPack.assets[{index}]")
+        asset_id = str(asset["assetId"])
+        if asset_id in local_assets:
+            _skin_pack_invalid(f'SkinPack declares duplicate assetId "{asset_id}".')
+        visual = available_assets.get(asset_id)
+        if visual is None:
+            raise RuntimeServiceError(
+                "theme_package_skin_pack_asset_missing",
+                f'SkinPack asset "{asset_id}" is not declared in the package Asset Catalog batch.',
+            )
+        comparable = {
+            "kind": "kind",
+            "format": "format",
+            "mimeType": "mimeType",
+            "path": "path",
+            "sha256": "sha256",
+            "byteSize": "byteSize",
+            "width": "width",
+            "height": "height",
+            "colorSpace": "colorSpace",
+            "alpha": "alpha",
+            "density": "density",
+            "accessibilityDescription": "accessibilityDescription",
+        }
+        if any(asset.get(left) != visual.get(right) for left, right in comparable.items()):
+            raise RuntimeServiceError(
+                "theme_package_skin_pack_asset_mismatch",
+                f'SkinPack asset "{asset_id}" does not match its validated Visual Asset.',
+            )
+        local_assets[asset_id] = asset
+
+    for skin_value in _list(skin_pack["skins"], "SkinPack.skins"):
+        skin = _object(skin_value, "SkinPack.skin")
+        binding_ids: set[str] = set()
+        for binding_value in _list(skin["assetBindings"], "Skin.assetBindings"):
+            binding = _object(binding_value, "Skin.assetBinding")
+            binding_id = str(binding["bindingId"])
+            if binding_id in binding_ids:
+                _skin_pack_invalid(f'Skin "{skin["skinId"]}" contains duplicate binding IDs.')
+            binding_ids.add(binding_id)
+            if str(binding["assetId"]) not in local_assets:
+                raise RuntimeServiceError(
+                    "theme_package_skin_pack_asset_missing",
+                    f'Skin binding "{binding_id}" references an undeclared package asset.',
+                )
+        for variant_value in _list(skin["stateVariants"], "Skin.stateVariants"):
+            variant = _object(variant_value, "Skin.stateVariant")
+            for binding_id in _list(variant.get("assetBindingIds", []), "StateVariant.assetBindingIds"):
+                if binding_id not in binding_ids:
+                    _skin_pack_invalid(f'StateVariant references unknown binding "{binding_id}".')
+    for asset in local_assets.values():
+        media = asset.get("media")
+        if isinstance(media, dict):
+            for name in ("posterAssetId", "reducedMotionAssetId"):
+                if str(media[name]) not in local_assets:
+                    raise RuntimeServiceError(
+                        "theme_package_skin_pack_asset_missing",
+                        f'Video fallback "{media[name]}" is not declared by the SkinPack.',
+                    )
+
+
+def _validate_bounds_override(value: dict[str, JSONValue], field: str) -> None:
+    _strict_fields(value, {"boundsId", "role", "shape"}, set(), f"{field}.boundsOverride")
+    _namespaced_id(value["boundsId"], f"{field}.boundsOverride.boundsId")
+    _enum(value["role"], {"visual", "effect", "label"}, f"{field}.boundsOverride.role")
+    _validate_shape(_object(value["shape"], f"{field}.boundsOverride.shape"), field)
+
+
+def _validate_shape(value: dict[str, JSONValue], field: str) -> None:
+    shape_type = value.get("type")
+    if shape_type == "rect":
+        _strict_fields(value, {"type", "x", "y", "width", "height"}, {"radius"}, f"{field}.shape")
+        for name in ("x", "y"):
+            _number(value[name], f"{field}.shape.{name}")
+        for name in ("width", "height"):
+            _number(value[name], f"{field}.shape.{name}", minimum=0, exclusive_minimum=True)
+        if "radius" in value:
+            _number(value["radius"], f"{field}.shape.radius", minimum=0)
+        return
+    if shape_type == "ellipse":
+        _strict_fields(value, {"type", "cx", "cy", "rx", "ry"}, set(), f"{field}.shape")
+        for name in ("cx", "cy"):
+            _number(value[name], f"{field}.shape.{name}")
+        for name in ("rx", "ry"):
+            _number(value[name], f"{field}.shape.{name}", minimum=0, exclusive_minimum=True)
+        return
+    if shape_type == "polygon":
+        _strict_fields(value, {"type", "points"}, set(), f"{field}.shape")
+        points = _list(value["points"], f"{field}.shape.points", minimum=3, maximum=128)
+        for point in points:
+            item = _object(point, f"{field}.shape.point")
+            _strict_fields(item, {"x", "y"}, set(), f"{field}.shape.point")
+            _number(item["x"], f"{field}.shape.point.x")
+            _number(item["y"], f"{field}.shape.point.y")
+        return
+    _skin_pack_invalid(f"{field}.shape has an unsupported type.")
+
+
+def _validate_animation(value: dict[str, JSONValue], field: str) -> None:
+    required = {"animationId", "durationMs", "iterations", "reducedMotion", "keyframes"}
+    optional = {"substituteAnimationId"}
+    _strict_fields(value, required, optional, f"{field}.animation")
+    _namespaced_id(value["animationId"], f"{field}.animation.animationId")
+    _integer(value["durationMs"], f"{field}.animation.durationMs", 0, 600000)
+    iterations = value["iterations"]
+    if iterations != "infinite":
+        _integer(iterations, f"{field}.animation.iterations", 1, 1000)
+    reduced_motion = _enum(
+        value["reducedMotion"],
+        {"disable", "freeze-first", "freeze-last", "substitute"},
+        f"{field}.animation.reducedMotion",
+    )
+    if reduced_motion == "substitute":
+        _namespaced_id(value.get("substituteAnimationId"), f"{field}.animation.substituteAnimationId")
+    keyframes = _list(value["keyframes"], f"{field}.animation.keyframes", minimum=2, maximum=128)
+    for keyframe in keyframes:
+        item = _object(keyframe, f"{field}.animation.keyframe")
+        _strict_fields(item, {"offset", "values"}, set(), f"{field}.animation.keyframe")
+        _number(item["offset"], f"{field}.animation.keyframe.offset", minimum=0, maximum=1)
+        values = _object(item["values"], f"{field}.animation.keyframe.values")
+        if len(values) > 32 or any(
+            not isinstance(entry, (str, int, float, bool)) or entry is None for entry in values.values()
+        ):
+            _skin_pack_invalid(f"{field}.animation keyframe values are invalid.")
 
 
 def _tokens(value: JSONValue) -> None:
@@ -1079,6 +1597,95 @@ def _object(value: object, field: str) -> dict[str, JSONValue]:
             f"{field} must be an object.",
         )
     return value
+
+
+def _list(
+    value: object,
+    field: str,
+    *,
+    minimum: int = 0,
+    maximum: int | None = None,
+) -> list[JSONValue]:
+    if not isinstance(value, list) or len(value) < minimum or (maximum is not None and len(value) > maximum):
+        _skin_pack_invalid(f"{field} must be an array with an allowed item count.")
+    return value
+
+
+def _enum(value: object, allowed: set[str], field: str) -> str:
+    if not isinstance(value, str) or value not in allowed:
+        _skin_pack_invalid(f"{field} contains an unsupported value.")
+    return value
+
+
+def _integer(value: object, field: str, minimum: int, maximum: int) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or not minimum <= value <= maximum:
+        _skin_pack_invalid(f"{field} must be an integer in the allowed range.")
+    return value
+
+
+def _number(
+    value: object,
+    field: str,
+    *,
+    minimum: float | None = None,
+    maximum: float | None = None,
+    exclusive_minimum: bool = False,
+) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        _skin_pack_invalid(f"{field} must be a number.")
+    number = float(value)
+    if minimum is not None and (number < minimum or (exclusive_minimum and number == minimum)):
+        _skin_pack_invalid(f"{field} is below the allowed range.")
+    if maximum is not None and number > maximum:
+        _skin_pack_invalid(f"{field} is above the allowed range.")
+    return number
+
+
+def _symbol(value: object, field: str) -> str:
+    text = _string(value, field)
+    if len(text) > 120 or re.fullmatch(r"^[a-z0-9]+(?:[._-][a-z0-9]+)*$", text) is None:
+        _skin_pack_invalid(f"{field} must be a symbol identifier.")
+    return text
+
+
+def _unique_namespaced_ids(values: list[JSONValue], field: str) -> None:
+    resolved = [_namespaced_id(value, f"{field} item") for value in values]
+    if len(set(resolved)) != len(resolved):
+        _skin_pack_invalid(f"{field} must contain unique values.")
+
+
+def _unique_symbols(values: list[JSONValue], field: str) -> None:
+    resolved = [_symbol(value, f"{field} item") for value in values]
+    if len(set(resolved)) != len(resolved):
+        _skin_pack_invalid(f"{field} must contain unique values.")
+
+
+def _validate_json_value(value: JSONValue, field: str, depth: int = 0) -> None:
+    if depth > 16:
+        _skin_pack_invalid(f"{field} exceeds the maximum JSON nesting depth.")
+    if value is None or isinstance(value, (bool, int, float)):
+        return
+    if isinstance(value, str):
+        if len(value) > 1000:
+            _skin_pack_invalid(f"{field} exceeds 1000 characters.")
+        return
+    if isinstance(value, list):
+        if len(value) > 128:
+            _skin_pack_invalid(f"{field} exceeds 128 items.")
+        for index, entry in enumerate(value):
+            _validate_json_value(entry, f"{field}[{index}]", depth + 1)
+        return
+    if isinstance(value, dict):
+        if len(value) > 128 or any(not isinstance(key, str) for key in value):
+            _skin_pack_invalid(f"{field} contains an invalid JSON object.")
+        for key, entry in value.items():
+            _validate_json_value(entry, f"{field}.{key}", depth + 1)
+        return
+    _skin_pack_invalid(f"{field} contains a non-JSON value.")
+
+
+def _skin_pack_invalid(message: str) -> None:
+    raise RuntimeServiceError("theme_package_skin_pack_schema_invalid", message)
 
 
 def _required_string(value: dict[str, JSONValue], key: str, field: str) -> str:
