@@ -17,7 +17,7 @@ from cosmos import __version__
 from cosmos.bootstrap import CosmosRuntime
 from cosmos.config import RuntimeSettings
 from cosmos.runtime import RuntimeContext
-from cosmos.services import RuntimeServiceError
+from cosmos.services import RuntimeServiceError, ThemePackageImportError
 
 THEME_RUNTIME_STATE_SCOPE = "cosmos.theme"
 THEME_RUNTIME_STATE_KEY = "activation"
@@ -89,6 +89,60 @@ async def theme_packages(request: Request) -> JSONResponse:
         )
     except RuntimeServiceError as error:
         return _service_error(error)
+
+
+async def theme_package_import(request: Request) -> JSONResponse:
+    service = request.app.state.runtime.theme_package_import
+    try:
+        media_type = request.headers.get("content-type", "").partition(";")[0].strip().lower()
+        if media_type != "application/zip":
+            raise ThemePackageImportError(
+                "theme_package_media_type_invalid",
+                'Theme Package import requires Content-Type "application/zip".',
+            )
+        content_length = request.headers.get("content-length")
+        if content_length is not None:
+            try:
+                declared_length = int(content_length)
+            except ValueError as error:
+                raise ThemePackageImportError(
+                    "theme_package_request_invalid",
+                    "Theme Package Content-Length is invalid.",
+                ) from error
+            if declared_length < 0 or declared_length > service.maximum_archive_bytes:
+                raise ThemePackageImportError(
+                    "theme_package_too_large",
+                    "Theme Package archive exceeds the intake limit.",
+                )
+
+        chunks: list[bytes] = []
+        received = 0
+        async for chunk in request.stream():
+            received += len(chunk)
+            if received > service.maximum_archive_bytes:
+                raise ThemePackageImportError(
+                    "theme_package_too_large",
+                    "Theme Package archive exceeds the intake limit.",
+                )
+            chunks.append(chunk)
+        if received == 0:
+            raise ThemePackageImportError(
+                "theme_package_request_invalid",
+                "Theme Package archive is empty.",
+            )
+        return JSONResponse(
+            service.import_archive(b"".join(chunks), _local_owner_context()),
+            status_code=201,
+        )
+    except ThemePackageImportError as error:
+        status_code = 409 if error.code == "theme_package_conflict" else 422
+        if error.code in {
+            "theme_package_entry_too_large",
+            "theme_package_too_large",
+            "theme_package_too_many_files",
+        }:
+            status_code = 413
+        return JSONResponse(error.result(), status_code=status_code)
 
 
 async def update_camera(request: Request) -> JSONResponse:
@@ -557,6 +611,7 @@ def create_app(
             Route("/base", base_snapshot),
             Route("/runtime-state/theme", theme_runtime_state, methods=["GET", "PUT"]),
             Route("/theme-packages", theme_packages, methods=["GET", "POST"]),
+            Route("/theme-packages/import", theme_package_import, methods=["POST"]),
             Route("/cosmos/camera", update_camera, methods=["PUT"]),
             Route("/cosmos/selection", update_selection, methods=["PUT"]),
             Route("/objects/{object_id:str}/position", move_node, methods=["PUT"]),

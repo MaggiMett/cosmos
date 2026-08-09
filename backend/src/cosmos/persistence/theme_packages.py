@@ -56,3 +56,15 @@ class ThemePackageRepository:
             }
             for row in rows
         )
+
+    def exists(self, package_id: str, package_version: str) -> bool:
+        with self._persistence.connect() as connection:
+            row = connection.execute(
+                """
+                SELECT 1
+                FROM theme_packages
+                WHERE package_id = ? AND package_version = ?
+                """,
+                (package_id, package_version),
+            ).fetchone()
+        return row is not None

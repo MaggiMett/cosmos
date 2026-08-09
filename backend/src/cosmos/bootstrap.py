@@ -33,6 +33,7 @@ from cosmos.services import (
     ResourceService,
     ReviewService,
     TagService,
+    ThemePackageImportService,
     ThemePackageService,
     ToolService,
     WorkspaceService,
@@ -72,6 +73,7 @@ class CosmosRuntime:
     relationships: RelationshipService
     runtime_state: RuntimeStateRepository
     theme_packages: ThemePackageService
+    theme_package_import: ThemePackageImportService
     companion: CompanionService
     base: BaseService
     tools: ToolService
@@ -105,9 +107,14 @@ class CosmosRuntime:
         companion = CompanionService(objects)
         base = BaseService(objects, companion)
         runtime_state = RuntimeStateRepository(persistence)
-        theme_packages = ThemePackageService(
+        theme_package_repository = ThemePackageRepository(persistence)
+        asset_catalog_repository = AssetCatalogRepository(persistence)
+        theme_packages = ThemePackageService(persistence, theme_package_repository)
+        theme_package_import = ThemePackageImportService(
             persistence,
-            ThemePackageRepository(persistence),
+            theme_package_repository,
+            asset_catalog_repository,
+            settings.runtime_path,
         )
         tools = ToolService(objects, ToolRuntime(objects.contract), events)
         workspaces = WorkspaceService(objects, runtime_state, tools, events)
@@ -133,6 +140,7 @@ class CosmosRuntime:
             relationships=relationships,
             runtime_state=runtime_state,
             theme_packages=theme_packages,
+            theme_package_import=theme_package_import,
             companion=companion,
             base=base,
             tools=tools,
@@ -150,7 +158,7 @@ class CosmosRuntime:
                 objects,
                 events,
                 persistence,
-                AssetCatalogRepository(persistence),
+                asset_catalog_repository,
                 settings.runtime_path,
             ),
             knowledge=knowledge,

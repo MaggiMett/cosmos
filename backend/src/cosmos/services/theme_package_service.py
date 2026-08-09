@@ -48,7 +48,7 @@ class ThemePackageService:
         context: RuntimeContext,
     ) -> dict[str, JSONValue]:
         require_permission(context.permissions, "resources.write")
-        record = _validate_install_record(value)
+        record = validate_prevalidated_install_record(value)
         installed_at = datetime.now(UTC)
         try:
             with self._persistence.connect() as connection:
@@ -77,7 +77,7 @@ def canonical_manifest_digest(manifest: dict[str, JSONValue]) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
-def _validate_install_record(value: object) -> dict[str, JSONValue]:
+def validate_prevalidated_install_record(value: object) -> dict[str, JSONValue]:
     payload = _object(value, "Theme Package")
     if set(payload) != _INPUT_FIELDS:
         _invalid("Theme Package install record has missing or unsupported fields.")

@@ -96,3 +96,28 @@ class AssetCatalogRepository:
             "visualAsset": json.loads(row["asset_json"]),
             "resourcePath": row["resource_path"],
         }
+
+    def get_catalog_entry(self, entry_id: str, version: str) -> dict[str, object] | None:
+        with self._persistence.connect() as connection:
+            row = connection.execute(
+                """
+                SELECT
+                    visual_assets.asset_json,
+                    visual_assets.resource_path,
+                    asset_catalog_entries.entry_json
+                FROM asset_catalog_entries
+                JOIN visual_assets
+                  ON visual_assets.asset_id = asset_catalog_entries.visual_asset_id
+                 AND visual_assets.asset_version = asset_catalog_entries.visual_asset_version
+                WHERE asset_catalog_entries.entry_id = ?
+                  AND asset_catalog_entries.entry_version = ?
+                """,
+                (entry_id, version),
+            ).fetchone()
+        if row is None:
+            return None
+        return {
+            "visualAsset": json.loads(row["asset_json"]),
+            "catalogEntry": json.loads(row["entry_json"]),
+            "resourcePath": row["resource_path"],
+        }

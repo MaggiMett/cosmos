@@ -17,6 +17,11 @@ from cosmos.services.resource_service import ResourceService
 from cosmos.services.review_service import ReviewService
 from cosmos.services.schemas import create_version_one_object_contract
 from cosmos.services.tag_service import TagService
+from cosmos.services.theme_package_import_service import (
+    ThemePackageImportError,
+    ThemePackageImportLimits,
+    ThemePackageImportService,
+)
 from cosmos.services.theme_package_service import ThemePackageService
 from cosmos.services.tool_service import ToolService
 from cosmos.services.workspace_service import WorkspaceService
@@ -47,6 +52,9 @@ __all__ = [
     "ReviewService",
     "RuntimeServiceError",
     "TagService",
+    "ThemePackageImportError",
+    "ThemePackageImportLimits",
+    "ThemePackageImportService",
     "ThemePackageService",
     "ToolService",
     "WorkspaceService",
