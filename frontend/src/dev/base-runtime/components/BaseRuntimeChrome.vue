@@ -1,6 +1,7 @@
 <template>
   <header class="base-runtime-chrome" data-testid="base-runtime-chrome">
     <button
+      v-if="!sceneOwnsFunctionControls"
       type="button"
       class="base-runtime-chrome__brand"
       aria-label="Return to Cosmos"
@@ -9,11 +10,19 @@
       <span aria-hidden="true">✦</span>
       <strong>COSMOS</strong>
     </button>
+    <div
+      v-else
+      class="base-runtime-chrome__brand base-runtime-chrome__brand--passive"
+      aria-hidden="true"
+    >
+      <span>✦</span>
+      <strong>COSMOS</strong>
+    </div>
 
     <CosmosNavigation
       :current-location="currentLocation"
       :left-neighbor="null"
-      :right-neighbor="rightNeighbor"
+      :right-neighbor="sceneOwnsFunctionControls ? null : rightNeighbor"
       :quick-travel-open="false"
       @travel="$emit('travel-room', $event)"
     />
@@ -22,6 +31,7 @@
       <span><i class="base-runtime-chrome__dot base-runtime-chrome__dot--synced" />Local · Synced</span>
       <span><i class="base-runtime-chrome__dot" />{{ roomStatus }}</span>
       <button
+        v-if="!sceneOwnsFunctionControls"
         type="button"
         :aria-label="companionLabel"
         :disabled="!companion"
@@ -30,6 +40,14 @@
         <CompanionAvatar v-if="companion" mode="compact" />
         <span v-else aria-hidden="true">○</span>
       </button>
+      <span
+        v-else
+        class="base-runtime-chrome__companion-visual"
+        aria-hidden="true"
+      >
+        <CompanionAvatar v-if="companion" mode="compact" />
+        <span v-else>○</span>
+      </span>
     </div>
   </header>
 </template>
@@ -41,12 +59,15 @@ import CosmosNavigation from "../../../components/cosmos/CosmosNavigation.vue";
 import CompanionAvatar from "../../../components/entities/CompanionAvatar.vue";
 import type { BaseCompanionPresentation } from "../baseRuntimeProjection";
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   currentLocation: string;
   roomCount: number;
   companion: Readonly<BaseCompanionPresentation> | null;
   rightNeighbor: Readonly<{ objectId: string; displayName: string }> | null;
-}>();
+  sceneOwnsFunctionControls?: boolean;
+}>(), {
+  sceneOwnsFunctionControls: false,
+});
 
 defineEmits<{
   "travel-room": [roomId: string];
@@ -91,6 +112,11 @@ const companionLabel = computed(() =>
   cursor: pointer;
   font: inherit;
   gap: 16px;
+}
+
+.base-runtime-chrome__brand--passive {
+  cursor: default;
+  pointer-events: none;
 }
 
 .base-runtime-chrome__brand:focus-visible {
@@ -150,6 +176,17 @@ const companionLabel = computed(() =>
   border-radius: 50%;
   background: rgba(5, 10, 16, 0.76);
   cursor: pointer;
+}
+
+.base-runtime-chrome__status > .base-runtime-chrome__companion-visual {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  padding: 7px;
+  place-items: center;
+  border: 1px solid var(--cosmos-color-border-strong);
+  border-radius: 50%;
+  background: rgba(5, 10, 16, 0.76);
 }
 
 .base-runtime-chrome__status button:disabled {

@@ -4,10 +4,22 @@
     :aria-label="viewLabel"
     :aria-hidden="backgroundOnly ? 'true' : undefined"
     :inert="backgroundOnly || undefined"
+    :data-room-renderer="compositionActive ? 'composition' : 'presenter'"
+    :data-room-renderer-fallback="compositionFallbackReason"
     data-testid="base-runtime-view"
   >
+    <RoomCompositionRuntimeScene
+      v-if="presentation.phase === 'success' && compositionActive && compositionResult?.status === 'active'"
+      :snapshot="compositionResult.shadow.snapshot"
+      :interactions="compositionResult.interactions.actual"
+      :room-name="presentation.room.displayName"
+      :selected-object-id="baseState.selectedObjectId"
+      :background-only="backgroundOnly"
+      @activate="activateCompositionTarget"
+      @open-context-menu="openObjectContextMenu"
+    />
     <BaseRoomScene
-      v-if="presentation.phase === 'success'"
+      v-else-if="presentation.phase === 'success'"
       :room="presentation.room"
       :selected-object-id="baseState.selectedObjectId"
       @travel-room="travelToRoom"
@@ -38,6 +50,7 @@
       :room-count="presentation.roomCount"
       :companion="presentation.phase === 'success' ? presentation.room.companion : null"
       :right-neighbor="rightNeighbor"
+      :scene-owns-function-controls="compositionActive"
       @travel-room="travelToRoom"
       @open-companion="openCompanion"
       @close-base="closeBase"
@@ -76,7 +89,15 @@ import BaseCaptureWindow from "./components/BaseCaptureWindow.vue";
 import BaseKnowledgeWindow from "./components/BaseKnowledgeWindow.vue";
 import BaseRoomScene from "./components/BaseRoomScene.vue";
 import BaseRuntimeChrome from "./components/BaseRuntimeChrome.vue";
+import RoomCompositionRuntimeScene from "./components/RoomCompositionRuntimeScene.vue";
+import {
+  configuredBaseRoomRenderer,
+  type BaseRoomRenderer,
+} from "./baseRoomRenderer";
+import { resolveBaseRoomCompositionPresenter } from "./baseRoomCompositionPresenter";
+import { forwardRoomCompositionTarget } from "./baseRoomCompositionInteractions";
 import type { BaseWorkspaceSlotPresentation } from "./baseRuntimeProjection";
+import type { RoomShadowInteractionTarget } from "../room-composition-preview/roomCompositionInteractionProjection";
 import {
   loadBaseRuntimeSnapshot,
   projectBaseRuntimeState,
@@ -93,9 +114,11 @@ import { scheduleBaseRoomShadowDiagnostics } from "./baseRoomShadowDiagnostics";
 const props = withDefaults(defineProps<{
   navigationScope?: BaseNavigationScope;
   backgroundOnly?: boolean;
+  roomRenderer?: BaseRoomRenderer;
 }>(), {
   navigationScope: "development",
   backgroundOnly: false,
+  roomRenderer: configuredBaseRoomRenderer,
 });
 
 const runtime = useCosmosRuntime();
@@ -121,6 +144,26 @@ const presentation = computed(() =>
     baseState.error,
     requestedRoomId.value,
   ),
+);
+const compositionResult = computed(() => {
+  const state = presentation.value;
+  const snapshot = baseState.snapshot;
+  if (props.roomRenderer !== "composition" || state.phase !== "success" || !snapshot) {
+    return null;
+  }
+  return resolveBaseRoomCompositionPresenter(
+    true,
+    snapshot,
+    state.room.objectId,
+  );
+});
+const compositionActive = computed(
+  () => compositionResult.value?.status === "active",
+);
+const compositionFallbackReason = computed(() =>
+  props.roomRenderer === "composition" && compositionResult.value?.status === "fallback"
+    ? compositionResult.value.reason
+    : undefined,
 );
 const viewLabel = computed(() =>
   presentation.value.phase === "success"
@@ -156,6 +199,25 @@ function closeBase() {
 function openWorkspace(slot: Readonly<BaseWorkspaceSlotPresentation>) {
   if (props.backgroundOnly) return;
   void navigateToBaseWorkspace(router, runtime.base, slot);
+}
+
+function activateCompositionTarget(
+  target: Readonly<RoomShadowInteractionTarget>,
+): void {
+  if (props.backgroundOnly || !target.available) return;
+  const state = presentation.value;
+  if (state.phase !== "success") return;
+  forwardRoomCompositionTarget(target, {
+    openWorkspace: (slotId) => {
+      const slot = state.room.workspaceSlots.find(
+        (candidate) => candidate.slotObjectId === slotId,
+      );
+      if (slot) openWorkspace(slot);
+    },
+    travelRoom: travelToRoom,
+    openCompanion,
+    closeBase,
+  });
 }
 
 function openCompanion() {

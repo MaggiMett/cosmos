@@ -3,7 +3,7 @@ import {
   type BaseRoomPresentation,
 } from "../base-runtime/baseRuntimeProjection";
 import {
-  projectBaseMainRoomToRoomCompositionShadow,
+  projectBaseRoomToRoomCompositionShadow,
   type BaseRuntimeSnapshotReadModel,
   type BaseRuntimeShadowBinding,
 } from "../../theme-engine/baseRuntimeRoomShadowProjection";
@@ -115,12 +115,13 @@ export function projectRoomCompositionInteractions(
 /** Reuses the productive Base presenter projection and legacy parity geometry. */
 export function projectBasePresenterInteractionExpectations(
   snapshot: BaseRuntimeSnapshotReadModel,
+  roomId = snapshot.rooms.find((room) => room.slug === "main")?.objectId ?? "",
 ): Readonly<RoomCompositionInteractionProjection> {
-  const presenter = projectBaseRuntimeState("ready", snapshot, null);
+  const presenter = projectBaseRuntimeState("ready", snapshot, null, roomId);
   if (presenter.phase !== "success") {
     return freezeProjection([]);
   }
-  const compatibility = projectBaseMainRoomToRoomCompositionShadow(snapshot);
+  const compatibility = projectBaseRoomToRoomCompositionShadow(snapshot, roomId);
   const records = new Map(
     compatibility.compatibility.parity.objects.map((record) => [
       record.objectInstanceId,
@@ -166,8 +167,9 @@ export function createRoomCompositionInteractionDiagnostics(
   baseSnapshot: BaseRuntimeSnapshotReadModel,
   roomSnapshot: Readonly<ImmutableRoomSnapshot>,
   runtimeBindings: readonly Readonly<BaseRuntimeShadowBinding>[],
+  roomId = roomSnapshot.roomId,
 ): Readonly<RoomCompositionInteractionDiagnostics> {
-  const expected = projectBasePresenterInteractionExpectations(baseSnapshot);
+  const expected = projectBasePresenterInteractionExpectations(baseSnapshot, roomId);
   const semanticLabels = Object.fromEntries(
     expected.targets.map((target) => [target.containerInstanceId, target.semanticLabel]),
   );

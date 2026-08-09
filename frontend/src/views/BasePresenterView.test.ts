@@ -13,6 +13,7 @@ const legacySource = source("./BaseView.vue");
 const newSource = source("../dev/base-runtime/BaseRuntimeView.vue");
 const roomSource = source("../dev/base-runtime/components/BaseRoomScene.vue");
 const workspaceSource = source("./WorkspaceView.vue");
+const roomRendererSource = source("../dev/base-runtime/baseRoomRenderer.ts");
 
 describe("controlled Base presenter rollout", () => {
   it("promotes New when the variable is unset", () => {
@@ -30,6 +31,14 @@ describe("controlled Base presenter rollout", () => {
   it("uses Legacy only for the exact rollback value", () => {
     expect(resolveBasePresenter("legacy")).toBe("legacy");
     expect(resolveBasePresenter("LEGACY")).toBe("new");
+  });
+
+  it("keeps the Base presenter and Room renderer switches independent", () => {
+    expect(source("./basePresenter.ts")).toContain("VITE_BASE_PRESENTER");
+    expect(source("./basePresenter.ts")).not.toContain("VITE_BASE_ROOM_RENDERER");
+    expect(roomRendererSource).toContain("VITE_BASE_ROOM_RENDERER");
+    expect(roomRendererSource).not.toContain("VITE_BASE_PRESENTER");
+    expect(presenterSource).not.toContain("configuredBaseRoomRenderer");
   });
 
   it("compiles a narrow wrapper that keeps both presenters renderable", () => {

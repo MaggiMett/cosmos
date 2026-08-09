@@ -199,6 +199,7 @@ export {
   roomShadowSkinResolutionFixture,
 } from "./roomShadowFixtures";
 export {
+  runBaseRoomShadowMode,
   runBaseMainRoomShadowMode,
 } from "./roomShadowMode";
 export type {
@@ -208,6 +209,7 @@ export type {
 export {
   BaseRuntimeRoomShadowProjectionError,
   compareBaseRuntimeRoomShadowProjection,
+  projectBaseRoomToRoomCompositionShadow,
   projectBaseMainRoomToRoomCompositionShadow,
 } from "./baseRuntimeRoomShadowProjection";
 export type {
@@ -215,6 +217,8 @@ export type {
   BaseRuntimeCompanionBinding,
   BaseRuntimeMainRoomReference,
   BaseRuntimeMainRoomShadowProjection,
+  BaseRuntimeRoomReference,
+  BaseRuntimeRoomShadowProjection,
   BaseRuntimeRoomTransitionBinding,
   BaseRuntimeSnapshotReadModel,
   BaseRuntimeShadowBinding,

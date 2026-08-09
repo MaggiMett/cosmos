@@ -79,7 +79,7 @@ export type BaseRuntimeShadowBinding =
 
 export type BaseRuntimeShadowBindingKind = BaseRuntimeShadowBinding["kind"];
 
-export interface BaseRuntimeMainRoomReference {
+export interface BaseRuntimeRoomReference {
   baseObjectId: string;
   roomId: string;
   roomName: string;
@@ -87,11 +87,15 @@ export interface BaseRuntimeMainRoomReference {
   bindings: readonly Readonly<BaseRuntimeShadowBinding>[];
 }
 
-export interface BaseRuntimeMainRoomShadowProjection {
-  source: Readonly<BaseRuntimeMainRoomReference>;
+export type BaseRuntimeMainRoomReference = BaseRuntimeRoomReference;
+
+export interface BaseRuntimeRoomShadowProjection {
+  source: Readonly<BaseRuntimeRoomReference>;
   compatibility: Readonly<BaseRoomCompatibilityProjection>;
   runtimeBindings: readonly Readonly<BaseRuntimeShadowBinding>[];
 }
+
+export type BaseRuntimeMainRoomShadowProjection = BaseRuntimeRoomShadowProjection;
 
 export class BaseRuntimeRoomShadowProjectionError extends Error {
   readonly code = "base_runtime_room_shadow_projection_invalid";
@@ -100,6 +104,13 @@ export class BaseRuntimeRoomShadowProjectionError extends Error {
 interface BindingAssignment {
   record: CompatibilityBoundsRecord;
   binding: BaseRuntimeShadowBinding;
+  positionOffset: Readonly<{ x: number; y: number }>;
+}
+
+interface WorkspaceTemplateAssignment {
+  slot: ReadonlySnapshotValue<WorkspaceSlot>;
+  record: CompatibilityBoundsRecord;
+  positionOffset: Readonly<{ x: number; y: number }>;
 }
 
 /**
@@ -113,6 +124,20 @@ export function projectBaseMainRoomToRoomCompositionShadow(
   if (!room) {
     throw new BaseRuntimeRoomShadowProjectionError(
       "The Base Snapshot has no Main Room",
+    );
+  }
+
+  return projectBaseRoomToRoomCompositionShadow(snapshot, room.objectId);
+}
+
+export function projectBaseRoomToRoomCompositionShadow(
+  snapshot: BaseRuntimeSnapshotReadModel,
+  roomId: string,
+): Readonly<BaseRuntimeRoomShadowProjection> {
+  const room = snapshot.rooms.find((candidate) => candidate.objectId === roomId);
+  if (!room) {
+    throw new BaseRuntimeRoomShadowProjectionError(
+      `The Base Snapshot has no Room "${roomId}"`,
     );
   }
 
@@ -132,7 +157,7 @@ export function projectBaseMainRoomToRoomCompositionShadow(
       baseObjectId: snapshot.base.objectId,
       roomId: room.objectId,
       roomName: room.displayName,
-      petId: snapshot.pet?.objectId ?? null,
+      petId: room.slug === "main" ? snapshot.pet?.objectId ?? null : null,
       bindings: sourceBindings,
     },
     compatibility: projected,
@@ -142,7 +167,7 @@ export function projectBaseMainRoomToRoomCompositionShadow(
 
 /** Adds Runtime identity parity to the existing geometry/function comparator. */
 export function compareBaseRuntimeRoomShadowProjection(
-  projection: Readonly<BaseRuntimeMainRoomShadowProjection>,
+  projection: Readonly<BaseRuntimeRoomShadowProjection>,
   snapshot: Readonly<ImmutableRoomSnapshot>,
   structuralParity: Readonly<RoomParityResult>,
 ): Readonly<RoomParityResult> {
@@ -250,15 +275,23 @@ function assignRuntimeBindings(
   const slots = [...room.workspaceSlots].sort(compareWorkspaceSlots);
   const assignments: BindingAssignment[] = [];
 
-  for (let index = 0; index < Math.min(workspaces.length, slots.length); index += 1) {
-    const slot = slots[index]!;
-    const record = workspaces[index]!;
+  const workspaceTemplates = assignWorkspaceTemplates(
+    slots,
+    workspaces,
+    compatibility.shell.referenceViewport.width,
+  );
+  for (const template of workspaceTemplates) {
+    const record = translateCompatibilityRecord(
+      template.record,
+      template.positionOffset,
+    );
     assignments.push({
       record,
+      positionOffset: template.positionOffset,
       binding: workspaceBinding(
         record,
         compatibility,
-        slot,
+        template.slot,
       ),
     });
   }
@@ -270,6 +303,7 @@ function assignRuntimeBindings(
   if (doorTargetRoomId && doorRecord) {
     assignments.push({
       record: doorRecord,
+      positionOffset: { x: 0, y: 0 },
       binding: roomTransitionBinding(snapshot.door.objectId, doorTargetRoomId),
     });
   }
@@ -277,9 +311,10 @@ function assignRuntimeBindings(
   const companionRecord = records.find(
     (record) => record.descriptorRole === "companion.open",
   );
-  if (snapshot.companion && companionRecord) {
+  if (room.slug === "main" && snapshot.companion && companionRecord) {
     assignments.push({
       record: companionRecord,
+      positionOffset: { x: 0, y: 0 },
       binding: companionBinding(snapshot.companion.objectId),
     });
   }
@@ -290,6 +325,7 @@ function assignRuntimeBindings(
   if (exitRecord) {
     assignments.push({
       record: exitRecord,
+      positionOffset: { x: 0, y: 0 },
       binding: baseExitBinding(snapshot.base.objectId),
     });
   }
@@ -353,6 +389,16 @@ function remapCompatibilityProjection(
     const instance = deepClone(sourceObject);
     instance.instanceId = assignment.binding.objectInstanceId;
     instance.functionContainerInstanceId = assignment.binding.containerInstanceId;
+    instance.position = {
+      x: instance.position.x + assignment.positionOffset.x,
+      y: instance.position.y + assignment.positionOffset.y,
+    };
+    if (instance.origin) {
+      instance.origin = {
+        ...instance.origin,
+        presetItemId: `${instance.origin.presetItemId}.${assignment.binding.objectInstanceId}`,
+      };
+    }
     objectInstances.push(instance);
 
     const container = deepClone(sourceContainer);
@@ -533,14 +579,139 @@ function compareWorkspaceSlots(
 ): number {
   return (
     sideOrder(left.placement) - sideOrder(right.placement) ||
+    placementDepthOrder(left.placement) - placementDepthOrder(right.placement) ||
     compareText(left.objectId, right.objectId)
   );
+}
+
+function assignWorkspaceTemplates(
+  slots: readonly ReadonlySnapshotValue<WorkspaceSlot>[],
+  records: readonly CompatibilityBoundsRecord[],
+  viewportWidth: number,
+): WorkspaceTemplateAssignment[] {
+  if (records.length === 0) return [];
+
+  const horizontallyOrdered = [...records].sort(
+    (left, right) =>
+      horizontalOrigin(left.visualBounds) - horizontalOrigin(right.visualBounds) ||
+      compareText(left.legacyNodeId, right.legacyNodeId),
+  );
+  const assigned = slots.map((slot, index) => ({
+    slot,
+    record: workspaceTemplateForSlot(
+      slot,
+      index,
+      horizontallyOrdered,
+      viewportWidth,
+    ),
+  }));
+  const grouped = new Map<string, typeof assigned>();
+  for (const assignment of assigned) {
+    const group = grouped.get(assignment.record.legacyNodeId) ?? [];
+    group.push(assignment);
+    grouped.set(assignment.record.legacyNodeId, group);
+  }
+
+  const offsets = new Map<string, Readonly<{ x: number; y: number }>>();
+  for (const group of grouped.values()) {
+    group.sort((left, right) => compareWorkspaceSlots(left.slot, right.slot));
+    const spacing = boundsHeight(group[0]!.record.visualBounds) + 20;
+    for (let index = 0; index < group.length; index += 1) {
+      offsets.set(group[index]!.slot.objectId, {
+        x: 0,
+        y: (index - (group.length - 1) / 2) * spacing,
+      });
+    }
+  }
+
+  return assigned.map((assignment) => ({
+    ...assignment,
+    positionOffset: offsets.get(assignment.slot.objectId) ?? { x: 0, y: 0 },
+  }));
+}
+
+function workspaceTemplateForSlot(
+  slot: ReadonlySnapshotValue<WorkspaceSlot>,
+  index: number,
+  records: readonly CompatibilityBoundsRecord[],
+  viewportWidth: number,
+): CompatibilityBoundsRecord {
+  const placement = slot.placement.toLocaleLowerCase();
+  if (placement.includes("left")) return records[0]!;
+  if (placement.includes("right")) return records[records.length - 1]!;
+
+  const left = records.find(
+    (record) => horizontalOrigin(record.visualBounds) < viewportWidth / 2,
+  );
+  const right = records.find(
+    (record) => horizontalOrigin(record.visualBounds) >= viewportWidth / 2,
+  );
+  const fallback = [left, right].filter(
+    (record): record is CompatibilityBoundsRecord => record !== undefined,
+  );
+  const pool = fallback.length > 0 ? fallback : records;
+  return pool[index % pool.length]!;
+}
+
+function translateCompatibilityRecord(
+  record: CompatibilityBoundsRecord,
+  offset: Readonly<{ x: number; y: number }>,
+): CompatibilityBoundsRecord {
+  return {
+    ...deepClone(record),
+    visualBounds: translateBounds(record.visualBounds, offset),
+    interactionBounds: translateBounds(record.interactionBounds, offset),
+    layoutBounds: translateBounds(record.layoutBounds, offset),
+    effectBounds: translateBounds(record.effectBounds, offset),
+    ...(record.labelBounds
+      ? { labelBounds: translateBounds(record.labelBounds, offset) }
+      : {}),
+  };
+}
+
+function translateBounds(
+  bounds: CompatibilityBoundsRecord["visualBounds"],
+  offset: Readonly<{ x: number; y: number }>,
+): CompatibilityBoundsRecord["visualBounds"] {
+  if (bounds.type === "rect") {
+    return { ...bounds, x: bounds.x + offset.x, y: bounds.y + offset.y };
+  }
+  if (bounds.type === "ellipse") {
+    return { ...bounds, cx: bounds.cx + offset.x, cy: bounds.cy + offset.y };
+  }
+  return {
+    ...bounds,
+    points: bounds.points.map((point) => ({
+      x: point.x + offset.x,
+      y: point.y + offset.y,
+    })),
+  };
+}
+
+function horizontalOrigin(bounds: CompatibilityBoundsRecord["visualBounds"]): number {
+  if (bounds.type === "rect") return bounds.x;
+  if (bounds.type === "ellipse") return bounds.cx - bounds.rx;
+  return Math.min(...bounds.points.map((point) => point.x));
+}
+
+function boundsHeight(bounds: CompatibilityBoundsRecord["visualBounds"]): number {
+  if (bounds.type === "rect") return bounds.height;
+  if (bounds.type === "ellipse") return bounds.ry * 2;
+  const ys = bounds.points.map((point) => point.y);
+  return Math.max(...ys) - Math.min(...ys);
 }
 
 function sideOrder(placement: string): number {
   const normalized = placement.toLocaleLowerCase();
   if (normalized.includes("left")) return 0;
   if (normalized.includes("right")) return 1;
+  return 2;
+}
+
+function placementDepthOrder(placement: string): number {
+  const normalized = placement.toLocaleLowerCase();
+  if (normalized.includes("rear")) return 0;
+  if (normalized.includes("front")) return 1;
   return 2;
 }
 

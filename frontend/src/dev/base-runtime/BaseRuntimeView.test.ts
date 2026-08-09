@@ -13,6 +13,7 @@ const files = [
   "./components/BaseCompanionPresence.vue",
   "./components/BasePetPresence.vue",
   "./components/BaseRoomScene.vue",
+  "./components/RoomCompositionRuntimeScene.vue",
 ] as const;
 
 function sourceFor(path: (typeof files)[number]): string {
@@ -169,6 +170,87 @@ describe("Base Room Runtime visual slice", () => {
     expect(diagnostics).not.toContain("console.");
     expect(diagnostics).not.toContain("runtime.base.select");
     expect(diagnostics).not.toContain("fetch(");
+  });
+
+  it("keeps the previous presenter renderer as default and gates Composition explicitly", () => {
+    const view = sourceFor("./BaseRuntimeView.vue");
+    const switchSource = readFileSync(
+      fileURLToPath(new URL("./baseRoomRenderer.ts", import.meta.url)),
+      "utf8",
+    );
+    const gate = readFileSync(
+      fileURLToPath(new URL("./baseRoomCompositionPresenter.ts", import.meta.url)),
+      "utf8",
+    );
+
+    expect(switchSource).toContain('value === "composition" ? "composition" : "presenter"');
+    expect(switchSource).toContain("VITE_BASE_ROOM_RENDERER");
+    expect(view).toContain("configuredBaseRoomRenderer");
+    expect(view).toContain("resolveBaseRoomCompositionPresenter(");
+    expect(view).toContain("compositionResult.value?.status === \"active\"");
+    expect(view).toContain("<RoomCompositionRuntimeScene");
+    expect(view).toContain("<BaseRoomScene");
+    expect(view).toContain("v-else-if=\"presentation.phase === 'success'\"");
+    expect(gate).toContain('shadow.parity.status === "blocking-difference"');
+    expect(gate).toContain('interactions.parity.status === "blocking-difference"');
+    expect(gate).toContain("validationStatus.valid");
+  });
+
+  it("mounts exactly one accessible Composition interaction structure", () => {
+    const scene = sourceFor("./components/RoomCompositionRuntimeScene.vue");
+
+    expect(scene).toContain("<RoomCompositionShadowRenderer");
+    expect(scene).toContain('mode="visual"');
+    expect(scene).toContain('v-if="!backgroundOnly"');
+    expect(scene).toContain('role="group"');
+    expect(scene).toContain('type="button"');
+    expect(scene).toContain(':disabled="!target.available"');
+    expect(scene).toContain(':aria-label="target.semanticLabel"');
+    expect(scene).toContain(':data-focus-order="target.focusOrder"');
+    expect(scene).not.toContain("tabindex");
+    expect(scene).not.toContain("@keydown");
+    expect(scene).not.toContain("@keyup");
+    expect(scene).toContain(":focus-visible");
+  });
+
+  it("keeps backgroundOnly Composition aria-hidden, inert and without controls", () => {
+    const view = sourceFor("./BaseRuntimeView.vue");
+    const scene = sourceFor("./components/RoomCompositionRuntimeScene.vue");
+
+    expect(view).toContain(':background-only="backgroundOnly"');
+    expect(scene).toContain(':aria-hidden="backgroundOnly ? \'true\' : undefined"');
+    expect(scene).toContain(':inert="backgroundOnly || undefined"');
+    expect(scene).toContain('v-if="!backgroundOnly"');
+    expect(scene).toContain("pointer-events: none");
+  });
+
+  it("forwards Composition Functions only to existing Base presenter actions", () => {
+    const view = sourceFor("./BaseRuntimeView.vue");
+    const forwarding = readFileSync(
+      fileURLToPath(new URL("./baseRoomCompositionInteractions.ts", import.meta.url)),
+      "utf8",
+    );
+
+    expect(view).toContain("forwardRoomCompositionTarget(target");
+    expect(view).toContain("openWorkspace(slot)");
+    expect(view).toContain("travelRoom: travelToRoom");
+    expect(view).toContain("openCompanion");
+    expect(view).toContain("closeBase");
+    expect(forwarding).not.toContain("useRouter");
+    expect(forwarding).not.toContain("useCosmosRuntime");
+    expect(forwarding).not.toContain("fetch(");
+  });
+
+  it("reuses the existing ObjectInteractionHost for Composition context menus", () => {
+    const view = sourceFor("./BaseRuntimeView.vue");
+    const scene = sourceFor("./components/RoomCompositionRuntimeScene.vue");
+
+    expect(scene).toContain("target.bindingKind !== \"workspace\"");
+    expect(scene).toContain('target.bindingKind === "base-exit"');
+    expect(scene).toContain('emit("open-context-menu", event');
+    expect(view).toContain('@open-context-menu="openObjectContextMenu"');
+    expect(view).toContain("objectInteractionHost.value");
+    expect(view).toContain("?.openContextMenu(objectId");
   });
 
   it("reuses the server-driven Object Context Menu for Base and Workspace objects", () => {

@@ -10,12 +10,57 @@ import { deepClone } from "./immutable";
 import { compareLegacyBaseToRoomSnapshot } from "./roomParity";
 import {
   compareBaseRuntimeRoomShadowProjection,
+  projectBaseRoomToRoomCompositionShadow,
   projectBaseMainRoomToRoomCompositionShadow,
 } from "./baseRuntimeRoomShadowProjection";
-import { runBaseMainRoomShadowMode } from "./roomShadowMode";
+import { runBaseMainRoomShadowMode, runBaseRoomShadowMode } from "./roomShadowMode";
 import type { ImmutableRoomSnapshot } from "./roomSnapshotResolver";
 
 describe("real Base Main Room Room-Composition Shadow projection", () => {
+  it("projects a real Workshop through the same resolver and parity path", () => {
+    const value = snapshot();
+    value.rooms[1]!.workspaceSlots = [
+      workspaceSlot(
+        "runtime.slot.workshop.1",
+        "left_rear",
+        null,
+      ),
+      workspaceSlot("runtime.slot.workshop.2", "left_front", null),
+      workspaceSlot("runtime.slot.workshop.3", "right_rear", null),
+      workspaceSlot("runtime.slot.workshop.4", "right_front", null),
+    ];
+    const projection = projectBaseRoomToRoomCompositionShadow(
+      value,
+      "runtime.room.workshop",
+    );
+    const result = runBaseRoomShadowMode({
+      baseSnapshot: value,
+      roomId: "runtime.room.workshop",
+    });
+
+    expect(projection.source).toMatchObject({
+      roomId: "runtime.room.workshop",
+      roomName: "Workshop",
+      petId: null,
+    });
+    expect(result.snapshot.roomId).toBe("runtime.room.workshop");
+    expect(result.parity.status).toBe("equal");
+    expect(result.runtimeBindings?.filter((binding) => binding.kind === "workspace")).toHaveLength(4);
+    expect(result.runtimeBindings).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        kind: "workspace",
+        workspaceSlotId: "runtime.slot.workshop.1",
+        workspaceId: null,
+      }),
+      expect.objectContaining({
+        kind: "room-transition",
+        targetRoomId: "runtime.room.main",
+      }),
+      expect.objectContaining({ kind: "base-exit" }),
+    ]));
+    expect(result.runtimeBindings?.some((binding) => binding.kind === "companion")).toBe(false);
+  });
+
   it("projects the authoritative Main Room through the existing Shadow path", () => {
     const result = runBaseMainRoomShadowMode({ baseSnapshot: snapshot() });
 
@@ -287,7 +332,7 @@ describe("real Base Main Room Room-Composition Shadow projection", () => {
     ]);
   });
 
-  it("reports an unmapped additional real Workspace Slot as blocking", () => {
+  it("maps an additional real Workspace Slot through a stable compatibility template", () => {
     const value = snapshot();
     value.rooms[0]!.workspaceSlots.push(
       workspaceSlot("runtime.slot.extra", "center", "runtime.workspace.extra"),
@@ -295,11 +340,12 @@ describe("real Base Main Room Room-Composition Shadow projection", () => {
 
     const result = runBaseMainRoomShadowMode({ baseSnapshot: value });
 
-    expect(result.parity.status).toBe("blocking-difference");
-    expect(result.parity.differences).toContainEqual(
+    expect(result.parity.status).toBe("equal");
+    expect(result.runtimeBindings).toContainEqual(
       expect.objectContaining({
-        category: "workspace-assignment",
-        legacyId: "runtime.slot.extra",
+        kind: "workspace",
+        workspaceSlotId: "runtime.slot.extra",
+        workspaceId: "runtime.workspace.extra",
       }),
     );
   });
@@ -375,18 +421,20 @@ function room(
 function workspaceSlot(
   objectId: string,
   placement: string,
-  workspaceObjectId: string,
+  workspaceObjectId: string | null,
 ): WorkspaceSlot {
   return {
     ...summary(objectId, "Workspace Slot", ["WorkspaceSlot"]),
     placement,
     skin: "Core",
-    workspace: {
-      ...summary(workspaceObjectId, "Workspace", ["Workspace"]),
-      icon: placement.includes("left") ? "Knowledge" : "Creation",
-      overlay: "Workspace",
-      sourceProjectId: "runtime.project.source",
-    },
+    workspace: workspaceObjectId
+      ? {
+          ...summary(workspaceObjectId, "Workspace", ["Workspace"]),
+          icon: placement.includes("left") ? "Knowledge" : "Creation",
+          overlay: "Workspace",
+          sourceProjectId: "runtime.project.source",
+        }
+      : null,
   };
 }
 

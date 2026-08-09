@@ -4,8 +4,9 @@ import {
 } from "./baseRoomCompatibilityAdapter";
 import {
   compareBaseRuntimeRoomShadowProjection,
+  projectBaseRoomToRoomCompositionShadow,
   projectBaseMainRoomToRoomCompositionShadow,
-  type BaseRuntimeMainRoomReference,
+  type BaseRuntimeRoomReference,
   type BaseRuntimeSnapshotReadModel,
   type BaseRuntimeShadowBinding,
 } from "./baseRuntimeRoomShadowProjection";
@@ -29,6 +30,7 @@ export interface RunBaseRoomShadowModeInput {
   legacy?: BaseRoomCompatibilityAdapterInput;
   skins?: RoomSkinResolutionInput;
   baseSnapshot?: BaseRuntimeSnapshotReadModel;
+  roomId?: string;
 }
 
 export interface RoomShadowModeResult {
@@ -37,11 +39,17 @@ export interface RoomShadowModeResult {
   snapshot: Readonly<ImmutableRoomSnapshot>;
   parity: Readonly<RoomParityResult>;
   diagnostics: readonly string[];
-  runtimeReference?: Readonly<BaseRuntimeMainRoomReference>;
+  runtimeReference?: Readonly<BaseRuntimeRoomReference>;
   runtimeBindings?: readonly Readonly<BaseRuntimeShadowBinding>[];
 }
 
 export function runBaseMainRoomShadowMode(
+  input: RunBaseRoomShadowModeInput = {},
+): Readonly<RoomShadowModeResult> {
+  return runBaseRoomShadowMode(input);
+}
+
+export function runBaseRoomShadowMode(
   input: RunBaseRoomShadowModeInput = {},
 ): Readonly<RoomShadowModeResult> {
   if (input.baseSnapshot && input.legacy) {
@@ -50,7 +58,9 @@ export function runBaseMainRoomShadowMode(
     );
   }
   const runtimeProjection = input.baseSnapshot
-    ? projectBaseMainRoomToRoomCompositionShadow(input.baseSnapshot)
+    ? input.roomId
+      ? projectBaseRoomToRoomCompositionShadow(input.baseSnapshot, input.roomId)
+      : projectBaseMainRoomToRoomCompositionShadow(input.baseSnapshot)
     : null;
   const legacy = runtimeProjection?.compatibility ?? adaptBaseMainRoomV1(input.legacy);
   const registries = createRoomCompositionRegistries();
